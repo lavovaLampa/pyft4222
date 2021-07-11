@@ -4,7 +4,7 @@ from ctypes import *
 from enum import IntEnum, IntFlag, auto
 from typing import NamedTuple, NewType, Optional, Tuple
 
-from .ft_common import FTStatus, FtHandle
+from ft_common import FTStatus, FtHandle
 
 try:
     ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')

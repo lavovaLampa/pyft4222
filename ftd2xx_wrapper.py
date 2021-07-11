@@ -2,9 +2,9 @@
 
 from ctypes import *
 from enum import IntEnum, IntFlag, auto
-from typing import Final, NamedTuple, Optional
+from typing import Final, List, NamedTuple, Optional
 
-from .ft_common import FTStatus, FtHandle
+from ft_common import FTStatus, FtHandle
 
 try:
     ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')
@@ -57,34 +57,30 @@ _reset_device.restype = FTStatus
 
 # Constants
 
-DESCRIPTION_MAX_LEN: Final[int] = 64
 SERIAL_NUMBER_MAX_LEN: Final[int] = 16
+DESCRIPTION_MAX_LEN: Final[int] = 64
 
 # Data types
 
 
-class DeviceInfoListNode(NamedTuple):
-    flags: int
-    type: int
-    id: int
-    loc_id: int
-    serial_number: str
-    description: str
-    handle: FtHandle
+class _RawDeviceInfoListNode(Structure):
+    _fields_ = [
+        ('Flags', c_uint),
+        ('Type', c_uint),
+        ('ID', c_uint),
+        ('LocId', c_uint),
+        ('SerialNumber', c_char * SERIAL_NUMBER_MAX_LEN),
+        ('Description', c_char * DESCRIPTION_MAX_LEN),
+        ('Handle', c_void_p)
+    ]
 
 
-class _OpenExFlag(IntEnum):
-    BY_SERIAL_NUMBER = 1
-    BY_DESCRIPTION = 2
-    BY_LOCATION = 4
+class DeviceFlags(IntFlag):
+    OPENED = 1
+    HISPEED = 2
 
 
-class PurgeType(IntFlag):
-    RX = 1
-    TX = 2
-
-
-class FtDeviceType(IntEnum):
+class DeviceType(IntEnum):
     DEV_BM = 0
     DEV_AM = auto()
     DEV_100AX = auto()
@@ -105,7 +101,40 @@ class FtDeviceType(IntEnum):
 
 
 class DeviceInfo(NamedTuple):
-    dev_type: FtDeviceType
+    flags: DeviceFlags
+    type: DeviceType
+    id: int
+    loc_id: int
+    serial_number: str
+    description: str
+    handle: FtHandle
+
+    @staticmethod
+    def from_raw(raw_node: _RawDeviceInfoListNode) -> 'DeviceInfo':
+        return DeviceInfo(
+            flags=DeviceFlags(raw_node.Flags),
+            type=DeviceType(raw_node.Type),
+            id=raw_node.ID,
+            loc_id=raw_node.LocId,
+            serial_number=raw_node.SerialNumber,
+            description=raw_node.Description,
+            handle=raw_node.Handle
+        )
+
+
+class _OpenExFlag(IntEnum):
+    BY_SERIAL_NUMBER = 1
+    BY_DESCRIPTION = 2
+    BY_LOCATION = 4
+
+
+class PurgeType(IntFlag):
+    RX = 1
+    TX = 2
+
+
+class ShortDeviceInfo(NamedTuple):
+    dev_type: DeviceType
     dev_id: int
     serial_number: str
     description: str
@@ -121,12 +150,50 @@ def create_device_info_list() -> int:
     return dev_count.value
 
 
-def get_device_info_list() -> None:
-    pass
+def get_device_info_list(dev_count: int) -> List[DeviceInfo]:
+    array_elems = c_uint(dev_count)
+    raw_list = (_RawDeviceInfoListNode * dev_count)()
+    result: FTStatus = _get_device_info_list(raw_list, byref(array_elems))
+
+    if result != FTStatus.OK:
+        raise RuntimeError("TODO")
+
+    return list(map(DeviceInfo.from_raw, raw_list))[:array_elems.value]
 
 
-def get_device_info_detail() -> None:
-    pass
+def get_device_info_detail(dev_id: int) -> DeviceInfo:
+    idx = c_uint(dev_id)
+    flags = c_uint()
+    type = c_uint()
+    id = c_uint()
+    loc_id = c_uint()
+    serial_number = create_string_buffer(SERIAL_NUMBER_MAX_LEN)
+    description = create_string_buffer(DESCRIPTION_MAX_LEN)
+    handle = c_void_p()
+
+    result: FTStatus = _get_device_info_detail(
+        idx,
+        byref(flags),
+        byref(type),
+        byref(id),
+        byref(loc_id),
+        serial_number,
+        description,
+        byref(handle)
+    )
+
+    if result != FTStatus.OK:
+        raise RuntimeError("TODO")
+
+    return DeviceInfo(
+        flags=DeviceFlags(flags.value),
+        type=DeviceType(type.value),
+        id=id.value,
+        loc_id=loc_id.value,
+        serial_number=serial_number.value,
+        description=description.value,
+        handle=FtHandle(handle)
+    )
 
 
 def open(dev_id: int) -> Optional[FtHandle]:
@@ -175,17 +242,28 @@ def open_by_location(location: int) -> Optional[FtHandle]:
         byref(ft_handle)
     )
 
-    if result != FTStatus.OK:
+    no_err_set = set([
+        FTStatus.DEVICE_NOT_FOUND,
+        FTStatus.INVALID_ARGS,
+        FTStatus.NOT_SUPPORTED,
+        FTStatus.INVALID_PARAMETER
+    ])
+    if result == FTStatus.OK:
+        return FtHandle(ft_handle)
+    elif result in no_err_set:
+        return None
+    else:
         raise RuntimeError("TODO")
-
-    return FtHandle(ft_handle)
 
 
 def close(ft_handle: FtHandle) -> None:
-    pass
+    result: FTStatus = _close(ft_handle)
+
+    if result != FTStatus.OK:
+        raise RuntimeError("TODO")
 
 
-def get_device_info(ft_handle: FtHandle, ) -> DeviceInfo:
+def get_device_info(ft_handle: FtHandle) -> ShortDeviceInfo:
     dev_type = c_uint()
     dev_id = c_uint()
     serial_number = create_string_buffer(SERIAL_NUMBER_MAX_LEN)
@@ -203,8 +281,8 @@ def get_device_info(ft_handle: FtHandle, ) -> DeviceInfo:
     if result != FTStatus.OK:
         raise RuntimeError("TODO")
 
-    return DeviceInfo(
-        dev_type=FtDeviceType(dev_type.value),
+    return ShortDeviceInfo(
+        dev_type=DeviceType(dev_type.value),
         dev_id=dev_id.value,
         serial_number=serial_number.value,
         description=description.value
@@ -223,7 +301,7 @@ def get_driver_version(ft_handle: FtHandle) -> int:
 
 
 def purge(ft_handle: FtHandle, purge_type_mask: PurgeType) -> None:
-    result: FTStatus = _purge(FtHandle, purge_type_mask)
+    result: FTStatus = _purge(ft_handle, purge_type_mask)
 
     if result != FTStatus.OK:
         raise RuntimeError("TODO")
@@ -234,3 +312,12 @@ def reset_device(ft_handle: FtHandle) -> None:
 
     if result != FTStatus.OK:
         raise RuntimeError("TODO")
+
+
+def main() -> None:
+    result = create_device_info_list()
+    print(get_device_info_detail(0))
+
+
+if __name__ == '__main__':
+    main()
