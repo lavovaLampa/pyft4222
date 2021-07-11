@@ -63,6 +63,29 @@ DESCRIPTION_MAX_LEN: Final[int] = 64
 # Data types
 
 
+class FTStatus(IntEnum):
+    OK = 0
+    INVALID_HANDLE = auto()
+    DEVICE_NOT_FOUND = auto()
+    DEVICE_NOT_OPENED = auto()
+    IO_ERROR = auto()
+    INSUFFICIENT_RESOURCES = auto()
+    INVALID_PARAMETER = auto()
+    INVALID_BAUD_RATE = auto()
+    DEVICE_NOT_OPENED_FOR_ERASE = auto()
+    DEVICE_NOT_OPENED_FOR_WRITE = auto()
+    FAILED_TO_WRITE_DEVICE = auto()
+    EEPROM_READ_FAILED = auto()
+    EEPROM_WRITE_FAILED = auto()
+    EEPROM_ERASE_FAILED = auto()
+    EEPROM_NOT_PRESENT = auto()
+    EEPROM_NOT_PROGRAMMED = auto()
+    INVALID_ARGS = auto()
+    NOT_SUPPORTED = auto()
+    OTHER_ERROR = auto()
+    DEVICE_LIST_NOT_READY = auto()
+
+
 class _RawDeviceInfoListNode(Structure):
     _fields_ = [
         ('Flags', c_uint),
@@ -76,8 +99,8 @@ class _RawDeviceInfoListNode(Structure):
 
 
 class DeviceFlags(IntFlag):
-    OPENED = 1
-    HISPEED = 2
+    OPEN = 1
+    HIGH_SPEED = 2
 
 
 class DeviceType(IntEnum):
