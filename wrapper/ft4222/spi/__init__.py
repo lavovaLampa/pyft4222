@@ -1,4 +1,6 @@
-from ctypes import cdll, c_void_p, c_uint8, c_uint
+from ctypes import cdll
+from ctypes import c_void_p, c_uint8, c_uint
+
 from enum import IntEnum, auto
 from typing import Union
 
@@ -8,7 +10,7 @@ from .slave import SpiSlaveHandle
 from .. import FT4222Status
 
 try:
-    ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)

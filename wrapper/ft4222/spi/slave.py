@@ -1,12 +1,16 @@
-from ctypes import c_void_p, cdll, c_uint, POINTER, c_uint16, c_uint8, byref
+from ctypes import cdll
+from ctypes import POINTER, byref
+from ctypes import c_void_p, c_uint, c_uint16, c_uint8
+
 from enum import IntEnum, auto
 from typing import Literal, NewType, Union, overload
 
-from ...ft_common import FtHandle
+from . import ClkPhase, ClkPolarity
 from .. import FT4222Status
+from ... import FtHandle
 
 try:
-    ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -114,8 +118,8 @@ def init_ex(ft_handle: FtHandle, protocol: IoProtocol) -> SpiSlaveHandle:
 
 def set_mode(
     ft_handle: SpiSlaveHandle,
-    clk_polarity: SPI.ClkPolarity,
-    clk_phase: SPI.ClkPhase
+    clk_polarity: ClkPolarity,
+    clk_phase: ClkPhase
 ) -> None:
     """Set clock polarity and phase.
 

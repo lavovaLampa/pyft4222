@@ -1,10 +1,14 @@
-from ctypes import c_void_p, cdll, POINTER, c_uint8, c_uint16, c_bool, byref
+from ctypes import cdll
+from ctypes import POINTER, byref
+from ctypes import c_void_p, c_uint8, c_uint16, c_bool
+
 from typing import NewType
+
 from .. import FT4222Status
-from ...ft_common import FtHandle
+from ... import FtHandle
 
 try:
-    ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)

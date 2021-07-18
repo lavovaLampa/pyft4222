@@ -1,12 +1,15 @@
-from ctypes import cdll, c_void_p, c_uint, c_bool, POINTER, byref, c_uint16
-from enum import IntEnum, auto
-from typing import Final, NewType, Tuple
+from ctypes import cdll
+from ctypes import POINTER, byref
+from ctypes import c_void_p, c_uint, c_bool, c_uint16
 
-from ..ft_common import FtHandle
-from . import FT4222Status
+from enum import IntEnum, auto
+from typing import Final, List, NewType, Tuple
+
+from . import FT4222Status, GpioTrigger
+from .. import FtHandle
 
 try:
-    ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary('../dlls/libft4222.so.1.4.4.44')
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -138,7 +141,7 @@ def write(ft_handle: GpioHandle, port_id: PortId, state: bool) -> None:
 def set_input_trigger(
     ft_handle: GpioHandle,
     port_id: PortId,
-    trigger: FT4222.GpioTrigger
+    trigger: GpioTrigger
 ) -> None:
     """Set software trigger conditions on the specified GPIO pin.
 
@@ -202,7 +205,7 @@ def read_trigger_queue(
     ft_handle: GpioHandle,
     port_id: PortId,
     max_read_size: int
-) -> List[FT4222.GpioTrigger]:
+) -> List[GpioTrigger]:
     """Get events recorded in the trigger event queue.
 
     After calling this function, all events will be removed from the event queue.
@@ -232,7 +235,7 @@ def read_trigger_queue(
     if result != FT4222Status.OK:
         raise RuntimeError('TODO')
 
-    return list(map(lambda x: FT4222.GpioTrigger(x), event_buffer[:events_read.value]))
+    return list(map(lambda x: GpioTrigger(x), event_buffer[:events_read.value]))
 
 
 def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:

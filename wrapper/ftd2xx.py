@@ -1,14 +1,16 @@
 #! /usr/bin/env python3
 
-from ctypes import *
+from ctypes import cdll
+from ctypes import POINTER, byref, create_string_buffer, Structure
+from ctypes import c_uint, c_void_p, c_int, c_char_p, c_char, c_wchar_p, c_uint32
 from enum import IntEnum, IntFlag, auto
 from typing import Final, List, NamedTuple, Optional
 import platform
 
-from ft_common import FtHandle
+from . import FtHandle
 
 try:
-    ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary('./dlls/libft4222.so.1.4.4.44')
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -466,14 +468,3 @@ def reset_device(ft_handle: FtHandle) -> None:
 
     if result != FTStatus.OK:
         raise RuntimeError("TODO")
-
-
-def main() -> None:
-    result = create_device_info_list()
-    if result > 0:
-        detail = get_device_info_detail(0)
-        print(detail)
-
-
-if __name__ == '__main__':
-    main()

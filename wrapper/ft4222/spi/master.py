@@ -1,11 +1,16 @@
-from ctypes import cdll, c_void_p, c_uint, c_uint8, c_uint16, c_bool, POINTER, byref, c_uint32
+from ctypes import cdll
+from ctypes import POINTER, byref
+from ctypes import c_void_p, c_uint, c_uint8, c_uint16, c_bool, c_uint32
+
 from enum import IntEnum, IntFlag, auto
-from typing import Literal, NewType, Union, overload
+from typing import Literal, NewType, NoReturn, Optional, Union, overload
+
+from . import ClkPhase, ClkPolarity
 from .. import FT4222Status
-from ...ft_common import FtHandle
+from ... import FtHandle
 
 try:
-    ftlib = cdll.LoadLibrary('./lib/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -85,9 +90,9 @@ def init(
     ft_handle: FtHandle,
     io_mode: Literal[IoMode.IO_SINGLE],
     clock_div: ClkDiv,
-    clk_polarity: SPI.ClkPolarity,
-    clk_phase: 'SPI.ClkPhase',
-    sso_map: 'SPI.Master.SsoMap'
+    clk_polarity: ClkPolarity,
+    clk_phase: ClkPhase,
+    sso_map: SsoMap
 ) -> SpiMasterSingleHandle: ...
 
 
@@ -96,9 +101,9 @@ def init(
     ft_handle: FtHandle,
     io_mode: Union[Literal[IoMode.IO_DUAL], Literal[IoMode.IO_QUAD]],
     clock_div: ClkDiv,
-    clk_polarity: 'SPI.ClkPolarity',
-    clk_phase: 'SPI.ClkPhase',
-    sso_map: 'SPI.Master.SsoMap'
+    clk_polarity: ClkPolarity,
+    clk_phase: ClkPhase,
+    sso_map: SsoMap
 ) -> SpiMasterMultiHandle: ...
 
 
@@ -107,20 +112,19 @@ def init(
     ft_handle: FtHandle,
     io_mode: Literal[IoMode.IO_NONE],
     clock_div: ClkDiv,
-    clk_polarity: 'SPI.ClkPolarity',
-    clk_phase: 'SPI.ClkPhase',
-    sso_map: 'SPI.Master.SsoMap'
+    clk_polarity: ClkPolarity,
+    clk_phase: ClkPhase,
+    sso_map: SsoMap
 ) -> NoReturn: ...
 
 
-@staticmethod
 def init(
     ft_handle: FtHandle,
     io_mode: IoMode,
     clock_div: ClkDiv,
-    clk_polarity: 'SPI.ClkPolarity',
-    clk_phase: 'SPI.ClkPhase',
-    sso_map: 'SPI.Master.SsoMap'
+    clk_polarity: ClkPolarity,
+    clk_phase: ClkPhase,
+    sso_map: SsoMap
 ) -> Union[SpiMasterSingleHandle, SpiMasterMultiHandle, NoReturn]:
     """Initialize the FT4222H as an SPI master.
 
@@ -138,7 +142,7 @@ def init(
     Returns:
         SpiMasterHandle:    Handle to initialized SPI Master FT4222 device
     """
-    result: FT4222Status = SPI.Master._init(
+    result: FT4222Status = _init(
         ft_handle,
         io_mode,
         clock_div,
@@ -150,15 +154,14 @@ def init(
     if result != FT4222Status.OK:
         raise RuntimeError('TODO')
 
-    if io_mode == SPI.Master.IoMode.IO_SINGLE:
+    if io_mode == IoMode.IO_SINGLE:
         return SpiMasterSingleHandle(ft_handle)
-    elif io_mode in set([SPI.Master.IoMode.IO_DUAL, SPI.Master.IoMode.IO_QUAD]):
+    elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
         return SpiMasterMultiHandle(ft_handle)
     else:
         raise RuntimeError('TODO')
 
 
-@staticmethod
 def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None:
     """Change polarity of chip select signal.
 
@@ -171,7 +174,7 @@ def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = SPI.Master._set_cs(ft_handle, cs_polarity)
+    result: FT4222Status = _set_cs(ft_handle, cs_polarity)
 
     if result != FT4222Status.OK:
         raise RuntimeError('TODO')
@@ -198,7 +201,6 @@ def set_lines(
 ) -> NoReturn: ...
 
 
-@staticmethod
 def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> Union[SpiMasterHandle, NoReturn]:
     """Switch the FT4222H SPI Master to single, dual, or quad mode.
 
@@ -215,20 +217,19 @@ def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> Union[SpiMasterHan
     Returns:
         SpiMasterHandle:    Handle to an initialized FT4222 device in SPI Master mode with selected io setting
     """
-    result: FT4222Status = SPI.Master._set_lines(ft_handle, io_mode)
+    result: FT4222Status = _set_lines(ft_handle, io_mode)
 
     if result != FT4222Status.OK:
         raise RuntimeError('TODO')
 
-    if io_mode == SPI.Master.IoMode.IO_SINGLE:
+    if io_mode == IoMode.IO_SINGLE:
         return SpiMasterSingleHandle(ft_handle)
-    elif io_mode in set([SPI.Master.IoMode.IO_DUAL, SPI.Master.IoMode.IO_QUAD]):
+    elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
         return SpiMasterMultiHandle(ft_handle)
     else:
         raise RuntimeError('TODO')
 
 
-@staticmethod
 def single_read(
     ft_handle: SpiMasterSingleHandle,
     read_byte_count: int,
@@ -250,7 +251,7 @@ def single_read(
     buffer = (c_uint8 * read_byte_count)()
     bytes_transferred = c_uint16()
 
-    result: FT4222Status = SPI.Master._single_read(
+    result: FT4222Status = _single_read(
         ft_handle,
         buffer,
         read_byte_count,
@@ -264,7 +265,6 @@ def single_read(
     return bytes(buffer)
 
 
-@staticmethod
 def single_write(
     ft_handle: SpiMasterSingleHandle,
     write_data: bytes,
@@ -284,7 +284,7 @@ def single_write(
         int:                Number of transmitted bytes
     """
     bytes_transferred = c_uint16()
-    result: FT4222Status = SPI.Master._single_write(
+    result: FT4222Status = _single_write(
         ft_handle,
         write_data,
         len(write_data),
@@ -298,7 +298,6 @@ def single_write(
     return bytes_transferred.value
 
 
-@staticmethod
 def single_read_write(
     ft_handle: SpiMasterSingleHandle,
     write_data: bytes,
@@ -320,7 +319,7 @@ def single_read_write(
     bytes_transferred = c_uint16()
     read_buffer = (c_uint8 * len(write_data))()
 
-    result: FT4222Status = SPI.Master._single_read_write(
+    result: FT4222Status = _single_read_write(
         ft_handle,
         read_buffer,
         write_data,
@@ -355,7 +354,6 @@ def multi_read_write(
 ) -> bytes: ...
 
 
-@staticmethod
 def multi_read_write(
     ft_handle: SpiMasterMultiHandle,
     write_data: Optional[bytes],
@@ -385,7 +383,7 @@ def multi_read_write(
     """
     read_buffer = (c_uint8 * multi_read_byte_count)()
     bytes_read = c_uint16()
-    result: FT4222Status = SPI.Master._multi_read_write(
+    result: FT4222Status = _multi_read_write(
         ft_handle,
         read_buffer,
         write_data,
