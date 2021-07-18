@@ -82,7 +82,9 @@ _reset_device.restype = FTStatus
 
 # Constants
 
+# Max. length of C string containing D2XX device serial number (according to D2XX documentation)
 SERIAL_NUMBER_MAX_LEN: Final[int] = 16
+# Max. length of C string containing D2XX device description (according to D2XX documentation)
 DESCRIPTION_MAX_LEN: Final[int] = 64
 SYSTEM_TYPE: Final[str] = platform.system()
 
