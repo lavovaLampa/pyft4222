@@ -1,22 +1,26 @@
-#! /usr/bin/env python3
-
 from ctypes import cdll
 from ctypes import POINTER, byref, create_string_buffer, Structure
 from ctypes import c_uint, c_void_p, c_int, c_char_p, c_char, c_wchar_p, c_uint32
+
 from enum import IntEnum, IntFlag, auto
 from typing import Final, List, NamedTuple, Optional
+from pathlib import Path
+
 import platform
 
-from . import FtHandle
+from . import FtHandle, Ok, Err, Result
+
+MODULE_PATH: Final[Path] = Path(__file__).parent
 
 try:
-    ftlib = cdll.LoadLibrary('./dlls/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary(
+        str(MODULE_PATH / 'dlls' / 'libft4222.so.1.4.4.44'))
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
 
 
-class FTStatus(IntEnum):
+class FtStatus(IntEnum):
     OK = 0
     INVALID_HANDLE = auto()
     DEVICE_NOT_FOUND = auto()
@@ -38,49 +42,65 @@ class FTStatus(IntEnum):
     OTHER_ERROR = auto()
     DEVICE_LIST_NOT_READY = auto()
 
+
+class FtException(Exception):
+    status: FtStatus
+    msg: Optional[str]
+
+    def __init__(self, status: FtStatus, msg: Optional[str] = None):
+        self.status = status
+        self.msg = msg
+
+    def __str__(self) -> str:
+        return f"""
+Exception during call to FTD2XX library.
+FT return code: {self.status.name}
+Message: {self.msg}
+        """
+
 # DLL function protoypes declaration
 
 
 _create_device_info_list = ftlib.FT_CreateDeviceInfoList
 _create_device_info_list.argtypes = [POINTER(c_uint)]
-_create_device_info_list.restype = FTStatus
+_create_device_info_list.restype = FtStatus
 
 _get_device_info_list = ftlib.FT_GetDeviceInfoList
 _get_device_info_list.argtypes = []
-_get_device_info_list.restype = FTStatus
+_get_device_info_list.restype = FtStatus
 
 _get_device_info_detail = ftlib.FT_GetDeviceInfoDetail
 _get_device_info_detail.argtypes = []
-_get_device_info_detail.restype = FTStatus
+_get_device_info_detail.restype = FtStatus
 
 _open = ftlib.FT_Open
 _open.argtypes = [c_int, POINTER(c_void_p)]
-_open.restype = FTStatus
+_open.restype = FtStatus
 
 _open_ex = ftlib.FT_OpenEx
 _open_ex.argtypes = [c_void_p, c_uint, POINTER(c_void_p)]
-_open_ex.restype = FTStatus
+_open_ex.restype = FtStatus
 
 _close = ftlib.FT_Close
 _close.argtypes = [c_void_p]
-_close.restype = FTStatus
+_close.restype = FtStatus
 
 _get_device_info = ftlib.FT_GetDeviceInfo
 _get_device_info.argtypes = [c_void_p, POINTER(
     c_uint), POINTER(c_uint), c_char_p, c_char_p, c_void_p]
-_get_device_info.restype = FTStatus
+_get_device_info.restype = FtStatus
 
 _get_driver_version = ftlib.FT_GetDriverVersion
 _get_driver_version.argtypes = [c_void_p, POINTER(c_uint)]
-_get_driver_version.restype = FTStatus
+_get_driver_version.restype = FtStatus
 
 _purge = ftlib.FT_Purge
 _purge.argtypes = [c_void_p, c_uint]
-_purge.restype = FTStatus
+_purge.restype = FtStatus
 
 _reset_device = ftlib.FT_ResetDevice
 _reset_device.argtypes = [c_void_p]
-_reset_device.restype = FTStatus
+_reset_device.restype = FtStatus
 
 # Constants
 
@@ -146,9 +166,9 @@ class DeviceInfo(NamedTuple):
             type=DeviceType(raw_node.type),
             id=raw_node.id,
             loc_id=raw_node.loc_id,
-            serial_number=raw_node.serial_number,
-            description=raw_node.description,
-            handle=raw_node.handle
+            serial_number=raw_node.serial_number.decode('utf-8'),
+            description=raw_node.description.decode('utf-8'),
+            handle=FtHandle(raw_node.handle)
         )
 
 
@@ -181,48 +201,64 @@ def create_device_info_list() -> int:
     If the devices connected to the system change,
     the device info list will not be updated until create_device_info_list is called again.
 
-    Return:
-        number of connected D2XX devices
+    Raises:
+        FtException:    In case of unexpected error
+
+    Returns:
+        int:            Number of connected D2XX devices
     """
     dev_count = c_uint()
-    result: FTStatus = _create_device_info_list(byref(dev_count))
+    result: FtStatus = _create_device_info_list(byref(dev_count))
 
-    if result != FTStatus.OK:
+    if result != FtStatus.OK:
         raise RuntimeError("TODO")
 
     return dev_count.value
 
 
-def get_device_info_list(dev_count: int) -> List[DeviceInfo]:
+def get_device_info_list() -> List[DeviceInfo]:
     """Return list containing details about connected D2XX devices.
 
     This function returns a device information list and the number of D2XX devices in the list.
 
     NOTE: function 'create_device_info_list' must be called beforehand, to update the list!
 
+    Args:
+        dev_count:          Max. number of devices to construct list for
+
+    Raises:
+        FtException:        In case of unexpected error
+
     Return:
-        list containing details about connected D2XX devices
+        List[DeviceInfo]:   List containing details about connected D2XX devices
     """
+    dev_count = create_device_info_list()
+
     array_elems = c_uint(dev_count)
     raw_list = (_RawDeviceInfoListNode * dev_count)()
-    result: FTStatus = _get_device_info_list(raw_list, byref(array_elems))
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
+    result: FtStatus = _get_device_info_list(raw_list, byref(array_elems))
+
+    if result != FtStatus.OK:
+        raise FtException(result)
 
     return list(map(DeviceInfo.from_raw, raw_list))[:array_elems.value]
 
 
-def get_device_info_detail(dev_id: int) -> DeviceInfo:
+def get_device_info_detail(dev_id: int) -> Optional[DeviceInfo]:
     """This function returns an entry from the device information list.
 
-    Parameters:
-        dev_id:     index of device in device info list
+    Args:
+        dev_id:         Index of device in device info list (non-negative)
 
-    Return:
+    Raises:
+        FtException:    In case of unexpected error
+
+    Returns:
         device details (if id exists)
-
     """
+    assert 0 <= dev_id, "Invalid device ID"
+
     idx = c_uint(dev_id)
     flags = c_uint()
     type = c_uint()
@@ -232,7 +268,7 @@ def get_device_info_detail(dev_id: int) -> DeviceInfo:
     description = create_string_buffer(DESCRIPTION_MAX_LEN)
     handle = c_void_p()
 
-    result: FTStatus = _get_device_info_detail(
+    result: FtStatus = _get_device_info_detail(
         idx,
         byref(flags),
         byref(type),
@@ -243,21 +279,23 @@ def get_device_info_detail(dev_id: int) -> DeviceInfo:
         byref(handle)
     )
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
+    if result == FtStatus.OK:
+        return DeviceInfo(
+            flags=DeviceFlags(flags.value),
+            type=DeviceType(type.value),
+            id=id.value,
+            loc_id=loc_id.value,
+            serial_number=serial_number.value.decode('utf-8'),
+            description=description.value.decode('utf-8'),
+            handle=FtHandle(handle)
+        )
+    elif result in {FtStatus.DEVICE_NOT_FOUND}:
+        return None
+    else:
+        raise FtException(result)
 
-    return DeviceInfo(
-        flags=DeviceFlags(flags.value),
-        type=DeviceType(type.value),
-        id=id.value,
-        loc_id=loc_id.value,
-        serial_number=serial_number.value,
-        description=description.value,
-        handle=FtHandle(handle)
-    )
 
-
-def open(dev_id: int) -> Optional[FtHandle]:
+def open(dev_id: int) -> Result[FtHandle, FtStatus]:
     """Open the device and return a handle which will be used for subsequent accesses.
 
     NOTE:
@@ -265,47 +303,49 @@ def open(dev_id: int) -> Optional[FtHandle]:
         there is no ability to open a specific device.
         To open named devices, use functions: 'open_by_serial', 'open_by_description', 'open_by_location'
 
-    Parameters:
+    Args:
         dev_id:     ID of D2XX device to open
 
-    Return:
+    Returns:
         D2XX device handle (optional)
     """
+    assert 0 <= dev_id, "Invalid device ID"
+
     ft_handle = c_void_p()
-    result: FTStatus = _open(dev_id, byref(ft_handle))
+    result: FtStatus = _open(dev_id, byref(ft_handle))
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
+    if result == FtStatus.OK:
+        return Ok(FtHandle(ft_handle))
+    else:
+        return Err(result)
 
-    return FtHandle(ft_handle)
 
-
-def open_by_serial(serial_num: str) -> Optional[FtHandle]:
+def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
     """Open the specified device and return a handle that will be used for subsequent accesses.
     The device is specified by its serial number.
 
     This function can also be used to open multiple devices simultaneously.
 
-    Arguments:
+    Args:
         serial_num:     Serial number of the D2XX device
 
-    Return:
+    Returns:
         D2XX device handle (optional)
     """
     ft_handle = c_void_p()
-    result: FTStatus = _open_ex(
-        c_wchar_p(serial_num),
+    result: FtStatus = _open_ex(
+        serial_num.encode('utf-8'),
         _OpenExFlag.BY_SERIAL_NUMBER,
         byref(ft_handle)
     )
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
+    if result == FtStatus.OK:
+        return Ok(FtHandle(ft_handle))
+    else:
+        return Err(result)
 
-    return FtHandle(ft_handle)
 
-
-def open_by_description(dev_description: str) -> Optional[FtHandle]:
+def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
     """Open the specified device and return a handle that will be used for subsequent accesses.
     The device is specified by its description string.
 
@@ -318,22 +358,22 @@ def open_by_description(dev_description: str) -> Optional[FtHandle]:
         D2XX device handle (optional)
     """
     ft_handle = c_void_p()
-    result: FTStatus = _open_ex(
-        c_wchar_p(dev_description),
+    result: FtStatus = _open_ex(
+        dev_description.encode('utf-8'),
         _OpenExFlag.BY_DESCRIPTION,
         byref(ft_handle)
     )
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
-
-    return FtHandle(ft_handle)
+    if result == FtStatus.OK:
+        return Ok(FtHandle(ft_handle))
+    else:
+        return Err(result)
 
 
 # This function is not supported on Linux and Windows CE
 # REVIEW: Windows CE is unsupported by Python so no need to check?
 if SYSTEM_TYPE != "Linux":
-    def open_by_location(location_id: int) -> Optional[FtHandle]:
+    def open_by_location(location_id: int) -> Result[FtHandle, FtStatus]:
         """Open the specified device and return a handle that will be used for subsequent accesses.
         The device is specified by its location ID.
 
@@ -348,70 +388,79 @@ if SYSTEM_TYPE != "Linux":
             D2XX device handle (optional)
         """
         ft_handle = c_void_p()
-        result: FTStatus = _open_ex(
+        result: FtStatus = _open_ex(
             location_id,
             _OpenExFlag.BY_LOCATION,
             byref(ft_handle)
         )
 
-        no_err_set = set([
-            FTStatus.DEVICE_NOT_FOUND,
-            FTStatus.INVALID_ARGS,
-            FTStatus.NOT_SUPPORTED,
-            FTStatus.INVALID_PARAMETER
-        ])
-        if result == FTStatus.OK:
-            return FtHandle(ft_handle)
-        elif result in no_err_set:
-            return None
+        if result == FtStatus.OK:
+            return Ok(FtHandle(ft_handle))
         else:
-            raise RuntimeError("TODO")
+            return Err(result)
 
 
 def close(ft_handle: FtHandle) -> None:
     """Close an open device.
 
-    Arguments:
-        ft_handle:  Handle to an opened D2XX device
+    Args:
+        ft_handle:      Handle to an opened D2XX device
+
+    Raises:
+        FtException:    In case of unexpected error
     """
-    result: FTStatus = _close(ft_handle)
+    result: FtStatus = _close(ft_handle)
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
+    if result not in [
+        FtStatus.OK,
+        FtStatus.DEVICE_NOT_OPENED,
+        FtStatus.INVALID_HANDLE,
+        FtStatus.DEVICE_NOT_FOUND,
+    ]:
+        raise FtException(result)
 
 
-def get_device_info(ft_handle: FtHandle) -> ShortDeviceInfo:
+def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
     """Get device information for an open device.
 
-    Arguments:
-        ft_handle:  Handle to an opened D2XX device
+    Args:
+        ft_handle:          Handle to an opened D2XX device
 
-    Return:
-        Short device info
+    Raises:
+        FtException:        In case of unexpected error
+
+    Returns:
+        ShortDeviceInfo:    Short device info
     """
     dev_type = c_uint()
     dev_id = c_uint()
     serial_number = create_string_buffer(SERIAL_NUMBER_MAX_LEN)
     description = create_string_buffer(DESCRIPTION_MAX_LEN)
 
-    result: FTStatus = _get_device_info(
+    result: FtStatus = _get_device_info(
         ft_handle,
         byref(dev_type),
         byref(dev_id),
-        byref(serial_number),
-        byref(description),
+        serial_number,
+        description,
         None
     )
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
-
-    return ShortDeviceInfo(
-        dev_type=DeviceType(dev_type.value),
-        dev_id=dev_id.value,
-        serial_number=serial_number.value,
-        description=description.value
-    )
+    if result == FtStatus.OK:
+        return ShortDeviceInfo(
+            dev_type=DeviceType(dev_type.value),
+            dev_id=dev_id.value,
+            serial_number=serial_number.value.decode('utf-8'),
+            description=description.value.decode('utf-8')
+        )
+    elif result in {
+        FtStatus.DEVICE_NOT_FOUND,
+        FtStatus.DEVICE_NOT_OPENED,
+        FtStatus.INVALID_HANDLE
+    }:
+        return None
+    else:
+        raise FtException(result)
 
 
 class DriverVersion(NamedTuple):
@@ -424,19 +473,22 @@ if SYSTEM_TYPE == "Windows":
     def get_driver_version(ft_handle: FtHandle) -> DriverVersion:
         """This function returns the D2XX driver version number.
 
-        Arguments:
-            ft_handle:  Handle to an opened D2XX device
+        Args:
+            ft_handle:      Handle to an opened D2XX device
 
-        Return:
-            NamedTuple containing driver version information
+        Raises:
+            FtException:    In case of unexpected error
+
+        Returns:
+            DriverVersion:  Tuple containing detailed driver version information
         """
         driver_version = c_uint32()
 
-        result: FTStatus = _get_driver_version(
+        result: FtStatus = _get_driver_version(
             ft_handle, byref(driver_version))
 
-        if result != FTStatus.OK:
-            raise RuntimeError("TODO")
+        if result != FtStatus.OK:
+            raise FtException(result)
 
         return DriverVersion(
             build_version=driver_version.value & 0xFF,
@@ -448,23 +500,35 @@ if SYSTEM_TYPE == "Windows":
 def purge(ft_handle: FtHandle, purge_type_mask: PurgeType) -> None:
     """This function purges receive and transmit buffers in the device.
 
-    Arguments:
-        ft_handle:  Handle to an opened D2XX device
-    """
-    result: FTStatus = _purge(ft_handle, purge_type_mask)
+    Args:
+        ft_handle:          Handle to an opened D2XX device
+        purge_type_mask:    Which buffers to purge (Tx and/or Rx)
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
+    Raises:
+        FtException:        In case of unexpected error
+    """
+    result: FtStatus = _purge(ft_handle, purge_type_mask)
+
+    if result not in {
+        FtStatus.OK, FtStatus.INVALID_HANDLE,
+        FtStatus.DEVICE_NOT_FOUND, FtStatus.DEVICE_NOT_OPENED
+    }:
+        raise FtException(result)
 
 
 def reset_device(ft_handle: FtHandle) -> None:
     """This function sends a reset command to the device.
 
-    Arguments:
-        ft_handle:  Handle to an opened D2XX device
+    Args:
+        ft_handle:      Handle to an opened D2XX device
 
+    Raises:
+        FtException:    In case of unexpected error
     """
-    result: FTStatus = _reset_device(ft_handle)
+    result: FtStatus = _reset_device(ft_handle)
 
-    if result != FTStatus.OK:
-        raise RuntimeError("TODO")
+    if result not in {
+        FtStatus.OK, FtStatus.INVALID_HANDLE,
+        FtStatus.DEVICE_NOT_FOUND, FtStatus.DEVICE_NOT_OPENED
+    }:
+        raise FtException(result)
