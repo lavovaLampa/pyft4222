@@ -3,19 +3,23 @@ from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_uint16, c_uint8
 
 from enum import IntEnum, auto
-from typing import Literal, NewType, Union, overload
+from pathlib import Path
+from typing import Final, Literal, NewType, Union, overload
 
 from . import ClkPhase, ClkPolarity
-from .. import FT4222Status
+from .. import Ft4222Status
 from ... import FtHandle
 
+MODULE_PATH: Final[Path] = Path(__file__).parent
+
 try:
-    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary(
+        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
 
-SpiSlaveRawHandle = NewType('SpiSlaveHandle', c_void_p)
+SpiSlaveRawHandle = NewType('SpiSlaveRawHandle', c_void_p)
 SpiSlaveProtoHandle = NewType('SpiSlaveProtoHandle', c_void_p)
 SpiSlaveHandle = Union[SpiSlaveRawHandle, SpiSlaveProtoHandle]
 
@@ -28,29 +32,29 @@ class IoProtocol(IntEnum):
 
 _init = ftlib.FT4222_SPISlave_Init
 _init.argtypes = [c_void_p]
-_init.restype = FT4222Status
+_init.restype = Ft4222Status
 
 _init_ex = ftlib.FT4222_SPISlave_InitEx
 _init_ex.argtypes = [c_void_p, c_uint]
-_init_ex.restype = FT4222Status
+_init_ex.restype = Ft4222Status
 
 _set_mode = ftlib.FT4222_SPISlave_SetMode
 _set_mode.argtypes = [c_void_p, c_uint, c_uint]
-_set_mode.restype = FT4222Status
+_set_mode.restype = Ft4222Status
 
 _get_rx_status = ftlib.FT4222_SPISlave_GetRxStatus
 _get_rx_status.argtypes = [c_void_p, POINTER(c_uint16)]
-_get_rx_status.restype = FT4222Status
+_get_rx_status.restype = Ft4222Status
 
 _read = ftlib.FT4222_SPISlave_Read
 _read.argtypes = [c_void_p, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16)]
-_read.restype = FT4222Status
+_read.restype = Ft4222Status
 
 _write = ftlib.FT4222_SPISlave_Write
 _write.argtypes = [c_void_p, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16)]
-_write.restype = FT4222Status
+_write.restype = Ft4222Status
 
 
 def init(ft_handle: FtHandle) -> SpiSlaveProtoHandle:
@@ -67,9 +71,9 @@ def init(ft_handle: FtHandle) -> SpiSlaveProtoHandle:
     Returns:
         SpiSlaveProtoHandle:    Handle to FT4222 device in SPI Slave mode with protocol
     """
-    result: FT4222Status = _init(ft_handle)
+    result: Ft4222Status = _init(ft_handle)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return SpiSlaveProtoHandle(ft_handle)
@@ -78,16 +82,16 @@ def init(ft_handle: FtHandle) -> SpiSlaveProtoHandle:
 @overload
 def init_ex(
     ft_handle: FtHandle,
-    protocol: Union[Literal[IoProtocol.WITH_PROTOCOL],
-                    Literal[IoProtocol.NO_ACK]]
-) -> SpiSlaveProtoHandle: ...
+    protocol: Literal[IoProtocol.NO_PROTOCOL]
+) -> SpiSlaveRawHandle: ...
 
 
 @overload
 def init_ex(
     ft_handle: FtHandle,
-    protocol: Literal[IoProtocol.NO_PROTOCOL]
-) -> SpiSlaveHandle: ...
+    protocol: Union[Literal[IoProtocol.WITH_PROTOCOL],
+                    Literal[IoProtocol.NO_ACK]]
+) -> SpiSlaveProtoHandle: ...
 
 
 def init_ex(ft_handle: FtHandle, protocol: IoProtocol) -> SpiSlaveHandle:
@@ -105,9 +109,9 @@ def init_ex(ft_handle: FtHandle, protocol: IoProtocol) -> SpiSlaveHandle:
     Returns:
         SpiSlaveHandle: Handle to FT4222 device in selected protocol mode
     """
-    result: FT4222Status = _init_ex(ft_handle, protocol)
+    result: Ft4222Status = _init_ex(ft_handle, protocol)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     if protocol == IoProtocol.NO_PROTOCOL:
@@ -131,13 +135,13 @@ def set_mode(
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _set_mode(
+    result: Ft4222Status = _set_mode(
         ft_handle,
         clk_polarity,
         clk_phase
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
 
@@ -154,12 +158,12 @@ def get_rx_status(ft_handle: SpiSlaveHandle) -> int:
     """
     rx_size = c_uint16()
 
-    result: FT4222Status = _get_rx_status(
+    result: Ft4222Status = _get_rx_status(
         ft_handle,
         byref(rx_size)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return rx_size.value
@@ -181,14 +185,14 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
-    result: FT4222Status = _read(
+    result: Ft4222Status = _read(
         ft_handle,
         read_buffer,
         len(read_buffer),
         byref(bytes_read)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes(read_buffer[:bytes_read.value])
@@ -212,14 +216,14 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
     """
     bytes_written = c_uint16()
 
-    result: FT4222Status = _write(
+    result: Ft4222Status = _write(
         ft_handle,
         write_data,
         len(write_data),
         byref(bytes_written)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes_written.value

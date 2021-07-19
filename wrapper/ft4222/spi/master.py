@@ -3,14 +3,19 @@ from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_uint8, c_uint16, c_bool, c_uint32
 
 from enum import IntEnum, IntFlag, auto
-from typing import Literal, NewType, NoReturn, Optional, Union, overload
+from ft4222 import Ft4222
+from pathlib import Path
+from typing import Final, Literal, NewType, NoReturn, Optional, Union, overload
 
-from . import ClkPhase, ClkPolarity
-from .. import FT4222Status
+from . import ClkPhase, ClkPolarity, Ft4222Exception, SOFT_ERROR_SET
+from .. import Ft4222Status
 from ... import FtHandle
 
+MODULE_PATH: Final[Path] = Path(__file__).parent
+
 try:
-    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary(
+        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -41,8 +46,8 @@ class ClkDiv(IntEnum):
 
 
 class CsPolarity(IntEnum):
-    CS_ACTIVE_NEGTIVE = 0
-    CS_ACTIVE_POSTIVE = auto()
+    ACTIVE_LOW = 0
+    ACTIVE_HIGH = auto()
 
 
 class SsoMap(IntFlag):
@@ -54,35 +59,35 @@ class SsoMap(IntFlag):
 
 _init = ftlib.FT4222_SPIMaster_Init
 _init.argtypes = [c_void_p, c_uint, c_uint, c_uint, c_uint, c_uint8]
-_init.restype = FT4222Status
+_init.restype = Ft4222Status
 
 _set_cs = ftlib.FT4222_SPIMaster_SetCS
 _set_cs.argtypes = [c_void_p, c_uint]
-_set_cs.restype = FT4222Status
+_set_cs.restype = Ft4222Status
 
 _set_lines = ftlib.FT4222_SPIMaster_SetLines
 _set_lines.argtypes = [c_void_p, c_uint]
-_set_lines.restype = FT4222Status
+_set_lines.restype = Ft4222Status
 
 _single_read = ftlib.FT4222_SPIMaster_SingleRead
 _single_read.argtypes = [c_void_p, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16), c_bool]
-_single_read.restype = FT4222Status
+_single_read.restype = Ft4222Status
 
 _single_write = ftlib.FT4222_SPIMaster_SingleWrite
 _single_write.argtypes = [c_void_p, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16), c_bool]
-_single_write.restype = FT4222Status
+_single_write.restype = Ft4222Status
 
 _single_read_write = ftlib.FT4222_SPIMaster_SingleReadWrite
 _single_read_write.argtypes = [c_void_p, POINTER(c_uint8), POINTER(
     c_uint8), c_uint16, POINTER(c_uint16), c_bool]
-_single_read_write.restype = FT4222Status
+_single_read_write.restype = Ft4222Status
 
 _multi_read_write = ftlib.FT4222_SPIMaster_MultiReadWrite
 _multi_read_write.argtypes = [c_void_p, POINTER(c_uint8), POINTER(
     c_uint8), c_uint8, c_uint16, c_uint16, POINTER(c_uint32)]
-_multi_read_write.restype = FT4222Status
+_multi_read_write.restype = Ft4222Status
 
 
 @overload
@@ -137,12 +142,12 @@ def init(
         sso_map:        Slave selection output pin map
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         SpiMasterHandle:    Handle to initialized SPI Master FT4222 device
     """
-    result: FT4222Status = _init(
+    result: Ft4222Status = _init(
         ft_handle,
         io_mode,
         clock_div,
@@ -151,15 +156,16 @@ def init(
         sso_map
     )
 
-    if result != FT4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     if io_mode == IoMode.IO_SINGLE:
         return SpiMasterSingleHandle(ft_handle)
     elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
         return SpiMasterMultiHandle(ft_handle)
     else:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(
+            result, "Invalid IoMode! Cannot use 'IoMode.NONE'.")
 
 
 def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None:
@@ -172,12 +178,12 @@ def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None
         cs_polarity:    Polarity of chip select signal
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
-    result: FT4222Status = _set_cs(ft_handle, cs_polarity)
+    result: Ft4222Status = _set_cs(ft_handle, cs_polarity)
 
-    if result != FT4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
 
 @overload
@@ -212,22 +218,25 @@ def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> Union[SpiMasterHan
         io_mode:    Desired IO mode (single, dual, quad)
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         SpiMasterHandle:    Handle to an initialized FT4222 device in SPI Master mode with selected io setting
     """
-    result: FT4222Status = _set_lines(ft_handle, io_mode)
+    result: Ft4222Status = _set_lines(ft_handle, io_mode)
 
-    if result != FT4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     if io_mode == IoMode.IO_SINGLE:
         return SpiMasterSingleHandle(ft_handle)
     elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
         return SpiMasterMultiHandle(ft_handle)
     else:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(
+            result,
+            "Invalid IoMode! Cannot use 'IoMode.NONE'."
+        )
 
 
 def single_read(
@@ -243,7 +252,7 @@ def single_read(
         end_transaction:    De-assert slave select pin at the end of transaction?
 
     Raises:
-        RuntimeError:      TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         bytes:              Read data (count can be lower than requested) # TODO: Can it?
@@ -251,7 +260,7 @@ def single_read(
     buffer = (c_uint8 * read_byte_count)()
     bytes_transferred = c_uint16()
 
-    result: FT4222Status = _single_read(
+    result: Ft4222Status = _single_read(
         ft_handle,
         buffer,
         read_byte_count,
@@ -259,8 +268,8 @@ def single_read(
         end_transaction
     )
 
-    if result != FT4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     return bytes(buffer)
 
@@ -278,13 +287,13 @@ def single_write(
         end_transaction:    De-assert slave select pin at the end of transaction?
 
     Raises:
-        RuntimeError:       TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:                Number of transmitted bytes
     """
     bytes_transferred = c_uint16()
-    result: FT4222Status = _single_write(
+    result: Ft4222Status = _single_write(
         ft_handle,
         write_data,
         len(write_data),
@@ -292,8 +301,8 @@ def single_write(
         end_transaction
     )
 
-    if result != FT4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     return bytes_transferred.value
 
@@ -311,7 +320,7 @@ def single_read_write(
         end_transaction:    De-assert slave select pin at the end of transaction?
 
     Raises:
-        RuntimeError:       TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         bytes:              Received data
@@ -319,7 +328,7 @@ def single_read_write(
     bytes_transferred = c_uint16()
     read_buffer = (c_uint8 * len(write_data))()
 
-    result: FT4222Status = _single_read_write(
+    result: Ft4222Status = _single_read_write(
         ft_handle,
         read_buffer,
         write_data,
@@ -328,8 +337,8 @@ def single_read_write(
         end_transaction
     )
 
-    if result != FT4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     return bytes(read_buffer)
 
@@ -381,9 +390,10 @@ def multi_read_write(
     Returns:
         bytes:                      Read data (if any)
     """
+    # FIXME: Add assert for length
     read_buffer = (c_uint8 * multi_read_byte_count)()
     bytes_read = c_uint16()
-    result: FT4222Status = _multi_read_write(
+    result: Ft4222Status = _multi_read_write(
         ft_handle,
         read_buffer,
         write_data,
@@ -393,7 +403,7 @@ def multi_read_write(
         byref(bytes_read)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes(read_buffer[:bytes_read])

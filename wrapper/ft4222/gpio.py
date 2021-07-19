@@ -3,13 +3,17 @@ from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_bool, c_uint16
 
 from enum import IntEnum, auto
+from pathlib import Path
 from typing import Final, List, NewType, Tuple
 
-from . import FT4222Status, GpioTrigger
+from . import Ft4222Status, GpioTrigger
 from .. import FtHandle
 
+MODULE_PATH: Final[Path] = Path(__file__).parent
+
 try:
-    ftlib = cdll.LoadLibrary('../dlls/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary(
+        str(MODULE_PATH / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -33,32 +37,32 @@ class PortId(IntEnum):
 
 _init = ftlib.FT4222_GPIO_Init
 _init.argtypes = [c_void_p, c_uint * 4]
-_init.restype = FT4222Status
+_init.restype = Ft4222Status
 
 _read = ftlib.FT4222_GPIO_Read
 _read.argtypes = [c_void_p, c_uint, POINTER(c_bool)]
-_read.restype = FT4222Status
+_read.restype = Ft4222Status
 
 _write = ftlib.FT4222_GPIO_Write
 _write.argtypes = [c_void_p, c_uint, c_bool]
-_write.restype = FT4222Status
+_write.restype = Ft4222Status
 
 _set_input_trigger = ftlib.FT4222_GPIO_SetInputTrigger
 _set_input_trigger.argtypes = [c_void_p, c_uint, c_uint]
-_set_input_trigger.restype = FT4222Status
+_set_input_trigger.restype = Ft4222Status
 
 _get_trigger_status = ftlib.FT4222_GPIO_GetTriggerStatus
 _get_trigger_status.argtypes = [c_void_p, c_uint, POINTER(c_uint16)]
-_get_trigger_status.restype = FT4222Status
+_get_trigger_status.restype = Ft4222Status
 
 _read_trigger_queue = ftlib.FT4222_GPIO_ReadTriggerQueue
 _read_trigger_queue.argtypes = [
     c_void_p, c_uint, POINTER(c_uint), c_uint16, POINTER(c_uint16)]
-_read_trigger_queue.restype = FT4222Status
+_read_trigger_queue.restype = Ft4222Status
 
 _set_waveform_mode = ftlib.FT4222_GPIO_SetWaveFormMode
 _set_waveform_mode.argtypes = [c_void_p, c_bool]
-_set_waveform_mode.restype = FT4222Status
+_set_waveform_mode.restype = Ft4222Status
 
 
 # FIXME: Better argument typing!
@@ -82,9 +86,9 @@ def init(
     """
     dir_array = (c_uint * _GPIO_COUNT)(dirs)
 
-    result: FT4222Status = _init(ft_handle, dir_array)
+    result: Ft4222Status = _init(ft_handle, dir_array)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return GpioHandle(ft_handle)
@@ -105,13 +109,13 @@ def read(ft_handle: GpioHandle, port_id: PortId) -> bool:
     """
     gpio_state = c_bool()
 
-    result: FT4222Status = _read(
+    result: Ft4222Status = _read(
         ft_handle,
         port_id,
         byref(gpio_state)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return gpio_state.value
@@ -128,13 +132,13 @@ def write(ft_handle: GpioHandle, port_id: PortId, state: bool) -> None:
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _write(
+    result: Ft4222Status = _write(
         ft_handle,
         port_id,
         state
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
 
@@ -164,13 +168,13 @@ def set_input_trigger(
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _set_input_trigger(
+    result: Ft4222Status = _set_input_trigger(
         ft_handle,
         port_id,
         trigger
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
 
@@ -189,13 +193,13 @@ def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
     """
     queue_size = c_uint16()
 
-    result: FT4222Status = _get_trigger_status(
+    result: Ft4222Status = _get_trigger_status(
         ft_handle,
         port_id,
         byref(queue_size)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return queue_size.value
@@ -224,7 +228,7 @@ def read_trigger_queue(
     event_buffer = (c_uint * max_read_size)()
     events_read = c_uint16()
 
-    result: FT4222Status = _read_trigger_queue(
+    result: Ft4222Status = _read_trigger_queue(
         ft_handle,
         port_id,
         event_buffer,
@@ -232,7 +236,7 @@ def read_trigger_queue(
         byref(events_read)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return list(map(lambda x: GpioTrigger(x), event_buffer[:events_read.value]))
@@ -252,7 +256,7 @@ def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _set_waveform_mode(ft_handle, enable)
+    result: Ft4222Status = _set_waveform_mode(ft_handle, enable)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')

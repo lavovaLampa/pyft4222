@@ -3,13 +3,17 @@ from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint32, c_uint8, c_uint16
 
 from enum import IntEnum, IntFlag
-from typing import NewType
+from pathlib import Path
+from typing import Final, NewType
 
-from .. import FT4222Status
+from .. import Ft4222Status
 from ... import FtHandle
 
+MODULE_PATH: Final[Path] = Path(__file__).parent
+
 try:
-    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary(
+        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -37,39 +41,39 @@ class Status(IntFlag):
 
 _init = ftlib.FT4222_I2CMaster_Init
 _init.argtypes = [c_void_p, c_uint32]
-_init.restype = FT4222Status
+_init.restype = Ft4222Status
 
 _read = ftlib.FT4222_I2CMaster_Read
 _read.argtypes = [c_void_p, c_uint16, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16)]
-_read.restype = FT4222Status
+_read.restype = Ft4222Status
 
 _write = ftlib.FT4222_I2CMaster_Write
 _write.argtypes = [c_void_p, c_uint16, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16)]
-_write.restype = FT4222Status
+_write.restype = Ft4222Status
 
 _read_ex = ftlib.FT4222_I2CMaster_ReadEx
 _read_ex.argtypes = [c_void_p, c_uint16, c_uint8,
                      POINTER(c_uint8), c_uint16, POINTER(c_uint16)]
-_read_ex.restype = FT4222Status
+_read_ex.restype = Ft4222Status
 
 _write_ex = ftlib.FT4222_I2CMaster_WriteEx
 _write_ex.argtypes = [c_void_p, c_uint16, c_uint8,
                       POINTER(c_uint8), c_uint16, POINTER(c_uint16)]
-_write_ex.restype = FT4222Status
+_write_ex.restype = Ft4222Status
 
 _reset = ftlib.FT4222_I2CMaster_Reset
 _reset.argtypes = [c_void_p]
-_reset.restype = FT4222Status
+_reset.restype = Ft4222Status
 
 _get_status = ftlib.FT4222_I2CMaster_GetStatus
 _get_status.argtypes = [c_void_p, POINTER(c_uint8)]
-_get_status.restype = FT4222Status
+_get_status.restype = Ft4222Status
 
 _reset_bus = ftlib.FT4222_I2CMaster_ResetBus
 _reset_bus.argtypes = [c_void_p]
-_reset_bus.restype = FT4222Status
+_reset_bus.restype = Ft4222Status
 
 
 # FIXME: Check kbps typing?
@@ -86,12 +90,12 @@ def init(ft_handle: FtHandle, kbps: int) -> I2cMasterHandle:
     Returns:
         I2cMasterHandle:    Handle to initialized FT4222 device in I2C Master mode
     """
-    result: FT4222Status = _init(
+    result: Ft4222Status = _init(
         ft_handle,
         kbps
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return I2cMasterHandle(ft_handle)
@@ -118,7 +122,7 @@ def read(
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
-    result: FT4222Status = _read(
+    result: Ft4222Status = _read(
         ft_handle,
         dev_address,
         read_buffer,
@@ -126,7 +130,7 @@ def read(
         byref(bytes_read)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes(read_buffer[:bytes_read.value])
@@ -152,7 +156,7 @@ def write(
     """
     bytes_written = c_uint16()
 
-    result: FT4222Status = _write(
+    result: Ft4222Status = _write(
         ft_handle,
         dev_address,
         write_data,
@@ -160,7 +164,7 @@ def write(
         byref(bytes_written)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes_written.value
@@ -191,7 +195,7 @@ def read_ex(
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
-    result: FT4222Status = _read_ex(
+    result: Ft4222Status = _read_ex(
         ft_handle,
         dev_address,
         flag,
@@ -200,7 +204,7 @@ def read_ex(
         byref(bytes_read)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes(read_buffer[:bytes_read.value])
@@ -230,7 +234,7 @@ def write_ex(
     """
     bytes_written = c_uint16()
 
-    result: FT4222Status = _write_ex(
+    result: Ft4222Status = _write_ex(
         ft_handle,
         dev_address,
         flag,
@@ -239,7 +243,7 @@ def write_ex(
         byref(bytes_written)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes_written.value
@@ -258,9 +262,9 @@ def reset(ft_handle: I2cMasterHandle) -> None:
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _reset(ft_handle)
+    result: Ft4222Status = _reset(ft_handle)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
 
@@ -280,10 +284,10 @@ def get_status(ft_handle: I2cMasterHandle) -> Status:
     """
     status = c_uint8()
 
-    result: FT4222Status = _get_status(
+    result: Ft4222Status = _get_status(
         ft_handle, byref(status))
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return Status(status.value)
@@ -302,7 +306,7 @@ def reset_bus(ft_handle: I2cMasterHandle) -> None:
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _reset_bus(ft_handle)
+    result: Ft4222Status = _reset_bus(ft_handle)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')

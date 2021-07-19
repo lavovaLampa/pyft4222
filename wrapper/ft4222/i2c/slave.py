@@ -1,14 +1,18 @@
 from ctypes import cdll
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint8, c_uint16, c_bool
+from pathlib import Path
 
-from typing import NewType
+from typing import Final, NewType
 
-from .. import FT4222Status
+from .. import Ft4222Status
 from ... import FtHandle
 
+MODULE_PATH: Final[Path] = Path(__file__).parent
+
 try:
-    ftlib = cdll.LoadLibrary('../../dlls/libft4222.so.1.4.4.44')
+    ftlib = cdll.LoadLibrary(
+        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
@@ -19,41 +23,41 @@ I2cSlaveHandle = NewType('I2cSlaveHandle', c_void_p)
 
 _init = ftlib.FT4222_I2CSlave_Init
 _init.argtypes = [c_void_p]
-_init.restype = FT4222Status
+_init.restype = Ft4222Status
 
 _reset = ftlib.FT4222_I2CSlave_Reset
 _reset.argtypes = [c_void_p]
-_reset.restype = FT4222Status
+_reset.restype = Ft4222Status
 
 _get_address = ftlib.FT4222_I2CSlave_GetAddress
 _get_address.argtypes = [c_void_p, POINTER(c_uint8)]
-_get_address.restype = FT4222Status
+_get_address.restype = Ft4222Status
 
 _set_address = ftlib.FT4222_I2CSlave_SetAddress
 _set_address.argtypes = [c_void_p, c_uint8]
-_set_address.restype = FT4222Status
+_set_address.restype = Ft4222Status
 
 _get_rx_status = ftlib.FT4222_I2CSlave_GetRxStatus
 _get_rx_status.argtypes = [c_void_p, POINTER(c_uint16)]
-_get_rx_status.restype = FT4222Status
+_get_rx_status.restype = Ft4222Status
 
 _read = ftlib.FT4222_I2CSlave_Read
 _read.argtypes = [c_void_p, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16)]
-_read.restype = FT4222Status
+_read.restype = Ft4222Status
 
 _write = ftlib.FT4222_I2CSlave_Write
 _write.argtypes = [c_void_p, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16)]
-_write.restype = FT4222Status
+_write.restype = Ft4222Status
 
 _set_clock_stretch = ftlib.FT4222_I2CSlave_SetClockStretch
 _set_clock_stretch.argtypes = [c_void_p, c_bool]
-_set_clock_stretch.restype = FT4222Status
+_set_clock_stretch.restype = Ft4222Status
 
 _set_resp_word = ftlib.FT4222_I2CSlave_SetRespWord
 _set_resp_word.argtypes = [c_void_p, c_uint8]
-_set_resp_word.restype = FT4222Status
+_set_resp_word.restype = Ft4222Status
 
 
 def init(ft_handle: FtHandle) -> I2cSlaveHandle:
@@ -70,9 +74,9 @@ def init(ft_handle: FtHandle) -> I2cSlaveHandle:
     Returns:
         I2cSlaveHandle: Handle to initialized FT4222 device in I2C Slave mode
     """
-    result: FT4222Status = _init(ft_handle)
+    result: Ft4222Status = _init(ft_handle)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return I2cSlaveHandle(ft_handle)
@@ -89,9 +93,9 @@ def reset(ft_handle: I2cSlaveHandle) -> None:
     Raises:
         RuntimeError:    TODO
     """
-    result: FT4222Status = _reset(ft_handle)
+    result: Ft4222Status = _reset(ft_handle)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
 
@@ -111,10 +115,10 @@ def get_address(ft_handle: I2cSlaveHandle) -> int:
     """
     addr = c_uint8()
 
-    result: FT4222Status = _get_address(
+    result: Ft4222Status = _get_address(
         ft_handle, byref(addr))
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return addr.value
@@ -130,9 +134,9 @@ def set_address(ft_handle: I2cSlaveHandle, addr: int) -> None:
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _set_address(ft_handle, addr)
+    result: Ft4222Status = _set_address(ft_handle, addr)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
 
@@ -150,10 +154,10 @@ def get_rx_status(ft_handle: I2cSlaveHandle) -> int:
     """
     rx_size = c_uint16()
 
-    result: FT4222Status = _get_rx_status(
+    result: Ft4222Status = _get_rx_status(
         ft_handle, byref(rx_size))
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return rx_size.value
@@ -175,14 +179,14 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
-    result: FT4222Status = _read(
+    result: Ft4222Status = _read(
         ft_handle,
         read_buffer,
         len(read_buffer),
         byref(bytes_read)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes(read_buffer[:bytes_read.value])
@@ -203,14 +207,14 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
     """
     bytes_written = c_uint16()
 
-    result: FT4222Status = _write(
+    result: Ft4222Status = _write(
         ft_handle,
         write_data,
         len(write_data),
         byref(bytes_written)
     )
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
     return bytes_written.value
@@ -234,10 +238,10 @@ def set_clock_stretch(ft_handle: I2cSlaveHandle, enable: bool) -> None:
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _set_clock_stretch(
+    result: Ft4222Status = _set_clock_stretch(
         ft_handle, enable)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
 
 
@@ -257,8 +261,8 @@ def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
     Raises:
         RuntimeError:   TODO
     """
-    result: FT4222Status = _set_resp_word(
+    result: Ft4222Status = _set_resp_word(
         ft_handle, response_word)
 
-    if result != FT4222Status.OK:
+    if result != Ft4222Status.OK:
         raise RuntimeError('TODO')
