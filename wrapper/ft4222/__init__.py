@@ -3,14 +3,8 @@ from ctypes import Structure, POINTER, byref
 from ctypes import c_uint, c_void_p, c_bool, c_uint16
 
 from enum import IntEnum, IntFlag, auto
-from ft4222 import Ft4222
 from pathlib import Path
-from typing import Final, NamedTuple, Optional, Set, Union
-
-from .spi import SpiHandle
-from .spi.slave import SpiSlaveProtoHandle
-from .i2c import I2cHandle
-from .gpio import GpioHandle
+from typing import Final, NamedTuple, Optional, Set
 
 from .. import FtHandle
 
@@ -22,8 +16,6 @@ try:
 except OSError as e:
     print("Unable to load shared library!")
     exit(1)
-
-InitializedHandle = Union[SpiHandle, I2cHandle, GpioHandle]
 
 
 class Ft4222Status(IntEnum):
@@ -110,10 +102,6 @@ class GpioTrigger(IntFlag):
     LEVEL_LOW = 0X08
 
 
-class EventType(IntFlag):
-    EVENT_RXCHAR = 8
-
-
 class _RawVersion(Structure):
     _fields_ = [
         ("chip_version", c_uint),
@@ -161,9 +149,6 @@ _get_max_transfer_size = ftlib.FT4222_GetMaxTransferSize
 _get_max_transfer_size.argtypes = [c_void_p, POINTER(c_uint16)]
 _get_max_transfer_size.restype = Ft4222Status
 
-_set_event_notification = ftlib.FT4222_SetEventNotification
-_set_event_notification.argtypes = [c_void_p, c_uint, c_void_p]
-_set_event_notification.restype = Ft4222Status
 
 _get_version = ftlib.FT4222_GetVersion
 _get_version.argtypes = [c_void_p, POINTER(_RawVersion)]
@@ -174,7 +159,7 @@ _chip_reset.argtypes = [c_void_p]
 _chip_reset.restype = Ft4222Status
 
 
-def uninitialize(ft_handle: InitializedHandle) -> FtHandle:
+def uninitialize(ft_handle: FtHandle) -> FtHandle:
     """Release allocated resources.
 
     This function should be called before calling 'close()'.
@@ -183,12 +168,12 @@ def uninitialize(ft_handle: InitializedHandle) -> FtHandle:
         ft_handle:  Handle to an initialized FT4222 device
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
-    retval: Ft4222Status = _uninitialize(ft_handle)
+    result: Ft4222Status = _uninitialize(ft_handle)
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     return FtHandle(ft_handle)
 
@@ -204,12 +189,12 @@ def set_clock(ft_handle: FtHandle, clk_rate: ClockRate) -> None:
         clk_rate:   Desired system clock rate
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
-    retval: Ft4222Status = _set_clock(ft_handle, clk_rate)
+    result: Ft4222Status = _set_clock(ft_handle, clk_rate)
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
 
 def get_clock(ft_handle: FtHandle) -> ClockRate:
@@ -219,16 +204,16 @@ def get_clock(ft_handle: FtHandle) -> ClockRate:
         ft_handle:  Handle to an opened FT4222 device
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         ClockRate:  Current system clock rate
     """
     clk_rate = c_uint()
-    retval: Ft4222Status = _get_clock(ft_handle, byref(clk_rate))
+    result: Ft4222Status = _get_clock(ft_handle, byref(clk_rate))
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     return ClockRate(clk_rate.value)
 
@@ -246,12 +231,12 @@ def set_wakeup_interrupt(ft_handle: FtHandle, enable: bool) -> None:
         enable:     Enable wakeup/interrupt function?
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
-    retval: Ft4222Status = _set_wakeup_interrupt(ft_handle, enable)
+    result: Ft4222Status = _set_wakeup_interrupt(ft_handle, enable)
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
 
 def set_interrupt_trigger(ft_handle: FtHandle, trigger: GpioTrigger) -> None:
@@ -278,13 +263,13 @@ def set_interrupt_trigger(ft_handle: FtHandle, trigger: GpioTrigger) -> None:
         trigger:    WakeUp/Interrupt condition to set
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
-    retval: Ft4222Status = _set_interrupt_trigger(
+    result: Ft4222Status = _set_interrupt_trigger(
         ft_handle, trigger.value)
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
 
 def set_suspend_out(ft_handle: FtHandle, enable: bool) -> None:
@@ -304,12 +289,12 @@ def set_suspend_out(ft_handle: FtHandle, enable: bool) -> None:
         enable:     Enable suspend-out signaling?
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
-    retval: Ft4222Status = _set_suspend_out(ft_handle, enable)
+    result: Ft4222Status = _set_suspend_out(ft_handle, enable)
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
 
 def get_max_transfer_size(ft_handle: FtHandle) -> int:
@@ -322,49 +307,19 @@ def get_max_transfer_size(ft_handle: FtHandle) -> int:
         ft_handle:  Handle to an opened FT4222 device
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:    Maximum packet size in a transaction
     """
     max_size = c_uint16()
-    retval: Ft4222Status = _get_max_transfer_size(
+    result: Ft4222Status = _get_max_transfer_size(
         ft_handle, byref(max_size))
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     return max_size.value
-
-
-# FIXME: Proper typing
-def set_event_notification(
-    ft_handle: SpiSlaveProtoHandle,
-    mask: EventType,
-    param: c_void_p
-) -> None:
-    """Sets conditions for event notification.
-
-    An application can use this function to setup conditions which allow a thread to block until one of the conditions is met.
-    Typically, an application will create an event, call this function, and then block on the event.
-    When the conditions are met, the event is set, and the application thread unblocked.
-    Usually, the event is set to notify the application to check the condition.
-    The application needs to check the condition again before it goes to handle the condition.
-    The API is only valid when the device acts as SPI slave and SPI slave protocol is not 'IoProtocol.No_PROTOCOL'. 
-
-    Args:
-        ft_handle:  Handle to an initialized FT4222 device in SPI Slave mode
-        mask:       Event mask (i.e. select which events to react to)
-        param:      TODO
-
-    Raises:
-        RuntimeError:   TODO
-    """
-    retval: Ft4222Status = _set_event_notification(
-        ft_handle, mask.value, param)
-
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
 
 
 # FIXME: Add enum for chip version?
@@ -375,17 +330,17 @@ def get_version(ft_handle: FtHandle) -> Version:
         ft_handle:  Handle to an opened FT4222 device
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         Version:    NamedTuple containing version information
     """
     version_struct = _RawVersion()
-    retval: Ft4222Status = _get_version(
+    result: Ft4222Status = _get_version(
         ft_handle, byref(version_struct))
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
 
     return Version.from_raw(version_struct)
 
@@ -400,9 +355,9 @@ def chip_reset(ft_handle: FtHandle) -> None:
         ft_handle:  Handle to an opened FT4222 device
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
-    retval: Ft4222Status = _chip_reset(ft_handle)
+    result: Ft4222Status = _chip_reset(ft_handle)
 
-    if retval != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)

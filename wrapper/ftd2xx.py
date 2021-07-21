@@ -1,6 +1,6 @@
 from ctypes import cdll
 from ctypes import POINTER, byref, create_string_buffer, Structure
-from ctypes import c_uint, c_void_p, c_int, c_char_p, c_char, c_wchar_p, c_uint32
+from ctypes import c_uint, c_void_p, c_int, c_char_p, c_char, c_uint32
 
 from enum import IntEnum, IntFlag, auto
 from typing import Final, List, NamedTuple, Optional

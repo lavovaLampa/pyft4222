@@ -2,7 +2,7 @@ from ctypes import cdll
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_uint16, c_uint8
 
-from enum import IntEnum, auto
+from enum import IntEnum, IntFlag, auto
 from pathlib import Path
 from typing import Final, Literal, NewType, Union, overload
 
@@ -30,6 +30,10 @@ class IoProtocol(IntEnum):
     NO_ACK = auto()
 
 
+class EventType(IntFlag):
+    EVENT_RXCHAR = 8
+
+
 _init = ftlib.FT4222_SPISlave_Init
 _init.argtypes = [c_void_p]
 _init.restype = Ft4222Status
@@ -55,6 +59,10 @@ _write = ftlib.FT4222_SPISlave_Write
 _write.argtypes = [c_void_p, POINTER(
     c_uint8), c_uint16, POINTER(c_uint16)]
 _write.restype = Ft4222Status
+
+_set_event_notification = ftlib.FT4222_SetEventNotification
+_set_event_notification.argtypes = [c_void_p, c_uint, c_void_p]
+_set_event_notification.restype = Ft4222Status
 
 
 def init(ft_handle: FtHandle) -> Result[SpiSlaveProtoHandle, Ft4222Status]:
@@ -228,3 +236,34 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
         raise Ft4222Exception(result)
 
     return bytes_written.value
+
+# FIXME: Proper typing
+
+
+def set_event_notification(
+    ft_handle: SpiSlaveProtoHandle,
+    mask: EventType,
+    param: c_void_p
+) -> None:
+    """Sets conditions for event notification.
+
+    An application can use this function to setup conditions which allow a thread to block until one of the conditions is met.
+    Typically, an application will create an event, call this function, and then block on the event.
+    When the conditions are met, the event is set, and the application thread unblocked.
+    Usually, the event is set to notify the application to check the condition.
+    The application needs to check the condition again before it goes to handle the condition.
+    The API is only valid when the device acts as SPI slave and SPI slave protocol is not 'IoProtocol.No_PROTOCOL'. 
+
+    Args:
+        ft_handle:  Handle to an initialized FT4222 device in SPI Slave mode
+        mask:       Event mask (i.e. select which events to react to)
+        param:      TODO
+
+    Raises:
+        Ft4222Exception:    In case of unexpected error
+    """
+    result: Ft4222Status = _set_event_notification(
+        ft_handle, mask.value, param)
+
+    if result != Ft4222Status.OK:
+        raise Ft4222Exception(result)
