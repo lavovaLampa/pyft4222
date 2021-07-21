@@ -5,8 +5,8 @@ from pathlib import Path
 
 from typing import Final, NewType
 
-from .. import Ft4222Status
-from ... import FtHandle
+from .. import Ft4222Exception, Ft4222Status
+from ... import FtHandle, Result, Ok, Err
 
 MODULE_PATH: Final[Path] = Path(__file__).parent
 
@@ -60,7 +60,7 @@ _set_resp_word.argtypes = [c_void_p, c_uint8]
 _set_resp_word.restype = Ft4222Status
 
 
-def init(ft_handle: FtHandle) -> I2cSlaveHandle:
+def init(ft_handle: FtHandle) -> Result[I2cSlaveHandle, Ft4222Status]:
     """Initialized FT4222H as an I2C slave.
 
     After initialization, the I2C slave address is set to 0x40.
@@ -68,18 +68,15 @@ def init(ft_handle: FtHandle) -> I2cSlaveHandle:
     Args:
         ft_handle:      Handle to an opened FT4222 device
 
-    Raises:
-        RuntimeError:   TODO
-
     Returns:
-        I2cSlaveHandle: Handle to initialized FT4222 device in I2C Slave mode
+        Result:         Handle to initialized FT4222 device in I2C Slave mode
     """
     result: Ft4222Status = _init(ft_handle)
 
-    if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
-
-    return I2cSlaveHandle(ft_handle)
+    if result == Ft4222Status.OK:
+        return Ok(I2cSlaveHandle(ft_handle))
+    else:
+        return Err(result)
 
 
 def reset(ft_handle: I2cSlaveHandle) -> None:
@@ -91,12 +88,12 @@ def reset(ft_handle: I2cSlaveHandle) -> None:
         ft_handle:      Handle to an initialized FT4222 device in I2C Slave mode
 
     Raises:
-        RuntimeError:    TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _reset(ft_handle)
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
 
 def get_address(ft_handle: I2cSlaveHandle) -> int:
@@ -108,7 +105,7 @@ def get_address(ft_handle: I2cSlaveHandle) -> int:
         ft_handle:      Handle to an initialized FT4222 device in I2C Slave mode
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:            Current I2C slave address
@@ -119,7 +116,7 @@ def get_address(ft_handle: I2cSlaveHandle) -> int:
         ft_handle, byref(addr))
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return addr.value
 
@@ -132,12 +129,12 @@ def set_address(ft_handle: I2cSlaveHandle, addr: int) -> None:
         addr:           Address to be set
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _set_address(ft_handle, addr)
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
 
 def get_rx_status(ft_handle: I2cSlaveHandle) -> int:
@@ -147,7 +144,7 @@ def get_rx_status(ft_handle: I2cSlaveHandle) -> int:
         ft_handle:      Handle to an initialized FT4222 device in I2C Slave mode
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:            Number of bytes in Rx queue
@@ -158,7 +155,7 @@ def get_rx_status(ft_handle: I2cSlaveHandle) -> int:
         ft_handle, byref(rx_size))
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return rx_size.value
 
@@ -171,7 +168,7 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
         read_byte_count:    Number of bytes to read
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         bytes:              Read data
@@ -187,7 +184,7 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes(read_buffer[:bytes_read.value])
 
@@ -200,7 +197,7 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
         write_data:     Data to write into Tx queue
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:            Number of bytes written
@@ -215,7 +212,7 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes_written.value
 
@@ -236,13 +233,13 @@ def set_clock_stretch(ft_handle: I2cSlaveHandle, enable: bool) -> None:
         enable:         Enable clock stretching?
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _set_clock_stretch(
         ft_handle, enable)
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
 
 def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
@@ -259,10 +256,10 @@ def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
         response_word:  Response word to be set
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _set_resp_word(
         ft_handle, response_word)
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)

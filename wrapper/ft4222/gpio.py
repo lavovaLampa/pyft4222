@@ -3,11 +3,12 @@ from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_bool, c_uint16
 
 from enum import IntEnum, auto
+from os import error
 from pathlib import Path
 from typing import Final, List, NewType, Tuple
 
-from . import Ft4222Status, GpioTrigger
-from .. import FtHandle
+from . import Ft4222Exception, Ft4222Status, GpioTrigger
+from .. import Err, FtHandle, Ok, Result
 
 MODULE_PATH: Final[Path] = Path(__file__).parent
 
@@ -69,7 +70,7 @@ _set_waveform_mode.restype = Ft4222Status
 def init(
     ft_handle: FtHandle,
     dirs: Tuple[Direction, Direction, Direction, Direction]
-) -> GpioHandle:
+) -> Result[GpioHandle, Ft4222Status]:
     """Initialize the GPIO interface of the FT4222H.
 
     NOTE: The GPIO interface is available on the 2nd USB interface in mode 0 or on the 4th USB interface in mode 1.
@@ -78,20 +79,17 @@ def init(
         ft_handle:      Handle to an opened FT4222 device
         dirs:           Tuple of directions to be set for each GPIO index - [0, 1, 2, 3]
 
-    Raises:
-        RuntimeError:   TODO
-
     Returns:
-        GpioHandle:     Handle to initialized FT4222 device in GPIO mode
+        Result:         Handle to initialized FT4222 device in GPIO mode
     """
     dir_array = (c_uint * _GPIO_COUNT)(dirs)
 
     result: Ft4222Status = _init(ft_handle, dir_array)
 
-    if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
-
-    return GpioHandle(ft_handle)
+    if result == Ft4222Status.OK:
+        return Ok(GpioHandle(ft_handle))
+    else:
+        return Err(result)
 
 
 def read(ft_handle: GpioHandle, port_id: PortId) -> bool:
@@ -102,7 +100,7 @@ def read(ft_handle: GpioHandle, port_id: PortId) -> bool:
         port_id:        GPIO port index
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         bool:           Is the port active/high?
@@ -116,7 +114,7 @@ def read(ft_handle: GpioHandle, port_id: PortId) -> bool:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return gpio_state.value
 
@@ -130,7 +128,7 @@ def write(ft_handle: GpioHandle, port_id: PortId, state: bool) -> None:
         state:          State to set
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _write(
         ft_handle,
@@ -139,7 +137,7 @@ def write(ft_handle: GpioHandle, port_id: PortId, state: bool) -> None:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
 
 def set_input_trigger(
@@ -166,7 +164,7 @@ def set_input_trigger(
         trigger:        Trigger type mask (using OR operator)
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _set_input_trigger(
         ft_handle,
@@ -175,7 +173,7 @@ def set_input_trigger(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
 
 def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
@@ -186,7 +184,7 @@ def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
         port_id:        GPIO port index
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:            Number of triggers in event queue for selected GPIO port
@@ -200,7 +198,7 @@ def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return queue_size.value
 
@@ -237,7 +235,7 @@ def read_trigger_queue(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return list(map(lambda x: GpioTrigger(x), event_buffer[:events_read.value]))
 
@@ -254,9 +252,9 @@ def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:
         enable:         Enable WaveForm mode?
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _set_waveform_mode(ft_handle, enable)
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)

@@ -3,13 +3,12 @@ from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_uint8, c_uint16, c_bool, c_uint32
 
 from enum import IntEnum, IntFlag, auto
-from ft4222 import Ft4222
 from pathlib import Path
 from typing import Final, Literal, NewType, NoReturn, Optional, Union, overload
 
-from . import ClkPhase, ClkPolarity, Ft4222Exception, SOFT_ERROR_SET
+from . import ClkPhase, ClkPolarity, Ft4222Exception
 from .. import Ft4222Status
-from ... import FtHandle
+from ... import FtHandle, Result, Ok, Err
 
 MODULE_PATH: Final[Path] = Path(__file__).parent
 
@@ -98,7 +97,7 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap
-) -> SpiMasterSingleHandle: ...
+) -> Result[SpiMasterSingleHandle, Ft4222Status]: ...
 
 
 @overload
@@ -109,7 +108,7 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap
-) -> SpiMasterMultiHandle: ...
+) -> Result[SpiMasterMultiHandle, Ft4222Status]: ...
 
 
 @overload
@@ -120,7 +119,7 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap
-) -> NoReturn: ...
+) -> Err[Ft4222Status]: ...
 
 
 def init(
@@ -130,7 +129,10 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap
-) -> Union[SpiMasterSingleHandle, SpiMasterMultiHandle, NoReturn]:
+) -> Union[
+    Result[SpiMasterSingleHandle, Ft4222Status],
+    Result[SpiMasterMultiHandle, Ft4222Status],
+]:
     """Initialize the FT4222H as an SPI master.
 
     Args:
@@ -141,11 +143,8 @@ def init(
         clk_phase:      Clock phase (data sampled on the leading [first] or trailing [second] clock edge)
         sso_map:        Slave selection output pin map
 
-    Raises:
-        Ft4222Exception:    In case of unexpected error
-
     Returns:
-        SpiMasterHandle:    Handle to initialized SPI Master FT4222 device
+        Result:         Handle to initialized SPI Master FT4222 device
     """
     result: Ft4222Status = _init(
         ft_handle,
@@ -156,16 +155,15 @@ def init(
         sso_map
     )
 
-    if result != Ft4222Status.OK:
-        raise Ft4222Exception(result)
-
-    if io_mode == IoMode.IO_SINGLE:
-        return SpiMasterSingleHandle(ft_handle)
-    elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
-        return SpiMasterMultiHandle(ft_handle)
+    if result == Ft4222Status.OK:
+        if io_mode == IoMode.IO_SINGLE:
+            return Ok(SpiMasterSingleHandle(ft_handle))
+        elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
+            return Ok(SpiMasterMultiHandle(ft_handle))
+        else:
+            return Err(result)
     else:
-        raise Ft4222Exception(
-            result, "Invalid IoMode! Cannot use 'IoMode.NONE'.")
+        return Err(result)
 
 
 def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None:
@@ -385,7 +383,7 @@ def multi_read_write(
         multi_read_byte_count:      Number of bytes to be read using multi IO lines             (3rd phase)
 
     Raises:
-        RuntimeError:               TODO
+        Ft4222Exception:            In case of unexpected error
 
     Returns:
         bytes:                      Read data (if any)
@@ -404,6 +402,6 @@ def multi_read_write(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes(read_buffer[:bytes_read])

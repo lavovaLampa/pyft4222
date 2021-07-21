@@ -1,28 +1,53 @@
+from typing import Optional, Union
+from abc import ABC
+
+from .wrapper import FtHandle
+
+
+class SpiMasterCommon(ABC):
+    pass
+
+
+class SpiMasterSingle(SpiMasterCommon):
+    pass
+
+
+class SpiMasterMulti(SpiMasterCommon):
+    pass
+
+
+SpiMaster = Union[SpiMasterSingle, SpiMasterMulti]
+
+
+class SpiSlaveCommon(ABC):
+    pass
+
+
+class SpiSlaveRaw(SpiSlaveCommon):
+    pass
+
+
+class SpiSlaveProto(SpiSlaveCommon):
+    pass
+
+
+SpiSlave = Union[SpiSlaveRaw, SpiSlaveProto]
 
 
 class Ft4222:
-    pass
+    _handle: Optional[FtHandle] = None
 
+    def __init__(self, ft_handle: FtHandle):
+        pass
 
-class SpiMaster:
-    pass
+    def init_spi_master(self) -> SpiMaster:
+        pass
 
+    def init_spi_slave(self) -> SpiSlave:
+        pass
 
-class SpiMasterSingle:
-    pass
+    def init_i2c_master(self) -> I2CMaster:
+        pass
 
-
-class SpiMasterMulti:
-    pass
-
-
-class SpiSlave:
-    pass
-
-
-class SpiSlaveRaw:
-    pass
-
-
-class SpiSlaveProto:
-    pass
+    def init_i2c_slave(self) -> I2CSlave:
+        pass

@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Final, Literal, NewType, Union, overload
 
 from . import ClkPhase, ClkPolarity
-from .. import Ft4222Status
-from ... import FtHandle
+from .. import Ft4222Exception, Ft4222Status
+from ... import FtHandle, Result, Ok, Err
 
 MODULE_PATH: Final[Path] = Path(__file__).parent
 
@@ -57,33 +57,30 @@ _write.argtypes = [c_void_p, POINTER(
 _write.restype = Ft4222Status
 
 
-def init(ft_handle: FtHandle) -> SpiSlaveProtoHandle:
+def init(ft_handle: FtHandle) -> Result[SpiSlaveProtoHandle, Ft4222Status]:
     """Initialize the FT4222H as an SPI slave.
 
     Default SPI Slave protocol is 'IoProtocol.WITH_PROTOCOL'.
 
     Args:
-        ft_handle:              Handle to an open FT4222 device
-
-    Raises:
-        RuntimeError:           TODO
+        ft_handle:  Handle to an open FT4222 device
 
     Returns:
-        SpiSlaveProtoHandle:    Handle to FT4222 device in SPI Slave mode with protocol
+        Result:     Handle to FT4222 device in SPI Slave mode with protocol
     """
     result: Ft4222Status = _init(ft_handle)
 
-    if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
-
-    return SpiSlaveProtoHandle(ft_handle)
+    if result == Ft4222Status.OK:
+        return Ok(SpiSlaveProtoHandle(ft_handle))
+    else:
+        return Err(result)
 
 
 @overload
 def init_ex(
     ft_handle: FtHandle,
     protocol: Literal[IoProtocol.NO_PROTOCOL]
-) -> SpiSlaveRawHandle: ...
+) -> Result[SpiSlaveRawHandle, Ft4222Status]: ...
 
 
 @overload
@@ -91,10 +88,16 @@ def init_ex(
     ft_handle: FtHandle,
     protocol: Union[Literal[IoProtocol.WITH_PROTOCOL],
                     Literal[IoProtocol.NO_ACK]]
-) -> SpiSlaveProtoHandle: ...
+) -> Result[SpiSlaveProtoHandle, Ft4222Status]: ...
 
 
-def init_ex(ft_handle: FtHandle, protocol: IoProtocol) -> SpiSlaveHandle:
+def init_ex(
+    ft_handle: FtHandle,
+    protocol: IoProtocol
+) -> Union[
+        Result[SpiSlaveProtoHandle, Ft4222Status],
+        Result[SpiSlaveRawHandle, Ft4222Status]
+]:
     """Initialize the FT4222H as an SPI slave.
 
     Similar to 'SPI.Slave.init()' function, but with parameters to define the transmission protocol.
@@ -103,21 +106,18 @@ def init_ex(ft_handle: FtHandle, protocol: IoProtocol) -> SpiSlaveHandle:
         ft_handle:      Handle to an open FT4222 device
         protocol:       Protocol to be used for communication (if any)
 
-    Raises:
-        RuntimeError:   TODO
-
     Returns:
-        SpiSlaveHandle: Handle to FT4222 device in selected protocol mode
+        Result: Handle to FT4222 device in selected protocol mode
     """
     result: Ft4222Status = _init_ex(ft_handle, protocol)
 
-    if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
-
-    if protocol == IoProtocol.NO_PROTOCOL:
-        return SpiSlaveRawHandle(ft_handle)
+    if result == Ft4222Status.OK:
+        if protocol == IoProtocol.NO_PROTOCOL:
+            return Ok(SpiSlaveRawHandle(ft_handle))
+        else:
+            return Ok(SpiSlaveProtoHandle(ft_handle))
     else:
-        return SpiSlaveProtoHandle(ft_handle)
+        return Err(result)
 
 
 def set_mode(
@@ -128,12 +128,12 @@ def set_mode(
     """Set clock polarity and phase.
 
     Args:
-        ft_handle:      Handle to an initialized FT4222 device in SPI Slave mode
-        clk_polarity:   Clock polarity (idle low/high)
-        clk_phase:      Clock phase
+        ft_handle:          Handle to an initialized FT4222 device in SPI Slave mode
+        clk_polarity:       Clock polarity (idle low/high)
+        clk_phase:          Clock phase
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _set_mode(
         ft_handle,
@@ -149,12 +149,13 @@ def get_rx_status(ft_handle: SpiSlaveHandle) -> int:
     """Get number of bytes in the receive queue.
 
     Args:
-        ft_handle:      Handle to an initialized FT4222 device in SPI Slave mode
+        ft_handle:          Handle to an initialized FT4222 device in SPI Slave mode
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
-    Return:             Number of bytes in the receive queue
+    Returns:
+        int:                Number of bytes in the receive queue
     """
     rx_size = c_uint16()
 
@@ -164,7 +165,7 @@ def get_rx_status(ft_handle: SpiSlaveHandle) -> int:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return rx_size.value
 
@@ -177,7 +178,7 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
         read_byte_count:    Number of bytes to read from Rx queue
 
     Raises:
-        RuntimeError:       TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         bytes:              Read data (if any)
@@ -193,7 +194,7 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes(read_buffer[:bytes_read.value])
 
@@ -205,14 +206,14 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
     This additional byte exists at all of the three transfer methods.
 
     Args:
-        ft_handle:      Handle to an initialized FT4222 device in SPI Slave mode
-        write_data:     Data to be written into Tx queue
+        ft_handle:          Handle to an initialized FT4222 device in SPI Slave mode
+        write_data:         Data to be written into Tx queue
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
-        int:            Number of bytes written into Tx queue
+        int:                Number of bytes written into Tx queue
     """
     bytes_written = c_uint16()
 
@@ -224,6 +225,6 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes_written.value

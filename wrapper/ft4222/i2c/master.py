@@ -6,8 +6,8 @@ from enum import IntEnum, IntFlag
 from pathlib import Path
 from typing import Final, NewType
 
-from .. import Ft4222Status
-from ... import FtHandle
+from .. import Ft4222Status, Ft4222Exception
+from ... import FtHandle, Result, Ok, Err
 
 MODULE_PATH: Final[Path] = Path(__file__).parent
 
@@ -77,28 +77,25 @@ _reset_bus.restype = Ft4222Status
 
 
 # FIXME: Check kbps typing?
-def init(ft_handle: FtHandle, kbps: int) -> I2cMasterHandle:
+def init(ft_handle: FtHandle, kbps: int) -> Result[I2cMasterHandle, Ft4222Status]:
     """Initialize the FT4222H as an I2C master with the requested I2C speed. 
 
     Args:
         ft_handle:          Handle to an opened FT4222 device
         kbps:               I2C transmission speed (60K - 3400K)
 
-    Raises:
-        RuntimeError:       TODO
-
     Returns:
-        I2cMasterHandle:    Handle to initialized FT4222 device in I2C Master mode
+        Result:    Handle to initialized FT4222 device in I2C Master mode
     """
     result: Ft4222Status = _init(
         ft_handle,
         kbps
     )
 
-    if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
-
-    return I2cMasterHandle(ft_handle)
+    if result == Ft4222Status.OK:
+        return Ok(I2cMasterHandle(ft_handle))
+    else:
+        return Err(result)
 
 
 def read(
@@ -114,7 +111,7 @@ def read(
         read_byte_count:    Number of bytes to read
 
     Raises:
-        RuntimeError:       TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         bytes:              Read data
@@ -131,7 +128,7 @@ def read(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes(read_buffer[:bytes_read.value])
 
@@ -149,7 +146,7 @@ def write(
         write_data:     Data to write
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:            Number of bytes written
@@ -165,7 +162,7 @@ def write(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes_written.value
 
@@ -187,7 +184,7 @@ def read_ex(
         read_byte_count:    Number of bytes to read
 
     Raises:
-        RuntimeError:       TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         bytes:              Read data
@@ -205,7 +202,7 @@ def read_ex(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes(read_buffer[:bytes_read.value])
 
@@ -227,7 +224,7 @@ def write_ex(
         write_data:     Data to write
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
         int:            Number of bytes written
@@ -244,7 +241,7 @@ def write_ex(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return bytes_written.value
 
@@ -260,12 +257,12 @@ def reset(ft_handle: I2cMasterHandle) -> None:
         ft_handle:      Handle to an initialized FT4222 device in I2C Master mode
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _reset(ft_handle)
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
 
 def get_status(ft_handle: I2cMasterHandle) -> Status:
@@ -277,10 +274,10 @@ def get_status(ft_handle: I2cMasterHandle) -> Status:
         ft_handle:          Handle to an initialized FT4222 device in I2C Master mode
 
     Raises:
-        RuntimeError:       TODO
+        Ft4222Exception:    In case of unexpected error
 
     Returns:
-        I2C.Master.Status:  Controller status
+        Status:  Controller status
     """
     status = c_uint8()
 
@@ -288,7 +285,7 @@ def get_status(ft_handle: I2cMasterHandle) -> Status:
         ft_handle, byref(status))
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
     return Status(status.value)
 
@@ -304,9 +301,9 @@ def reset_bus(ft_handle: I2cMasterHandle) -> None:
         ft_handle:      Handle to an initialized FT4222 device in I2C Master mode
 
     Raises:
-        RuntimeError:   TODO
+        Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _reset_bus(ft_handle)
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
