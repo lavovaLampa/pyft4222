@@ -1,6 +1,10 @@
 from enum import Enum, auto
-from typing import Generic, Literal, NewType, TypeVar, Union
+from typing import Final, Generic, Literal, NewType, TypeVar, Union
 from ctypes import c_void_p
+
+import platform
+
+SYSTEM_TYPE: Final[str] = platform.system()
 
 FtHandle = NewType('FtHandle', c_void_p)
 

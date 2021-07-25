@@ -6,8 +6,7 @@ from enum import IntEnum, IntFlag, auto
 from typing import Final, List, NamedTuple, Optional
 from pathlib import Path
 
-import platform
-
+from . import SYSTEM_TYPE
 from . import FtHandle, Ok, Err, Result
 
 MODULE_PATH: Final[Path] = Path(__file__).parent
@@ -108,7 +107,6 @@ _reset_device.restype = FtStatus
 SERIAL_NUMBER_MAX_LEN: Final[int] = 16
 # Max. length of C string containing D2XX device description (according to D2XX documentation)
 DESCRIPTION_MAX_LEN: Final[int] = 64
-SYSTEM_TYPE: Final[str] = platform.system()
 
 # Data types
 
@@ -289,7 +287,7 @@ def get_device_info_detail(dev_id: int) -> Optional[DeviceInfo]:
             description=description.value.decode('utf-8'),
             handle=FtHandle(handle)
         )
-    elif result in {FtStatus.DEVICE_NOT_FOUND}:
+    elif result in {FtStatus.DEVICE_NOT_FOUND, FtStatus.INVALID_HANDLE}:
         return None
     else:
         raise FtException(result)

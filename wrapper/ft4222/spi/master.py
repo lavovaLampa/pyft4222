@@ -6,8 +6,8 @@ from enum import IntEnum, IntFlag, auto
 from pathlib import Path
 from typing import Final, Literal, NewType, NoReturn, Optional, Union, overload
 
-from . import ClkPhase, ClkPolarity, Ft4222Exception
-from .. import Ft4222Status
+from . import ClkPhase, ClkPolarity
+from .. import Ft4222Status, Ft4222Exception
 from ... import FtHandle, Result, Ok, Err
 
 MODULE_PATH: Final[Path] = Path(__file__).parent
@@ -120,6 +120,20 @@ def init(
     clk_phase: ClkPhase,
     sso_map: SsoMap
 ) -> Err[Ft4222Status]: ...
+
+
+@overload
+def init(
+    ft_handle: FtHandle,
+    io_mode: IoMode,
+    clock_div: ClkDiv,
+    clk_polarity: ClkPolarity,
+    clk_phase: ClkPhase,
+    sso_map: SsoMap
+) -> Union[
+    Result[SpiMasterSingleHandle, Ft4222Status],
+    Result[SpiMasterMultiHandle, Ft4222Status],
+]: ...
 
 
 def init(
