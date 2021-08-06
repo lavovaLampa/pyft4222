@@ -54,7 +54,7 @@ def reset_transaction(ft_handle: SpiHandle, spi_idx: Literal[0, 1, 2, 3]) -> Non
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    assert 0 <= spi_idx <= 3
+    assert 0 <= spi_idx <= 3, "Invalid SPI transaction index (0 - 3)"
 
     result: Ft4222Status = _reset_transaction(ft_handle, spi_idx)
 

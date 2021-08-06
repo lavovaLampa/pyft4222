@@ -181,7 +181,7 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data (if any)
     """
-    assert 0 < read_byte_count < (2 ** 16)
+    assert 0 < read_byte_count < (2 ** 16), "Invalid number of bytes to read"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
@@ -215,7 +215,7 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:                Number of bytes written into Tx queue
     """
-    assert len(write_data) > 0
+    assert len(write_data) > 0, "Data to write must be non-empty"
 
     bytes_written = c_uint16()
 

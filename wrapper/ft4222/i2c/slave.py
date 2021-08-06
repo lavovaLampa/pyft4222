@@ -122,7 +122,7 @@ def set_address(ft_handle: I2cSlaveHandle, addr: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    assert 0 <= addr < (2 ** 16)
+    assert 0 <= addr < (2 ** 16), "Invalid device address"
 
     result: Ft4222Status = _set_address(ft_handle, addr)
 
@@ -166,7 +166,7 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data
     """
-    assert 0 < read_byte_count < (2 ** 16)
+    assert 0 < read_byte_count < (2 ** 16), "Invalid number of bytes to read"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
@@ -197,7 +197,7 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:            Number of bytes written
     """
-    assert len(write_data) > 0
+    assert len(write_data) > 0, "Data must be non-empty"
 
     bytes_written = c_uint16()
 
@@ -255,7 +255,7 @@ def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    assert 0 <= response_word < (2 ** 8)
+    assert 0 <= response_word < (2 ** 8), "Invalid response word"
 
     result: Ft4222Status = _set_resp_word(
         ft_handle, response_word)

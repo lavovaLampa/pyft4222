@@ -259,7 +259,7 @@ def single_read(
     Returns:
         bytes:              Read data (count can be lower than requested) # TODO: Can it?
     """
-    assert 0 < read_byte_count < (2 ** 16)
+    assert 0 < read_byte_count < (2 ** 16), "Invalid number of bytes to read"
 
     buffer = (c_uint8 * read_byte_count)()
     bytes_transferred = c_uint16()
@@ -296,7 +296,7 @@ def single_write(
     Returns:
         int:                Number of transmitted bytes
     """
-    assert len(write_data) > 0
+    assert len(write_data) > 0, "Data to write must be non-empty"
 
     bytes_transferred = c_uint16()
     result: Ft4222Status = _single_write(
@@ -331,7 +331,7 @@ def single_read_write(
     Returns:
         bytes:              Received data
     """
-    assert len(write_data) > 0
+    assert len(write_data) > 0, "Data to write must be non-empty"
 
     bytes_transferred = c_uint16()
     read_buffer = (c_uint8 * len(write_data))()
@@ -398,16 +398,20 @@ def multi_read_write(
     Returns:
         bytes:                      Read data (if any)
     """
-    assert 0 <= single_write_byte_count < (2 ** 4)
-    assert 0 <= multi_write_byte_count < (2 ** 16)
-    assert 0 <= multi_read_byte_count < (2 ** 16)
-    assert (single_write_byte_count +
-            multi_write_byte_count + multi_read_byte_count) > 0
+    assert 0 <= single_write_byte_count < (
+        2 ** 4), "Invalid number of single write bytes"
+    assert 0 <= multi_write_byte_count < (
+        2 ** 16), "Invalid number of multi write bytes"
+    assert 0 <= multi_read_byte_count < (
+        2 ** 16), "Invalid number of multi read bytes"
+    assert (single_write_byte_count + multi_write_byte_count +
+            multi_read_byte_count) > 0, "Total number of bytes written/read must be non-zero"
     if write_data is None:
-        assert (single_write_byte_count + multi_write_byte_count) == 0
+        assert (single_write_byte_count +
+                multi_write_byte_count) == 0, "Write byte count must be zero in case data is None"
     else:
         assert (single_write_byte_count +
-                multi_write_byte_count) <= len(write_data)
+                multi_write_byte_count) <= len(write_data), "Length of data to write is longer than given data"
 
     read_buffer = (c_uint8 * multi_read_byte_count)()
     bytes_read = c_uint16()
