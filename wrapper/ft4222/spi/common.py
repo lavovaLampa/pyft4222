@@ -1,23 +1,14 @@
-from ctypes import cdll
 from ctypes import c_void_p, c_uint8, c_uint
 
-from pathlib import Path
-from typing import Final, Union
+from typing import Literal, Union
 from .slave import SpiSlaveHandle
 from .master import SpiMasterHandle
 
+from . import DriveStrength
+from ...dll_loader import ftlib
 from .. import Ft4222Exception, Ft4222Status, SOFT_ERROR_SET
 
 SpiHandle = Union[SpiMasterHandle, SpiSlaveHandle]
-
-MODULE_PATH: Final[Path] = Path(__file__).parent
-
-try:
-    ftlib = cdll.LoadLibrary(
-        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
-except OSError as e:
-    print("Unable to load shared library!")
-    exit(1)
 
 _reset = ftlib.FT4222_SPI_Reset
 _reset.argtypes = [c_void_p]
@@ -51,7 +42,7 @@ def reset(ft_handle: SpiHandle) -> None:
         raise Ft4222Exception(result)
 
 
-def reset_transaction(ft_handle: SpiHandle, spi_idx: int) -> None:
+def reset_transaction(ft_handle: SpiHandle, spi_idx: Literal[0, 1, 2, 3]) -> None:
     """Reset the SPI transaction.
 
     Purge receive and transmit buffers in the device and reset the transaction state.
@@ -63,6 +54,8 @@ def reset_transaction(ft_handle: SpiHandle, spi_idx: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
+    assert 0 <= spi_idx <= 3
+
     result: Ft4222Status = _reset_transaction(ft_handle, spi_idx)
 
     if result not in SOFT_ERROR_SET:

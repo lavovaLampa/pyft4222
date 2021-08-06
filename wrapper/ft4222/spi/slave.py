@@ -1,23 +1,13 @@
-from ctypes import cdll
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_uint16, c_uint8
 
 from enum import IntEnum, IntFlag, auto
-from pathlib import Path
-from typing import Final, Literal, NewType, Union, overload
+from typing import Literal, NewType, Union, overload
 
 from . import ClkPhase, ClkPolarity
 from .. import Ft4222Exception, Ft4222Status
+from ...dll_loader import ftlib
 from ... import FtHandle, Result, Ok, Err
-
-MODULE_PATH: Final[Path] = Path(__file__).parent
-
-try:
-    ftlib = cdll.LoadLibrary(
-        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
-except OSError as e:
-    print("Unable to load shared library!")
-    exit(1)
 
 SpiSlaveRawHandle = NewType('SpiSlaveRawHandle', c_void_p)
 SpiSlaveProtoHandle = NewType('SpiSlaveProtoHandle', c_void_p)
@@ -183,7 +173,7 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
 
     Args:
         ft_handle:          Handle to an initialized FT4222 device in SPI Slave mode
-        read_byte_count:    Number of bytes to read from Rx queue
+        read_byte_count:    Positive number of bytes to read from Rx queue
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -191,6 +181,8 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data (if any)
     """
+    assert 0 < read_byte_count < (2 ** 16)
+
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
@@ -215,7 +207,7 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
 
     Args:
         ft_handle:          Handle to an initialized FT4222 device in SPI Slave mode
-        write_data:         Data to be written into Tx queue
+        write_data:         Non-empty list of bytes to be written into Tx queue
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -223,6 +215,8 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:                Number of bytes written into Tx queue
     """
+    assert len(write_data) > 0
+
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write(

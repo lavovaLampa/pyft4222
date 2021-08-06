@@ -1,21 +1,11 @@
-from ctypes import cdll
 from ctypes import Structure, POINTER, byref
 from ctypes import c_uint, c_void_p, c_bool, c_uint16
 
 from enum import IntEnum, IntFlag, auto
-from pathlib import Path
 from typing import Final, NamedTuple, Optional, Set
 
 from .. import FtHandle
-
-MODULE_PATH: Final[Path] = Path(__file__).parent
-
-try:
-    ftlib = cdll.LoadLibrary(
-        str(MODULE_PATH / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
-except OSError as e:
-    print("Unable to load shared library!")
-    exit(1)
+from ..dll_loader import ftlib
 
 
 class Ft4222Status(IntEnum):

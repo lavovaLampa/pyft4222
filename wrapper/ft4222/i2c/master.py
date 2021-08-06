@@ -1,22 +1,12 @@
-from ctypes import cdll
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint32, c_uint8, c_uint16
 
 from enum import IntEnum, IntFlag
-from pathlib import Path
-from typing import Final, NewType
+from typing import NewType
 
+from ...dll_loader import ftlib
 from .. import Ft4222Status, Ft4222Exception
 from ... import FtHandle, Result, Ok, Err
-
-MODULE_PATH: Final[Path] = Path(__file__).parent
-
-try:
-    ftlib = cdll.LoadLibrary(
-        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
-except OSError as e:
-    print("Unable to load shared library!")
-    exit(1)
 
 I2cMasterHandle = NewType('I2cMasterHandle', c_void_p)
 
@@ -87,6 +77,8 @@ def init(ft_handle: FtHandle, kbps: int) -> Result[I2cMasterHandle, Ft4222Status
     Returns:
         Result:    Handle to initialized FT4222 device in I2C Master mode
     """
+    assert 60 <= kbps <= 3400
+
     result: Ft4222Status = _init(
         ft_handle,
         kbps
@@ -108,7 +100,7 @@ def read(
     Args:
         ft_handle:          Handle to an initialized FT4222 device in I2C Master mode
         dev_address:        Address of the target I2C slave
-        read_byte_count:    Number of bytes to read
+        read_byte_count:    Positive number of bytes to read
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -116,6 +108,9 @@ def read(
     Returns:
         bytes:              Read data
     """
+    assert 0 <= dev_address < (2 ** 16)
+    assert 0 < read_byte_count < (2 ** 16)
+
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
@@ -143,7 +138,7 @@ def write(
     Args:
         ft_handle:      Handle to an initialized FT4222 device in I2C Master mode
         dev_address:    Address of the target I2C slave
-        write_data:     Data to write
+        write_data:     List of non-zero length containing bytes to write
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -151,6 +146,9 @@ def write(
     Returns:
         int:            Number of bytes written
     """
+    assert 0 <= dev_address < (2 ** 16)
+    assert len(write_data) > 0
+
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write(
@@ -181,7 +179,7 @@ def read_ex(
         ft_handle:          Handle to an initialized FT4222 device in SPI Master mode
         dev_address:        Address of target I2C slave device
         flag:               I2C transaction condition flag
-        read_byte_count:    Number of bytes to read
+        read_byte_count:    Positive number of bytes to read
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -189,6 +187,9 @@ def read_ex(
     Returns:
         bytes:              Read data
     """
+    assert 0 <= dev_address < (2 ** 16)
+    assert 0 < read_byte_count < (2 ** 16)
+
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
@@ -221,7 +222,7 @@ def write_ex(
         ft_handle:      Handle to an initialized FT4222 device in I2C Master mode
         dev_address:    Address of target I2C slave device
         flag:           I2C transaction condition flag
-        write_data:     Data to write
+        write_data:     Non-empty list of bytes to write
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -229,6 +230,9 @@ def write_ex(
     Returns:
         int:            Number of bytes written
     """
+    assert 0 <= dev_address < (2 ** 16)
+    assert len(write_data) > 0
+
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write_ex(

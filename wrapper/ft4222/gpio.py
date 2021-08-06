@@ -1,23 +1,12 @@
-from ctypes import cdll
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_bool, c_uint16
 
 from enum import IntEnum, auto
-from os import error
-from pathlib import Path
 from typing import Final, List, NewType, Tuple
 
+from ..dll_loader import ftlib
 from . import Ft4222Exception, Ft4222Status, GpioTrigger
 from .. import Err, FtHandle, Ok, Result
-
-MODULE_PATH: Final[Path] = Path(__file__).parent
-
-try:
-    ftlib = cdll.LoadLibrary(
-        str(MODULE_PATH / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
-except OSError as e:
-    print("Unable to load shared library!")
-    exit(1)
 
 GpioHandle = NewType('GpioHandle', c_void_p)
 

@@ -1,21 +1,12 @@
-from ctypes import cdll
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint8, c_uint16, c_bool
-from pathlib import Path
 
-from typing import Final, NewType
+from typing import NewType
 
+from ...dll_loader import ftlib
 from .. import Ft4222Exception, Ft4222Status
 from ... import FtHandle, Result, Ok, Err
 
-MODULE_PATH: Final[Path] = Path(__file__).parent
-
-try:
-    ftlib = cdll.LoadLibrary(
-        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
-except OSError as e:
-    print("Unable to load shared library!")
-    exit(1)
 
 I2cSlaveHandle = NewType('I2cSlaveHandle', c_void_p)
 
@@ -131,6 +122,8 @@ def set_address(ft_handle: I2cSlaveHandle, addr: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
+    assert 0 <= addr < (2 ** 16)
+
     result: Ft4222Status = _set_address(ft_handle, addr)
 
     if result != Ft4222Status.OK:
@@ -165,7 +158,7 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
 
     Args:
         ft_handle:          Handle to an initialized FT4222 device in I2C Slave mode
-        read_byte_count:    Number of bytes to read
+        read_byte_count:    Positive number of bytes to read
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -173,6 +166,8 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data
     """
+    assert 0 < read_byte_count < (2 ** 16)
+
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
@@ -194,7 +189,7 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
 
     Args:
         ft_handle:      Handle to an initialized FT4222 device in I2C Slave mode
-        write_data:     Data to write into Tx queue
+        write_data:     Non-empty list of bytes to write into Tx queue
 
     Raises:
         Ft4222Exception:    In case of unexpected error
@@ -202,6 +197,8 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:            Number of bytes written
     """
+    assert len(write_data) > 0
+
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write(
@@ -253,11 +250,13 @@ def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
 
     Args:
         ft_handle:      Handle to an initialized FT4222 device in I2C Slave mode
-        response_word:  Response word to be set
+        response_word:  Unsigned 8-bit response word to be set
 
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
+    assert 0 <= response_word < (2 ** 8)
+
     result: Ft4222Status = _set_resp_word(
         ft_handle, response_word)
 

@@ -1,23 +1,13 @@
-from ctypes import cdll
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_uint8, c_uint16, c_bool, c_uint32
 
 from enum import IntEnum, IntFlag, auto
-from pathlib import Path
-from typing import Final, Literal, NewType, NoReturn, Optional, Union, overload
+from typing import Literal, NewType, NoReturn, Optional, Union, overload
 
 from . import ClkPhase, ClkPolarity
 from .. import Ft4222Status, Ft4222Exception
+from ...dll_loader import ftlib
 from ... import FtHandle, Result, Ok, Err
-
-MODULE_PATH: Final[Path] = Path(__file__).parent
-
-try:
-    ftlib = cdll.LoadLibrary(
-        str(MODULE_PATH / '..' / '..' / 'dlls' / 'libft4222.so.1.4.4.44'))
-except OSError as e:
-    print("Unable to load shared library!")
-    exit(1)
 
 SpiMasterSingleHandle = NewType('SpiMasterSingleHandle', c_void_p)
 SpiMasterMultiHandle = NewType('SpiMasterMultiHandle', c_void_p)
@@ -260,7 +250,7 @@ def single_read(
 
     Args:
         ft_handle:          Handle to an initialized FT4222 device in SPI Master mode with 'IoMode.IO_SINGLE' setting
-        read_byte_count:    Number of bytes to read
+        read_byte_count:    Positive number of bytes to read
         end_transaction:    De-assert slave select pin at the end of transaction?
 
     Raises:
@@ -269,6 +259,8 @@ def single_read(
     Returns:
         bytes:              Read data (count can be lower than requested) # TODO: Can it?
     """
+    assert 0 < read_byte_count < (2 ** 16)
+
     buffer = (c_uint8 * read_byte_count)()
     bytes_transferred = c_uint16()
 
@@ -295,7 +287,7 @@ def single_write(
 
     Args:
         ft_handle:          Handle to an initialized FT4222 device in SPI Master mode with 'IoMode.IO_SINGLE' setting
-        write_data:         Data to be written
+        write_data:         Non-empty list of bytes to be written
         end_transaction:    De-assert slave select pin at the end of transaction?
 
     Raises:
@@ -304,6 +296,8 @@ def single_write(
     Returns:
         int:                Number of transmitted bytes
     """
+    assert len(write_data) > 0
+
     bytes_transferred = c_uint16()
     result: Ft4222Status = _single_write(
         ft_handle,
@@ -328,7 +322,7 @@ def single_read_write(
 
     Args:
         ft_handle:          Handle to an initialized FT4222 device in SPI Master mode with 'IoMode.IO_SINGLE' setting
-        write_data:         Data to be written
+        write_data:         Non-empty list of data to be written
         end_transaction:    De-assert slave select pin at the end of transaction?
 
     Raises:
@@ -337,6 +331,8 @@ def single_read_write(
     Returns:
         bytes:              Received data
     """
+    assert len(write_data) > 0
+
     bytes_transferred = c_uint16()
     read_buffer = (c_uint8 * len(write_data))()
 
@@ -402,7 +398,17 @@ def multi_read_write(
     Returns:
         bytes:                      Read data (if any)
     """
-    # FIXME: Add assert for length
+    assert 0 <= single_write_byte_count < (2 ** 4)
+    assert 0 <= multi_write_byte_count < (2 ** 16)
+    assert 0 <= multi_read_byte_count < (2 ** 16)
+    assert (single_write_byte_count +
+            multi_write_byte_count + multi_read_byte_count) > 0
+    if write_data is None:
+        assert (single_write_byte_count + multi_write_byte_count) == 0
+    else:
+        assert (single_write_byte_count +
+                multi_write_byte_count) <= len(write_data)
+
     read_buffer = (c_uint8 * multi_read_byte_count)()
     bytes_read = c_uint16()
     result: Ft4222Status = _multi_read_write(
