@@ -25,6 +25,8 @@ class PortId(IntEnum):
     PORT_3 = auto()
 
 
+DirTuple = Tuple[Direction, Direction, Direction, Direction]
+
 _init = ftlib.FT4222_GPIO_Init
 _init.argtypes = [c_void_p, c_uint * 4]
 _init.restype = Ft4222Status
@@ -55,11 +57,7 @@ _set_waveform_mode.argtypes = [c_void_p, c_bool]
 _set_waveform_mode.restype = Ft4222Status
 
 
-# FIXME: Better argument typing!
-def init(
-    ft_handle: FtHandle,
-    dirs: Tuple[Direction, Direction, Direction, Direction]
-) -> Result[GpioHandle, Ft4222Status]:
+def init(ft_handle: FtHandle, dirs: DirTuple) -> Result[GpioHandle, Ft4222Status]:
     """Initialize the GPIO interface of the FT4222H.
 
     NOTE: The GPIO interface is available on the 2nd USB interface in mode 0 or on the 4th USB interface in mode 1.
@@ -71,7 +69,7 @@ def init(
     Returns:
         Result:         Handle to initialized FT4222 device in GPIO mode
     """
-    dir_array = (c_uint * _GPIO_COUNT)(dirs)
+    dir_array = (c_uint * _GPIO_COUNT)(*dirs)
 
     result: Ft4222Status = _init(ft_handle, dir_array)
 

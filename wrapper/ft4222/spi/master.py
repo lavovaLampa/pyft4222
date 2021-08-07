@@ -1,4 +1,4 @@
-from ctypes import POINTER, byref
+from ctypes import POINTER, byref, c_char_p
 from ctypes import c_void_p, c_uint, c_uint8, c_uint16, c_bool, c_uint32
 
 from enum import IntEnum, IntFlag, auto
@@ -64,8 +64,8 @@ _single_read.argtypes = [c_void_p, POINTER(
 _single_read.restype = Ft4222Status
 
 _single_write = ftlib.FT4222_SPIMaster_SingleWrite
-_single_write.argtypes = [c_void_p, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16), c_bool]
+_single_write.argtypes = [c_void_p, c_char_p,
+                          c_uint16, POINTER(c_uint16), c_bool]
 _single_write.restype = Ft4222Status
 
 _single_read_write = ftlib.FT4222_SPIMaster_SingleReadWrite
