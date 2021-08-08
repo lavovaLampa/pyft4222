@@ -10,6 +10,9 @@ from .. import Ft4222Exception, Ft4222Status, SOFT_ERROR_SET
 
 SpiHandle = Union[SpiMasterHandle, SpiSlaveHandle]
 
+TransactionIdx = Literal[0, 1, 2, 3]
+
+
 _reset = ftlib.FT4222_SPI_Reset
 _reset.argtypes = [c_void_p]
 _reset.restype = Ft4222Status
@@ -42,7 +45,7 @@ def reset(ft_handle: SpiHandle) -> None:
         raise Ft4222Exception(result)
 
 
-def reset_transaction(ft_handle: SpiHandle, spi_idx: Literal[0, 1, 2, 3]) -> None:
+def reset_transaction(ft_handle: SpiHandle, spi_idx: TransactionIdx) -> None:
     """Reset the SPI transaction.
 
     Purge receive and transmit buffers in the device and reset the transaction state.

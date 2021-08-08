@@ -8,7 +8,7 @@ from ...dll_loader import ftlib
 from .. import Ft4222Status, Ft4222Exception
 from ... import FtHandle, Result, Ok, Err
 
-I2cMasterHandle = NewType('I2cMasterHandle', c_void_p)
+I2cMasterHandle = NewType('I2cMasterHandle', FtHandle)
 
 
 class TransactionFlag(IntEnum):

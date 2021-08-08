@@ -8,7 +8,7 @@ from .. import Ft4222Exception, Ft4222Status
 from ... import FtHandle, Result, Ok, Err
 
 
-I2cSlaveHandle = NewType('I2cSlaveHandle', c_void_p)
+I2cSlaveHandle = NewType('I2cSlaveHandle', FtHandle)
 
 # Function prototypes
 

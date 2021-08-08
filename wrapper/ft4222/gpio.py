@@ -8,14 +8,14 @@ from ..dll_loader import ftlib
 from . import Ft4222Exception, Ft4222Status, GpioTrigger
 from .. import Err, FtHandle, Ok, Result
 
-GpioHandle = NewType('GpioHandle', c_void_p)
+GpioHandle = NewType('GpioHandle', FtHandle)
 
 _GPIO_COUNT: Final[int] = 4
 
 
 class Direction(IntEnum):
-    GPIO_OUTPUT = 0,
-    GPIO_INPUT = auto()
+    OUTPUT = 0,
+    INPUT = auto()
 
 
 class PortId(IntEnum):

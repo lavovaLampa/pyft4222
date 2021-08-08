@@ -2,20 +2,19 @@ from ctypes import POINTER, byref, c_char_p
 from ctypes import c_void_p, c_uint, c_uint8, c_uint16, c_bool, c_uint32
 
 from enum import IntEnum, IntFlag, auto
-from typing import Literal, NewType, NoReturn, Optional, Union, overload
+from typing import Literal, NewType, Optional, Union, overload
 
 from . import ClkPhase, ClkPolarity
 from .. import Ft4222Status, Ft4222Exception
 from ...dll_loader import ftlib
 from ... import FtHandle, Result, Ok, Err
 
-SpiMasterSingleHandle = NewType('SpiMasterSingleHandle', c_void_p)
-SpiMasterMultiHandle = NewType('SpiMasterMultiHandle', c_void_p)
+SpiMasterSingleHandle = NewType('SpiMasterSingleHandle', FtHandle)
+SpiMasterMultiHandle = NewType('SpiMasterMultiHandle', FtHandle)
 SpiMasterHandle = Union[SpiMasterSingleHandle, SpiMasterMultiHandle]
 
 
 class IoMode(IntEnum):
-    IO_NONE = 0
     IO_SINGLE = 1
     IO_DUAL = 2
     IO_QUAD = 4
@@ -99,17 +98,6 @@ def init(
     clk_phase: ClkPhase,
     sso_map: SsoMap
 ) -> Result[SpiMasterMultiHandle, Ft4222Status]: ...
-
-
-@overload
-def init(
-    ft_handle: FtHandle,
-    io_mode: Literal[IoMode.IO_NONE],
-    clock_div: ClkDiv,
-    clk_polarity: ClkPolarity,
-    clk_phase: ClkPhase,
-    sso_map: SsoMap
-) -> Err[Ft4222Status]: ...
 
 
 @overload
@@ -202,14 +190,7 @@ def set_lines(
 ) -> SpiMasterMultiHandle: ...
 
 
-@overload
-def set_lines(
-    ft_handle: SpiMasterHandle,
-    io_mode: Literal[IoMode.IO_NONE]
-) -> NoReturn: ...
-
-
-def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> Union[SpiMasterHandle, NoReturn]:
+def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
     """Switch the FT4222H SPI Master to single, dual, or quad mode.
 
     This overrides the mode passed to 'SPI.Master.init()' function.
@@ -365,6 +346,16 @@ def multi_read_write(
 def multi_read_write(
     ft_handle: SpiMasterMultiHandle,
     write_data: bytes,
+    single_write_byte_count: int,
+    multi_write_byte_count: int,
+    multi_read_byte_count: int
+) -> bytes: ...
+
+
+@overload
+def multi_read_write(
+    ft_handle: SpiMasterMultiHandle,
+    write_data: Optional[bytes],
     single_write_byte_count: int,
     multi_write_byte_count: int,
     multi_read_byte_count: int

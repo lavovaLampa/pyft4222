@@ -9,8 +9,8 @@ from .. import Ft4222Exception, Ft4222Status
 from ...dll_loader import ftlib
 from ... import FtHandle, Result, Ok, Err
 
-SpiSlaveRawHandle = NewType('SpiSlaveRawHandle', c_void_p)
-SpiSlaveProtoHandle = NewType('SpiSlaveProtoHandle', c_void_p)
+SpiSlaveRawHandle = NewType('SpiSlaveRawHandle', FtHandle)
+SpiSlaveProtoHandle = NewType('SpiSlaveProtoHandle', FtHandle)
 SpiSlaveHandle = Union[SpiSlaveRawHandle, SpiSlaveProtoHandle]
 
 
