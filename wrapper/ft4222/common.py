@@ -30,14 +30,21 @@ class ClockRate(IntEnum):
     SYS_CLK_80 = auto()
 
 
+class ChipVersion(IntEnum):
+    REV_A = 0x42220100
+    REV_B = 0x42220200
+    REV_C = 0x42220300
+    REV_D = 0x42220400
+
+
 class Version(NamedTuple):
-    chip_version: int
+    chip_version: ChipVersion
     dll_version: int
 
     @staticmethod
     def from_raw(raw_struct: _RawVersion) -> 'Version':
         return Version(
-            raw_struct.chip_version,
+            ChipVersion(raw_struct.chip_version),
             raw_struct.dll_version
         )
 
@@ -247,7 +254,6 @@ def get_max_transfer_size(ft_handle: FtHandle) -> int:
     return max_size.value
 
 
-# FIXME: Add enum for chip version?
 def get_version(ft_handle: FtHandle) -> Version:
     """Get the version of FT4222H chip and LibFT4222 library.
 

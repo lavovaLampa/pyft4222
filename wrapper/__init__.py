@@ -9,7 +9,7 @@ SYSTEM_TYPE: Final[str] = platform.system()
 FtHandle = NewType('FtHandle', c_void_p)
 
 
-class ResultTag(Enum):
+class ResType(Enum):
     OK = auto()
     ERR = auto()
 
@@ -19,7 +19,7 @@ E = TypeVar('E')
 
 
 class Ok(Generic[T]):
-    tag: Literal[ResultTag.OK] = ResultTag.OK
+    tag: Literal[ResType.OK] = ResType.OK
     result: T
 
     def __init__(self, result: T):
@@ -27,7 +27,7 @@ class Ok(Generic[T]):
 
 
 class Err(Generic[E]):
-    tag: Literal[ResultTag.ERR] = ResultTag.ERR
+    tag: Literal[ResType.ERR] = ResType.ERR
     err: E
 
     def __init__(self, err: E):

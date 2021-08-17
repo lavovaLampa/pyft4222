@@ -83,14 +83,14 @@ def read(ft_handle: GpioHandle, port_id: PortId) -> bool:
     """Read the status of a specified GPIO pin or interrupt register.
 
     Args:
-        ft_handle:      Handle to an initialized FT4222 device in GPIO mode
-        port_id:        GPIO port index
+        ft_handle:          Handle to an initialized FT4222 device in GPIO mode
+        port_id:            GPIO port index
 
     Raises:
         Ft4222Exception:    In case of unexpected error
 
     Returns:
-        bool:           Is the port active/high?
+        bool:               Is the port active/high?
     """
     gpio_state = c_bool()
 
@@ -193,7 +193,7 @@ def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
 def read_trigger_queue(
     ft_handle: GpioHandle,
     port_id: PortId,
-    max_read_size: int
+    max_read_size: int = (2 ** 16) - 1
 ) -> List[GpioTrigger]:
     """Get events recorded in the trigger event queue.
 
@@ -202,14 +202,17 @@ def read_trigger_queue(
     Args:
         ft_handle:                  Handle to an initialized FT4222 device in GPIO mode
         port_id:                    GPIO port index
-        max_read_size:              Number of event to read from queue
+        max_read_size:              Non-negative number of event to read from queue
 
     Raises:
-        RuntimeError:               TODO
+        Ft4222Exception:            In case of unexpected device error
 
     Returns:
         List[FT4222.GpioTrigger]:   List of trigger events (if any)
     """
+    assert 0 <= max_read_size < (
+        2 ** 16), "Max. read size must be a non-negative number smaller than 2^16."
+
     event_buffer = (c_uint * max_read_size)()
     events_read = c_uint16()
 
@@ -224,7 +227,7 @@ def read_trigger_queue(
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return list(map(lambda x: GpioTrigger(x), event_buffer[:events_read.value]))
+    return list(map(GpioTrigger, event_buffer[:events_read.value]))
 
 
 def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:
@@ -239,7 +242,7 @@ def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:
         enable:         Enable WaveForm mode?
 
     Raises:
-        Ft4222Exception:    In case of unexpected error
+        Ft4222Exception:    In case of unexpected device error
     """
     result: Ft4222Status = _set_waveform_mode(ft_handle, enable)
 

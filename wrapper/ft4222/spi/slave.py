@@ -84,8 +84,7 @@ def init_ex(
 @overload
 def init_ex(
     ft_handle: FtHandle,
-    protocol: Union[Literal[IoProtocol.WITH_PROTOCOL],
-                    Literal[IoProtocol.NO_ACK]]
+    protocol: Literal[IoProtocol.WITH_PROTOCOL, IoProtocol.NO_ACK]
 ) -> Result[SpiSlaveProtoHandle, Ft4222Status]: ...
 
 
@@ -98,7 +97,7 @@ def init_ex(
 ]:
     """Initialize the FT4222H as an SPI slave.
 
-    Similar to 'SPI.Slave.init()' function, but with parameters to define the transmission protocol.
+    Similar to 'spi.slave.init()' function, but with parameters to define the transmission protocol.
 
     Args:
         ft_handle:      Handle to an open FT4222 device
@@ -140,7 +139,7 @@ def set_mode(
     )
 
     if result != Ft4222Status.OK:
-        raise RuntimeError('TODO')
+        raise Ft4222Exception(result)
 
 
 def get_rx_status(ft_handle: SpiSlaveHandle) -> int:
@@ -181,7 +180,8 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data (if any)
     """
-    assert 0 < read_byte_count < (2 ** 16), "Invalid number of bytes to read"
+    assert 0 < read_byte_count < (2 ** 16),\
+        "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
@@ -215,7 +215,8 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:                Number of bytes written into Tx queue
     """
-    assert len(write_data) > 0, "Data to write must be non-empty"
+    assert 0 < len(write_data) < (2 ** 16),\
+        "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
 
@@ -231,9 +232,8 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
 
     return bytes_written.value
 
+
 # FIXME: Proper typing
-
-
 def set_event_notification(
     ft_handle: SpiSlaveProtoHandle,
     mask: EventType,

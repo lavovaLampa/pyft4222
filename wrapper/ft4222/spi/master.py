@@ -15,8 +15,11 @@ SpiMasterHandle = Union[SpiMasterSingleHandle, SpiMasterMultiHandle]
 
 
 class IoMode(IntEnum):
+    # Data are transferred full-duplex using MISO/MOSI lines
     IO_SINGLE = 1
+    # Data are transferred half-duplex using MISO, MOSI lines (bit0, bit1)
     IO_DUAL = 2
+    # Data are transferred half-duplex using MISO, MOSI, IO2, IO3 (bit0, bit1, bit2, bit3)
     IO_QUAD = 4
 
 
@@ -34,8 +37,8 @@ class ClkDiv(IntEnum):
 
 
 class CsPolarity(IntEnum):
-    ACTIVE_LOW = 0
-    ACTIVE_HIGH = auto()
+    ACTIVE_LOW = 0          # Active-low chip select (DEFAULT)
+    ACTIVE_HIGH = auto()    # Active-high chip select
 
 
 class SsoMap(IntFlag):
@@ -150,7 +153,7 @@ def init(
     if result == Ft4222Status.OK:
         if io_mode == IoMode.IO_SINGLE:
             return Ok(SpiMasterSingleHandle(ft_handle))
-        elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
+        elif io_mode in {IoMode.IO_DUAL, IoMode.IO_QUAD}:
             return Ok(SpiMasterMultiHandle(ft_handle))
         else:
             return Err(result)
@@ -186,7 +189,7 @@ def set_lines(
 @overload
 def set_lines(
     ft_handle: SpiMasterHandle,
-    io_mode: Union[Literal[IoMode.IO_DUAL], Literal[IoMode.IO_QUAD]]
+    io_mode: Literal[IoMode.IO_DUAL, IoMode.IO_QUAD]
 ) -> SpiMasterMultiHandle: ...
 
 
@@ -240,7 +243,8 @@ def single_read(
     Returns:
         bytes:              Read data (count can be lower than requested) # TODO: Can it?
     """
-    assert 0 < read_byte_count < (2 ** 16), "Invalid number of bytes to read"
+    assert 0 < read_byte_count < (2 ** 16),\
+        "Number of bytes to read must be positive and less than 2^16"
 
     buffer = (c_uint8 * read_byte_count)()
     bytes_transferred = c_uint16()
@@ -277,7 +281,8 @@ def single_write(
     Returns:
         int:                Number of transmitted bytes
     """
-    assert len(write_data) > 0, "Data to write must be non-empty"
+    assert 0 < len(write_data) < (2 ** 16),\
+        "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
     result: Ft4222Status = _single_write(
@@ -312,7 +317,8 @@ def single_read_write(
     Returns:
         bytes:              Received data
     """
-    assert len(write_data) > 0, "Data to write must be non-empty"
+    assert 0 < len(write_data) < (2 ** 16),\
+        "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
     read_buffer = (c_uint8 * len(write_data))()
@@ -330,36 +336,6 @@ def single_read_write(
         raise Ft4222Exception(result)
 
     return bytes(read_buffer)
-
-
-@overload
-def multi_read_write(
-    ft_handle: SpiMasterMultiHandle,
-    write_data: Literal[None],
-    single_write_byte_count: Literal[0],
-    multi_write_byte_count: Literal[0],
-    multi_read_byte_count: int
-) -> bytes: ...
-
-
-@overload
-def multi_read_write(
-    ft_handle: SpiMasterMultiHandle,
-    write_data: bytes,
-    single_write_byte_count: int,
-    multi_write_byte_count: int,
-    multi_read_byte_count: int
-) -> bytes: ...
-
-
-@overload
-def multi_read_write(
-    ft_handle: SpiMasterMultiHandle,
-    write_data: Optional[bytes],
-    single_write_byte_count: int,
-    multi_write_byte_count: int,
-    multi_read_byte_count: int
-) -> bytes: ...
 
 
 def multi_read_write(
@@ -389,20 +365,22 @@ def multi_read_write(
     Returns:
         bytes:                      Read data (if any)
     """
-    assert 0 <= single_write_byte_count < (
-        2 ** 4), "Invalid number of single write bytes"
-    assert 0 <= multi_write_byte_count < (
-        2 ** 16), "Invalid number of multi write bytes"
-    assert 0 <= multi_read_byte_count < (
-        2 ** 16), "Invalid number of multi read bytes"
-    assert (single_write_byte_count + multi_write_byte_count +
-            multi_read_byte_count) > 0, "Total number of bytes written/read must be non-zero"
+    assert 0 <= single_write_byte_count < (2 ** 4),\
+        "Number of single-write bytes must be non-negative and less than 16"
+    assert 0 <= multi_write_byte_count < (2 ** 16),\
+        "Number of multi-write bytes must be non-negative and less than 2^16 (65 536)"
+    assert 0 <= multi_read_byte_count < (2 ** 16),\
+        "Number of multi-read bytes must be non-negative and less than 2^16 (65 536)"
+    assert (single_write_byte_count + multi_write_byte_count + multi_read_byte_count) > 0,\
+        "Total number of bytes written/read must be non-zero"
     if write_data is None:
-        assert (single_write_byte_count +
-                multi_write_byte_count) == 0, "Write byte count must be zero in case data is None"
+        assert (single_write_byte_count + multi_write_byte_count) == 0,\
+            "Number of bytes to write must be zero in case the write data are None"
     else:
-        assert (single_write_byte_count +
-                multi_write_byte_count) <= len(write_data), "Length of data to write is longer than given data"
+        assert len(write_data) < (2 ** 16),\
+            "Data to be written must have size less than 2^16 bytes"
+        assert (single_write_byte_count + multi_write_byte_count) <= len(write_data),\
+            "Length of data to write is longer than given data"
 
     read_buffer = (c_uint8 * multi_read_byte_count)()
     bytes_read = c_uint16()

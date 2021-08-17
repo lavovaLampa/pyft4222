@@ -1,4 +1,3 @@
-
 from enum import IntEnum, IntFlag, auto
 from typing import Final, Optional, Set
 
@@ -58,6 +57,8 @@ SOFT_ERROR_SET: Final[Set[Ft4222Status]] = {
 
 
 class Ft4222Exception(Exception):
+    """A class wrapping the FT4222 driver exception.
+    """
     status: Ft4222Status
     msg: Optional[str]
 
@@ -74,7 +75,7 @@ Message: {self.msg}
 
 
 class GpioTrigger(IntFlag):
-    RISING = 0x01
-    FALLING = 0x02
-    LEVEL_HIGH = 0x04
-    LEVEL_LOW = 0X08
+    RISING = 0x01       # Trigger on rising edge
+    FALLING = 0x02      # Trigger on falling edge
+    LEVEL_HIGH = 0x04   # Trigger on high level
+    LEVEL_LOW = 0X08    # Trigger on low level

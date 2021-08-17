@@ -122,7 +122,8 @@ def set_address(ft_handle: I2cSlaveHandle, addr: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    assert 0 <= addr < (2 ** 16), "Invalid device address"
+    assert 0 <= addr < (2 ** 16),\
+        "Device address must be an unsigned 16b integer (range 0 - 65 535)"
 
     result: Ft4222Status = _set_address(ft_handle, addr)
 
@@ -134,13 +135,13 @@ def get_rx_status(ft_handle: I2cSlaveHandle) -> int:
     """Get number of bytes in the receive queue.
 
     Args:
-        ft_handle:      Handle to an initialized FT4222 device in I2C Slave mode
+        ft_handle:          Handle to an initialized FT4222 device in I2C Slave mode
 
     Raises:
         Ft4222Exception:    In case of unexpected error
 
     Returns:
-        int:            Number of bytes in Rx queue
+        int:                Number of bytes in Rx queue
     """
     rx_size = c_uint16()
 
@@ -166,7 +167,8 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data
     """
-    assert 0 < read_byte_count < (2 ** 16), "Invalid number of bytes to read"
+    assert 0 < read_byte_count < (2 ** 16),\
+        "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
@@ -197,7 +199,8 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:            Number of bytes written
     """
-    assert len(write_data) > 0, "Data must be non-empty"
+    assert 0 < len(write_data) < (2 ** 16),\
+        "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
 
@@ -255,7 +258,8 @@ def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    assert 0 <= response_word < (2 ** 8), "Invalid response word"
+    assert 0 <= response_word < (2 ** 8),\
+        "The response word must be an 8b unsigned integer (range 0 - 255)"
 
     result: Ft4222Status = _set_resp_word(
         ft_handle, response_word)

@@ -198,7 +198,7 @@ def create_device_info_list() -> int:
     result: FtStatus = _create_device_info_list(byref(dev_count))
 
     if result != FtStatus.OK:
-        raise RuntimeError("TODO")
+        raise FtException(result)
 
     return dev_count.value
 
@@ -207,8 +207,6 @@ def get_device_info_list() -> List[DeviceInfo]:
     """Return list containing details about connected D2XX devices.
 
     This function returns a device information list and the number of D2XX devices in the list.
-
-    NOTE: function 'create_device_info_list' must be called beforehand, to update the list!
 
     Args:
         dev_count:          Max. number of devices to construct list for
@@ -244,7 +242,8 @@ def get_device_info_detail(dev_id: int) -> Optional[DeviceInfo]:
     Returns:
         device details (if id exists)
     """
-    assert 0 <= dev_id, "Invalid device ID"
+    assert 0 <= dev_id <= (2 ** 31) - 1,\
+        "Device ID must be a non-negative integer"
 
     idx = c_uint(dev_id)
     flags = c_uint()
@@ -296,7 +295,8 @@ def open(dev_id: int) -> Result[FtHandle, FtStatus]:
     Returns:
         D2XX device handle (optional)
     """
-    assert 0 <= dev_id, "Invalid device ID"
+    assert 0 <= dev_id <= (2 ** 31) - 1,\
+        "Device ID must be a non-negative integer"
 
     ft_handle = c_void_p()
     result: FtStatus = _open(dev_id, byref(ft_handle))
