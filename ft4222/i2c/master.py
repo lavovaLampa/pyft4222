@@ -1,17 +1,21 @@
-from typing import Optional
-
 from wrapper import FtHandle
+from ft4222 import CommonHandle
+from typing import Generic, Type, TypeVar
+
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status
 from wrapper.ft4222.common import uninitialize
 from wrapper.ft4222.i2c.master import I2cMasterHandle, Status, TransactionFlag
 from wrapper.ft4222.i2c.master import get_status, read, read_ex, reset, reset_bus, write, write_ex
 
+T = TypeVar('T', bound=CommonHandle[FtHandle])
 
-class I2CMaster:
-    _handle: Optional[I2cMasterHandle]
 
-    def __init__(self, ft_handle: I2cMasterHandle):
-        self._handle = ft_handle
+class I2CMaster(Generic[T], CommonHandle[I2cMasterHandle]):
+    _mode_class: Type[T]
+
+    def __init__(self, ft_handle: I2cMasterHandle, mode_class: Type[T]):
+        super().__init__(ft_handle)
+        self._mode_class = mode_class
 
     def read(self, dev_address: int, read_byte_count: int) -> bytes:
         if self._handle is not None:
@@ -86,11 +90,14 @@ class I2CMaster:
                 "I2C Master has been uninitialized!"
             )
 
-    def uninitialize(self) -> FtHandle:
+    def close(self) -> None:
+        self.uninitialize().close()
+
+    def uninitialize(self) -> T:
         if self._handle is not None:
             handle = self._handle
             self._handle = None
-            return uninitialize(handle)
+            return self._mode_class(uninitialize(handle))
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,

@@ -1,4 +1,5 @@
-from typing import Optional
+from ft4222 import CommonHandle
+from typing import Generic, Type, TypeVar
 from wrapper.ft4222.common import uninitialize
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status
 from wrapper import FtHandle
@@ -6,11 +7,15 @@ from wrapper import FtHandle
 from wrapper.ft4222.i2c.slave import I2cSlaveHandle, get_address, get_rx_status, read, reset, set_address, set_clock_stretch, set_resp_word, write
 
 
-class I2CSlave:
-    _handle: Optional[I2cSlaveHandle]
+T = TypeVar('T', bound=CommonHandle[FtHandle])
 
-    def __init__(self, ft_handle: I2cSlaveHandle):
-        self._handle = ft_handle
+
+class I2CSlave(Generic[T], CommonHandle[I2cSlaveHandle]):
+    _mode_class: Type[T]
+
+    def __init__(self, ft_handle: I2cSlaveHandle, mode_class: Type[T]):
+        super().__init__(ft_handle)
+        self._mode_class = mode_class
 
     def reset(self) -> None:
         if self._handle is not None:
@@ -84,11 +89,14 @@ class I2CSlave:
                 "I2C Slave has been uninitialized!"
             )
 
-    def uninitialize(self) -> FtHandle:
+    def close(self) -> None:
+        self.uninitialize().close()
+
+    def uninitialize(self) -> T:
         if self._handle is not None:
             handle = self._handle
             self._handle = None
-            return uninitialize(handle)
+            return self._mode_class(uninitialize(handle))
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,

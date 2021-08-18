@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
-from wrapper import ResultTag, ftd2xx as ftd
+from wrapper import ResType, ftd2xx as ftd
 
-from wrapper.ft4222 import ClockRate, set_clock
-from wrapper.ft4222 import gpio, set_wakeup_interrupt, set_suspend_out
+from wrapper.ft4222.common import ClockRate, set_wakeup_interrupt, set_suspend_out, set_clock
+from wrapper.ft4222 import gpio
 
-from wrapper.ft4222.spi import ClkPhase, ClkPolarity, master as spi_master, slave as spi_slave
+from wrapper.ft4222.spi import ClkPhase, ClkPolarity, master as spi_master
 from wrapper.ft4222.gpio import Direction, PortId
 
 import sys
@@ -15,7 +15,7 @@ def mode_test():
     result0 = ftd.open(0)
     result1 = ftd.open(1)
 
-    if result0.tag == ResultTag.OK and result1.tag == ResultTag.OK:
+    if result0.tag == ResType.OK and result1.tag == ResType.OK:
         handle0 = result0.result
         handle1 = result1.result
 
@@ -43,7 +43,7 @@ def mode_test():
             )
         )
 
-        if spim_handle.tag == ResultTag.OK:
+        if spim_handle.tag == ResType.OK:
             handle = spim_handle.result
             print("Spi Master initialized OK")
             temp = spi_master.single_write(handle, bytes([0x00] * 256))
@@ -52,7 +52,7 @@ def mode_test():
             print(
                 f"Spi Master failed to initialize. Reason: {spim_handle.err}", file=sys.stderr)
 
-        if gpio_handle.tag == ResultTag.OK:
+        if gpio_handle.tag == ResType.OK:
             handle = gpio_handle.result
             print("GPIO initialized OK")
 
@@ -85,7 +85,7 @@ def spi_mode_test():
         print(i)
 
     handle3 = ftd.open(0)
-    if handle3.tag == ResultTag.OK:
+    if handle3.tag == ResType.OK:
         handle = handle3.result
 
         set_wakeup_interrupt(handle, False)
@@ -101,7 +101,7 @@ def spi_mode_test():
             )
         )
 
-        if result.tag == ResultTag.OK:
+        if result.tag == ResType.OK:
             handle = result.result
             gpio.write(handle, PortId.PORT_3, True)
         else:

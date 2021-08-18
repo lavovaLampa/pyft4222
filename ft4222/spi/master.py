@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from ft4222 import CommonHandle
+from typing import Generic, Optional, Type, TypeVar, Union
 
 from wrapper import FtHandle
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status
@@ -10,8 +11,16 @@ from wrapper.ft4222.spi.common import reset, reset_transaction, set_driving_stre
 from wrapper.ft4222.spi.master import multi_read_write, set_cs_polarity, single_read, single_read_write, single_write
 
 
-class SpiMasterCommon():
-    _handle: Optional[SpiMasterHandle]
+T = TypeVar('T', bound=CommonHandle[FtHandle])
+U = TypeVar('U', bound=SpiMasterHandle)
+
+
+class SpiMasterCommon(Generic[T, U], CommonHandle[U]):
+    _mode_class: Type[T]
+
+    def __init__(self, ft_handle: U, mode_class: Type[T]):
+        super().__init__(ft_handle)
+        self._mode_class = mode_class
 
     def reset_bus(self) -> None:
         if self._handle is not None:
@@ -63,11 +72,14 @@ class SpiMasterCommon():
     def set_lines(self, io_mode: IoMode) -> None:
         pass
 
-    def uninitialize(self) -> FtHandle:
+    def close(self) -> None:
+        self.uninitialize().close()
+
+    def uninitialize(self) -> T:
         if self._handle is not None:
             handle = self._handle
             self._handle = None
-            return uninitialize(handle)
+            return self._mode_class(uninitialize(handle))
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,
@@ -75,11 +87,9 @@ class SpiMasterCommon():
             )
 
 
-class SpiMasterSingle(SpiMasterCommon):
-    _handle: Optional[SpiMasterSingleHandle]
-
-    def __init__(self, ft_handle: SpiMasterSingleHandle):
-        self._handle = ft_handle
+class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
+    def __init__(self, ft_handle: SpiMasterSingleHandle, mode_class: Type[T]):
+        super().__init__(ft_handle, mode_class)
 
     def single_read(self, read_byte_count: int, end_transaction: bool = True) -> bytes:
         if self._handle is not None:
@@ -109,11 +119,9 @@ class SpiMasterSingle(SpiMasterCommon):
             )
 
 
-class SpiMasterMulti(SpiMasterCommon):
-    _handle: Optional[SpiMasterMultiHandle]
-
-    def __init__(self, ft_handle: SpiMasterMultiHandle):
-        self._handle = ft_handle
+class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
+    def __init__(self, ft_handle: SpiMasterMultiHandle, mode_class: Type[T]):
+        super().__init__(ft_handle, mode_class)
 
     def multi_read_write(
         self,
@@ -137,4 +145,4 @@ class SpiMasterMulti(SpiMasterCommon):
             )
 
 
-SpiMaster = Union[SpiMasterSingle, SpiMasterMulti]
+SpiMaster = Union[SpiMasterSingle[T], SpiMasterMulti[T]]

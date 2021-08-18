@@ -1,16 +1,22 @@
-from typing import List, Optional
-from wrapper.ft4222.common import uninitialize
-from wrapper.ft4222 import Ft4222Exception, Ft4222Status, GpioTrigger
+from ft4222 import CommonHandle
+from typing import Generic, List, Type, TypeVar
+
 from wrapper import FtHandle
+from wrapper.ft4222 import Ft4222Exception, Ft4222Status, GpioTrigger
+from wrapper.ft4222.common import uninitialize
 
-from wrapper.ft4222.gpio import GpioHandle, PortId, get_trigger_status, read, read_trigger_queue, set_input_trigger, set_waveform_mode, write
+from wrapper.ft4222.gpio import GpioHandle, PortId
+from wrapper.ft4222.gpio import get_trigger_status, read, read_trigger_queue, set_input_trigger, set_waveform_mode, write
+
+T = TypeVar('T', bound=CommonHandle[FtHandle])
 
 
-class Gpio:
-    _handle: Optional[GpioHandle]
+class Gpio(Generic[T], CommonHandle[GpioHandle]):
+    _mode_handle: Type[T]
 
-    def __init__(self, ft_handle: GpioHandle):
-        self._handle = ft_handle
+    def __init__(self, ft_handle: GpioHandle, mode_handle: Type[T]):
+        super().__init__(ft_handle)
+        self._mode_handle = mode_handle
 
     def read(self, port_id: PortId) -> bool:
         if self._handle is not None:
@@ -66,11 +72,14 @@ class Gpio:
                 "GPIO has been uninitialized!"
             )
 
-    def uninitialize(self) -> FtHandle:
+    def close(self) -> None:
+        self.uninitialize().close()
+
+    def uninitialize(self) -> T:
         if self._handle is not None:
             handle = self._handle
             self._handle = None
-            return uninitialize(handle)
+            return self._mode_handle(uninitialize(handle))
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,

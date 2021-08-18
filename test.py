@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 
 from ctypes import c_void_p
+from wrapper.ft4222.gpio import Direction
+from ft4222.ft4222 import InterfaceType
 from wrapper.ft4222.spi import ClkPhase, ClkPolarity, master
-from wrapper import FtHandle, ResultTag
+from wrapper import FtHandle, ResType
 import wrapper.ftd2xx as ft
 
 import wrapper.ft4222.spi.slave as slave
 
-import ft4222 as pyft
+import ft4222.init as pyft
 
 
 def main() -> None:
@@ -28,7 +30,7 @@ def main() -> None:
 
 def test_positif() -> None:
     result = ft.open(0)
-    if result.tag == ResultTag.OK:
+    if result.tag == ResType.OK:
         handle = result.result
         print(f"Get Device Info: {ft.get_device_info(handle)}")
         print(f"Purge: {ft.purge(handle, ft.PurgeType.RX)}")
@@ -36,13 +38,13 @@ def test_positif() -> None:
 
 def test_spi_slave() -> None:
     result = ft.open(0)
-    if result.tag == ResultTag.OK:
+    if result.tag == ResType.OK:
         handle = result.result
         temp = slave.init_ex(handle, slave.IoProtocol.NO_PROTOCOL)
 
 def test_spi_master() -> None:
     result = ft.open(0)
-    if result.tag == ResultTag.OK:
+    if result.tag == ResType.OK:
         handle = result.result
         temp = master.init(
             handle, 
@@ -55,7 +57,19 @@ def test_spi_master() -> None:
 
 
 def new_one() -> None:
-    pyft.open(0)
+    result = pyft.open(0)
+    if result.tag == ResType.OK:
+        temp = result.result
+
+        if temp.tag == InterfaceType.GPIO:
+            omega = temp.init_gpio((Direction.OUTPUT, Direction.OUTPUT, Direction.OUTPUT, Direction.OUTPUT, ))
+            print(omega)
+        elif temp.tag == InterfaceType.SPI_MASTER:
+            omega = temp.init_single_spi_master(master.ClkDiv.CLK_DIV_2, ClkPolarity.CLK_IDLE_LOW, ClkPhase.CLK_TRAILING, master.SsoMap.SS_0)
+            cont = omega.uninitialize()
+            testo = temp.init_quad_spi_master(master.ClkDiv.CLK_DIV_2, ClkPolarity.CLK_IDLE_LOW, ClkPhase.CLK_TRAILING, master.SsoMap.SS_0)
+        else:
+            omega = temp.init_raw_spi_slave()
 
 
 if __name__ == "__main__":

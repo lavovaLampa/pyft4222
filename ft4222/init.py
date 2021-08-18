@@ -2,7 +2,7 @@ from enum import Enum, auto
 from typing import Callable, Union, Final, Dict, Tuple, Type
 
 from .ft4222 import ProtocolHandle, GpioHandle, SpiMasterHandle
-from wrapper import Err, FtHandle, Ok, Result, ResultTag, ftd2xx as ftd
+from wrapper import Err, FtHandle, Ok, Result, ResType, ftd2xx as ftd
 from wrapper.dll_loader import OS_TYPE
 from wrapper.ftd2xx import DeviceType
 from wrapper.ft4222 import gpio
@@ -30,7 +30,7 @@ def _disambiguate_modes(handle: FtHandle) -> Union[GpioHandle, SpiMasterHandle]:
         TODO
     """
     result = gpio.init(handle, _DEFAULT_GPIO_DIRS)
-    if result.tag == ResultTag.OK:
+    if result.tag == ResType.OK:
         gpio_handle = result.result
         open_handle = uninitialize(gpio_handle)
         return GpioHandle(open_handle)
@@ -94,7 +94,7 @@ def open(dev_id: int) -> Result[Ft4222Handle, FtError]:
 
     if id_valid:
         ft_handle = ftd.open(dev_id)
-        if ft_handle.tag == ResultTag.OK:
+        if ft_handle.tag == ResType.OK:
             return get_mode_handle(ft_handle.result)
         else:
             return Err(FtError.INVALID_HANDLE)
@@ -104,7 +104,7 @@ def open(dev_id: int) -> Result[Ft4222Handle, FtError]:
 
 def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
     ft_handle = ftd.open_by_serial(serial_num)
-    if ft_handle.tag == ResultTag.OK:
+    if ft_handle.tag == ResType.OK:
         return get_mode_handle(ft_handle.result)
     else:
         return Err(FtError.INVALID_HANDLE)
@@ -112,7 +112,7 @@ def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
 
 def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtError]:
     ft_handle = ftd.open_by_description(dev_description)
-    if ft_handle.tag == ResultTag.OK:
+    if ft_handle.tag == ResType.OK:
         return get_mode_handle(ft_handle.result)
     else:
         return Err(FtError.INVALID_HANDLE)
@@ -121,7 +121,7 @@ def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtError]:
 if OS_TYPE != 'Linux':
     def open_by_location(location_id: int) -> Result[Ft4222Handle, FtError]:
         ft_handle = ftd.open_by_location(location_id)
-        if ft_handle.tag == ResultTag.OK:
+        if ft_handle.tag == ResType.OK:
             return get_mode_handle(ft_handle.result)
         else:
             return Err(FtError.INVALID_HANDLE)
