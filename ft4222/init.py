@@ -21,19 +21,17 @@ def _disambiguate_modes(handle: FtHandle) -> Union[GpioHandle, SpiMasterHandle]:
     """Disambiguate between FT4222 in mode 1 and 2.
 
     Args:
-        handle:     Handle to an opened FT4222 interface (in mode_1_2)
+        handle:                 Handle to an opened FT4222 interface (in mode_1_2)
 
     Raises:
         Ft4222Exception:        In case of unexpected error
 
     Returns:
-        TODO
+        Union[GpioHandle, SpiMasterHandle]:     Returns disambiguated handle
     """
     result = gpio.init(handle, _DEFAULT_GPIO_DIRS)
     if result.tag == ResType.OK:
-        gpio_handle = result.result
-        open_handle = uninitialize(gpio_handle)
-        return GpioHandle(open_handle)
+        return GpioHandle(uninitialize(result.result))
     else:
         return SpiMasterHandle(handle)
 

@@ -1,9 +1,10 @@
 from abc import ABC
 from typing import Generic, Optional, TypeVar
-from wrapper.ft4222.common import ClockRate, Version, chip_reset, get_clock, get_version, set_clock, set_interrupt_trigger, set_suspend_out, set_wakeup_interrupt
-from wrapper.ft4222 import Ft4222Exception, Ft4222Status, GpioTrigger
-from wrapper.ftd2xx import close
+
 from wrapper import FtHandle
+from wrapper.ftd2xx import close
+from wrapper.ft4222 import Ft4222Exception, Ft4222Status, GpioTrigger
+from wrapper.ft4222.common import ClockRate, Version, chip_reset, get_clock, get_version, set_clock, set_interrupt_trigger, set_suspend_out, set_wakeup_interrupt
 
 T = TypeVar('T', bound=FtHandle)
 
