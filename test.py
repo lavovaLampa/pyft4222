@@ -66,8 +66,11 @@ def new_one() -> None:
             print(omega)
         elif temp.tag == InterfaceType.SPI_MASTER:
             omega = temp.init_single_spi_master(master.ClkDiv.CLK_DIV_2, ClkPolarity.CLK_IDLE_LOW, ClkPhase.CLK_TRAILING, master.SsoMap.SS_0)
+            read_vals = omega.single_read_write(bytes([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06]))
+            print(read_vals)
             cont = omega.uninitialize()
-            testo = temp.init_quad_spi_master(master.ClkDiv.CLK_DIV_2, ClkPolarity.CLK_IDLE_LOW, ClkPhase.CLK_TRAILING, master.SsoMap.SS_0)
+            omega = cont.init_single_spi_master(master.ClkDiv.CLK_DIV_2, ClkPolarity.CLK_IDLE_LOW, ClkPhase.CLK_TRAILING, master.SsoMap.SS_0)
+            omega.close()
         else:
             omega = temp.init_raw_spi_slave()
 

@@ -71,8 +71,8 @@ _single_write.argtypes = [c_void_p, c_char_p,
 _single_write.restype = Ft4222Status
 
 _single_read_write = ftlib.FT4222_SPIMaster_SingleReadWrite
-_single_read_write.argtypes = [c_void_p, POINTER(c_uint8), POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16), c_bool]
+_single_read_write.argtypes = [c_void_p, POINTER(
+    c_uint8), c_char_p, c_uint16, POINTER(c_uint16), c_bool]
 _single_read_write.restype = Ft4222Status
 
 _multi_read_write = ftlib.FT4222_SPIMaster_MultiReadWrite
