@@ -84,7 +84,10 @@ def set_driving_strength(
     setting driving strength to 4 mA should be enough.
 
     Args:
-        ft_handle:  Handle to an initialized FT4222 device in SPI Master/Slave mode
+        ft_handle:      Handle to an initialized FT4222 device in SPI Master/Slave mode
+        clk_strength:   Driving strength of the clk pin
+        io_strength:    Driving strength of the I/O pins (MISO, MOSI, IO2, IO3)
+        sso_strength:   Driving strength of the slave select pins (SSO0, SSO1, SSO2, SSO3)
 
     Raises:
         Ft4222Exception:    In case of unexpected error

@@ -48,7 +48,7 @@ def test_spi_master() -> None:
         handle = result.result
         temp = master.init(
             handle, 
-            master.IoMode.IO_DUAL,
+            master.IoMode.DUAL,
             master.ClkDiv.CLK_DIV_2,
             ClkPolarity.CLK_IDLE_LOW,
             ClkPhase.CLK_LEADING,
@@ -70,7 +70,8 @@ def new_one() -> None:
             print(read_vals)
             cont = omega.uninitialize()
             omega = cont.init_single_spi_master(master.ClkDiv.CLK_DIV_2, ClkPolarity.CLK_IDLE_LOW, ClkPhase.CLK_TRAILING, master.SsoMap.SS_0)
-            omega.close()
+            treloo = omega.set_io_mode(master.IoMode.SINGLE)
+            reslo = treloo.uninitialize()
         else:
             omega = temp.init_raw_spi_slave()
 

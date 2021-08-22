@@ -17,11 +17,11 @@ SpiMasterHandle = Union[SpiMasterSingleHandle, SpiMasterMultiHandle]
 class IoMode(IntEnum):
     """Enum representing possible SPI data I/O modes/counts.
     """
-    IO_SINGLE = 1
+    SINGLE = 1
     """Data are transferred full-duplex using MISO/MOSI lines."""
-    IO_DUAL = 2
+    DUAL = 2
     """Data are transferred half-duplex using MISO, MOSI lines (bit0, bit1)."""
-    IO_QUAD = 4
+    QUAD = 4
     """Data are transferred half-duples using
     MISO, MOSI, IO2, IO3 lines (bit0, bit1, bit2, bit3).
     """
@@ -94,7 +94,7 @@ _multi_read_write.restype = Ft4222Status
 @overload
 def init(
     ft_handle: FtHandle,
-    io_mode: Literal[IoMode.IO_SINGLE],
+    io_mode: Literal[IoMode.SINGLE],
     clock_div: ClkDiv,
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
@@ -105,7 +105,7 @@ def init(
 @overload
 def init(
     ft_handle: FtHandle,
-    io_mode: Union[Literal[IoMode.IO_DUAL], Literal[IoMode.IO_QUAD]],
+    io_mode: Union[Literal[IoMode.DUAL], Literal[IoMode.QUAD]],
     clock_div: ClkDiv,
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
@@ -161,9 +161,9 @@ def init(
     )
 
     if result == Ft4222Status.OK:
-        if io_mode == IoMode.IO_SINGLE:
+        if io_mode == IoMode.SINGLE:
             return Ok(SpiMasterSingleHandle(ft_handle))
-        elif io_mode in {IoMode.IO_DUAL, IoMode.IO_QUAD}:
+        elif io_mode in {IoMode.DUAL, IoMode.QUAD}:
             return Ok(SpiMasterMultiHandle(ft_handle))
         else:
             return Err(result)
@@ -192,14 +192,14 @@ def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None
 @overload
 def set_lines(
     ft_handle: SpiMasterHandle,
-    io_mode: Literal[IoMode.IO_SINGLE]
+    io_mode: Literal[IoMode.SINGLE]
 ) -> SpiMasterSingleHandle: ...
 
 
 @overload
 def set_lines(
     ft_handle: SpiMasterHandle,
-    io_mode: Literal[IoMode.IO_DUAL, IoMode.IO_QUAD]
+    io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
 ) -> SpiMasterMultiHandle: ...
 
 
@@ -224,9 +224,9 @@ def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    if io_mode == IoMode.IO_SINGLE:
+    if io_mode == IoMode.SINGLE:
         return SpiMasterSingleHandle(ft_handle)
-    elif io_mode in [IoMode.IO_DUAL, IoMode.IO_QUAD]:
+    elif io_mode in [IoMode.DUAL, IoMode.QUAD]:
         return SpiMasterMultiHandle(ft_handle)
     else:
         raise Ft4222Exception(

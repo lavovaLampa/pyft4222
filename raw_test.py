@@ -27,7 +27,7 @@ def mode_test():
         set_suspend_out(handle1, False)
         spim_handle = spi_master.init(
             handle0,
-            spi_master.IoMode.IO_SINGLE,
+            spi_master.IoMode.SINGLE,
             spi_master.ClkDiv.CLK_DIV_512,
             ClkPolarity.CLK_IDLE_LOW,
             ClkPhase.CLK_TRAILING,

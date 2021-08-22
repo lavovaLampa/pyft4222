@@ -1,14 +1,15 @@
-"""Module encapsulation all possible FT4222 USB stream modes.
+"""Module encapsulating all possible FT4222 USB stream modes.
 
 FT4222 chip can be set into one of 4 possible modes externally.
-Each mode has a specific set of available USB interfaces.
+Each mode has a specific set of available USB stream interfaces.
 
 Each class represents a specific mode of stream and encapsulates it.
 
 Important:
-    Do not use classes in this module directly. Use functions
-    from ft4222 module instead.
+    Do not instantiate classes in this module directly. Use functions
+    from the ft4222 module instead.
 """
+
 from enum import Enum, auto
 from typing import Literal, Union
 
@@ -104,7 +105,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
-                spi_master.IoMode.IO_SINGLE,
+                spi_master.IoMode.SINGLE,
                 clk_div,
                 clk_polarity,
                 clk_phase,
@@ -142,7 +143,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
-                spi_master.IoMode.IO_DUAL,
+                spi_master.IoMode.DUAL,
                 clk_div,
                 clk_polarity,
                 clk_phase,
@@ -180,7 +181,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
-                spi_master.IoMode.IO_QUAD,
+                spi_master.IoMode.QUAD,
                 clk_div,
                 clk_polarity,
                 clk_phase,
@@ -378,7 +379,7 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
-                spi_master.IoMode.IO_SINGLE,
+                spi_master.IoMode.SINGLE,
                 clk_div,
                 clk_polarity,
                 clk_phase,
@@ -416,7 +417,7 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
-                spi_master.IoMode.IO_DUAL,
+                spi_master.IoMode.DUAL,
                 clk_div,
                 clk_polarity,
                 clk_phase,
@@ -454,7 +455,7 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
-                spi_master.IoMode.IO_QUAD,
+                spi_master.IoMode.QUAD,
                 clk_div,
                 clk_polarity,
                 clk_phase,
