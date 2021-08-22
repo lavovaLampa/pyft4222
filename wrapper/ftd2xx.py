@@ -9,6 +9,8 @@ from . import FtHandle, Ok, Err, Result, SYSTEM_TYPE
 
 
 class FtStatus(IntEnum):
+    """Class representing a D2XX 'FT_RESULT' enum.
+    """
     OK = 0
     INVALID_HANDLE = auto()
     DEVICE_NOT_FOUND = auto()
@@ -32,10 +34,17 @@ class FtStatus(IntEnum):
 
 
 class FtException(Exception):
+    """A class wrapping the D2XX driver exceptions.
+
+    Attributes:
+        status:     D2XX result enum
+        msg:        Optional human-readable message
+    """
     status: FtStatus
     msg: Optional[str]
 
     def __init__(self, status: FtStatus, msg: Optional[str] = None):
+        super().__init__()
         self.status = status
         self.msg = msg
 
@@ -92,10 +101,12 @@ _reset_device.restype = FtStatus
 
 # Constants
 
-# Max. length of C string containing D2XX device serial number (according to D2XX documentation)
-SERIAL_NUMBER_MAX_LEN: Final[int] = 16
-# Max. length of C string containing D2XX device description (according to D2XX documentation)
-DESCRIPTION_MAX_LEN: Final[int] = 64
+# Max. length of C string containing D2XX device serial number,
+# according to the D2XX documentation
+_SERIAL_NUMBER_MAX_LEN: Final[int] = 16
+# Max. length of C string containing D2XX device description,
+# according to the D2XX documentation
+_DESCRIPTION_MAX_LEN: Final[int] = 64
 
 # Data types
 
@@ -106,18 +117,22 @@ class _RawDeviceInfoListNode(Structure):
         ('type', c_uint),
         ('id', c_uint),
         ('loc_id', c_uint),
-        ('serial_number', c_char * SERIAL_NUMBER_MAX_LEN),
-        ('description', c_char * DESCRIPTION_MAX_LEN),
+        ('serial_number', c_char * _SERIAL_NUMBER_MAX_LEN),
+        ('description', c_char * _DESCRIPTION_MAX_LEN),
         ('handle', c_void_p)
     ]
 
 
 class DeviceFlags(IntFlag):
+    """Class representing the D2XX 'device information flags' enum."""
     OPEN = 1
+    """Device is currently opened."""
     HIGH_SPEED = 2
+    """Device is using USB High-Speed signaling rate."""
 
 
 class DeviceType(IntEnum):
+    """Class representing the 'FT_DEVICE' D2XX enum."""
     DEV_BM = 0
     DEV_AM = auto()
     DEV_100AX = auto()
@@ -138,25 +153,41 @@ class DeviceType(IntEnum):
 
 
 class DeviceInfo(NamedTuple):
+    """NamedTuple encapsulating the 'FT_DEVICE_INFO_LIST_NODE' D2XX data struct.
+    """
     flags: DeviceFlags
-    type: DeviceType
-    id: int
+    """Special device flags. See 'DeviceFlags'."""
+    dev_type: DeviceType
+    """Device type. See 'DeviceType'."""
+    idx: int
+    """Device index in device information list."""
     loc_id: int
+    """Device USB Location ID."""
     serial_number: str
+    """Serial number of the device."""
     description: str
+    """Device description."""
     handle: FtHandle
+    """A C pointer to device handle; NULL if not opened"""
 
-    @staticmethod
-    def from_raw(raw_node: _RawDeviceInfoListNode) -> 'DeviceInfo':
-        return DeviceInfo(
+    @classmethod
+    def from_raw(cls, raw_node: _RawDeviceInfoListNode) -> 'DeviceInfo':
+        return cls(
             flags=DeviceFlags(raw_node.flags),
-            type=DeviceType(raw_node.type),
-            id=raw_node.id,
+            dev_type=DeviceType(raw_node.type),
+            idx=raw_node.id,
             loc_id=raw_node.loc_id,
             serial_number=raw_node.serial_number.decode('utf-8'),
             description=raw_node.description.decode('utf-8'),
             handle=FtHandle(raw_node.handle)
         )
+
+
+class DriverVersion(NamedTuple):
+    """NamedTuple encapsulating the driver version information."""
+    major: int
+    minor: int
+    build_version: int
 
 
 class _OpenExFlag(IntEnum):
@@ -166,27 +197,39 @@ class _OpenExFlag(IntEnum):
 
 
 class PurgeType(IntFlag):
+    """Enum for selecting the buffer purge type."""
     RX = 1
+    """Purge receive buffers."""
     TX = 2
+    """Purge transmit buffers."""
 
 
 class ShortDeviceInfo(NamedTuple):
+    """NamedTuple encapsulating the short device information."""
     dev_type: DeviceType
-    dev_id: int
+    """Device type. See 'DeviceType' enum."""
+    dev_idx: int
+    """Device index in device information list."""
     serial_number: str
+    """Device serial number."""
     description: str
+    """Device description"""
 
 
 def create_device_info_list() -> int:
     """Create a device info list.
 
-    This function builds a device information list and returns the number of D2XX devices connected to the system.
+    This function builds a device information list and returns
+    the number of D2XX devices connected to the system.
     The list contains information about both unopened and open devices.
 
-    An application can use this function to get the number of devices attached to the system.
-    It can then allocate space for the device information list and retrieve the list using get_device_info_list.
+    An application can use this function to get the number
+    of devices attached to the system.
+    It can then allocate space for the device information list
+    and retrieve the list using get_device_info_list.
     If the devices connected to the system change,
-    the device info list will not be updated until create_device_info_list is called again.
+    the device info list will not be updated until
+    'create_device_info_list()' is called again.
 
     Raises:
         FtException:    In case of unexpected error
@@ -206,7 +249,8 @@ def create_device_info_list() -> int:
 def get_device_info_list() -> List[DeviceInfo]:
     """Return list containing details about connected D2XX devices.
 
-    This function returns a device information list and the number of D2XX devices in the list.
+    This function returns a device information list containing information
+    about all connected D2XX devices.
 
     Args:
         dev_count:          Max. number of devices to construct list for
@@ -214,23 +258,23 @@ def get_device_info_list() -> List[DeviceInfo]:
     Raises:
         FtException:        In case of unexpected error
 
-    Return:
+    Returns:
         List[DeviceInfo]:   List containing details about connected D2XX devices
     """
     dev_count = create_device_info_list()
 
-    array_elems = c_uint(dev_count)
+    array_elem_count = c_uint(dev_count)
     raw_list = (_RawDeviceInfoListNode * dev_count)()
 
-    result: FtStatus = _get_device_info_list(raw_list, byref(array_elems))
+    result: FtStatus = _get_device_info_list(raw_list, byref(array_elem_count))
 
     if result != FtStatus.OK:
         raise FtException(result)
 
-    return list(map(DeviceInfo.from_raw, raw_list))[:array_elems.value]
+    return list(map(DeviceInfo.from_raw, raw_list))[:array_elem_count.value]
 
 
-def get_device_info_detail(dev_id: int) -> Optional[DeviceInfo]:
+def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
     """This function returns an entry from the device information list.
 
     Args:
@@ -242,23 +286,23 @@ def get_device_info_detail(dev_id: int) -> Optional[DeviceInfo]:
     Returns:
         device details (if id exists)
     """
-    assert 0 <= dev_id <= (2 ** 31) - 1,\
+    assert 0 <= dev_idx <= (2 ** 31) - 1,\
         "Device ID must be a non-negative integer"
 
-    idx = c_uint(dev_id)
+    idx = c_uint(dev_idx)
     flags = c_uint()
-    type = c_uint()
-    id = c_uint()
+    dev_type = c_uint()
+    idx = c_uint()
     loc_id = c_uint()
-    serial_number = create_string_buffer(SERIAL_NUMBER_MAX_LEN)
-    description = create_string_buffer(DESCRIPTION_MAX_LEN)
+    serial_number = create_string_buffer(_SERIAL_NUMBER_MAX_LEN)
+    description = create_string_buffer(_DESCRIPTION_MAX_LEN)
     handle = c_void_p()
 
     result: FtStatus = _get_device_info_detail(
         idx,
         byref(flags),
-        byref(type),
-        byref(id),
+        byref(dev_type),
+        byref(idx),
         byref(loc_id),
         serial_number,
         description,
@@ -268,8 +312,8 @@ def get_device_info_detail(dev_id: int) -> Optional[DeviceInfo]:
     if result == FtStatus.OK:
         return DeviceInfo(
             flags=DeviceFlags(flags.value),
-            type=DeviceType(type.value),
-            id=id.value,
+            dev_type=DeviceType(dev_type.value),
+            idx=idx.value,
             loc_id=loc_id.value,
             serial_number=serial_number.value.decode('utf-8'),
             description=description.value.decode('utf-8'),
@@ -281,25 +325,27 @@ def get_device_info_detail(dev_id: int) -> Optional[DeviceInfo]:
         raise FtException(result)
 
 
-def open(dev_id: int) -> Result[FtHandle, FtStatus]:
-    """Open the device and return a handle which will be used for subsequent accesses.
+def open_by_idx(dev_idx: int) -> Result[FtHandle, FtStatus]:
+    """Open the device using 'device index' and return a device handle.
 
     NOTE:
-        Although this function can be used to open multiple devices by setting iDevice to 0, 1, 2 etc.
-        there is no ability to open a specific device.
-        To open named devices, use functions: 'open_by_serial', 'open_by_description', 'open_by_location'
+        Although this function can be used to open multiple devices
+        by setting iDevice to 0, 1, 2 etc., there is no ability to open
+        a specific device.
+        To open named devices, use functions: 'open_by_serial()',
+        'open_by_description()', 'open_by_location()'.
 
     Args:
-        dev_id:     ID of D2XX device to open
+        dev_id:     D2XX device index
 
     Returns:
         D2XX device handle (optional)
     """
-    assert 0 <= dev_id <= (2 ** 31) - 1,\
+    assert 0 <= dev_idx <= (2 ** 31) - 1,\
         "Device ID must be a non-negative integer"
 
     ft_handle = c_void_p()
-    result: FtStatus = _open(dev_id, byref(ft_handle))
+    result: FtStatus = _open(dev_idx, byref(ft_handle))
 
     if result == FtStatus.OK:
         return Ok(FtHandle(ft_handle))
@@ -308,7 +354,8 @@ def open(dev_id: int) -> Result[FtHandle, FtStatus]:
 
 
 def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
-    """Open the specified device and return a handle that will be used for subsequent accesses.
+    """Open the specified device using 'serial number' and return a device handle.
+
     The device is specified by its serial number.
 
     This function can also be used to open multiple devices simultaneously.
@@ -333,7 +380,8 @@ def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
 
 
 def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
-    """Open the specified device and return a handle that will be used for subsequent accesses.
+    """Open the specified device using 'device description' and return a device handle.
+
     The device is specified by its description string.
 
     This function can also be used to open multiple devices simultaneously.
@@ -361,18 +409,20 @@ def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
 # REVIEW: Windows CE is unsupported by Python so no need to check?
 if SYSTEM_TYPE != "Linux":
     def open_by_location(location_id: int) -> Result[FtHandle, FtStatus]:
-        """Open the specified device and return a handle that will be used for subsequent accesses.
+        """Open the specified device using 'location ID' and return a device handle.
+
         The device is specified by its location ID.
 
         This function can also be used to open multiple devices simultaneously.
 
-        NOTE: This method is not supported on Windows CE and Linux.
+        Note:
+            This method is not supported on Windows CE and Linux.
 
         Arguments:
             location_id:    Location ID of the D2XX device
 
-        Return:
-            D2XX device handle (optional)
+        Returns:
+            Result[FtHandle, FtStatus]: D2XX device handle (if location exists)
         """
         ft_handle = c_void_p()
         result: FtStatus = _open_ex(
@@ -387,7 +437,7 @@ if SYSTEM_TYPE != "Linux":
             return Err(result)
 
 
-def close(ft_handle: FtHandle) -> None:
+def close_handle(ft_handle: FtHandle) -> None:
     """Close an open device.
 
     Args:
@@ -408,7 +458,7 @@ def close(ft_handle: FtHandle) -> None:
 
 
 def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
-    """Get device information for an open device.
+    """Get device information for an opened device.
 
     Args:
         ft_handle:          Handle to an opened D2XX device
@@ -421,8 +471,8 @@ def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
     """
     dev_type = c_uint()
     dev_id = c_uint()
-    serial_number = create_string_buffer(SERIAL_NUMBER_MAX_LEN)
-    description = create_string_buffer(DESCRIPTION_MAX_LEN)
+    serial_number = create_string_buffer(_SERIAL_NUMBER_MAX_LEN)
+    description = create_string_buffer(_DESCRIPTION_MAX_LEN)
 
     result: FtStatus = _get_device_info(
         ft_handle,
@@ -436,7 +486,7 @@ def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
     if result == FtStatus.OK:
         return ShortDeviceInfo(
             dev_type=DeviceType(dev_type.value),
-            dev_id=dev_id.value,
+            dev_idx=dev_id.value,
             serial_number=serial_number.value.decode('utf-8'),
             description=description.value.decode('utf-8')
         )
@@ -448,12 +498,6 @@ def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
         return None
     else:
         raise FtException(result)
-
-
-class DriverVersion(NamedTuple):
-    major: int
-    minor: int
-    build_version: int
 
 
 if SYSTEM_TYPE == "Windows":
@@ -484,7 +528,7 @@ if SYSTEM_TYPE == "Windows":
         )
 
 
-def purge(ft_handle: FtHandle, purge_type_mask: PurgeType) -> None:
+def purge_buffers(ft_handle: FtHandle, purge_type_mask: PurgeType) -> None:
     """This function purges receive and transmit buffers in the device.
 
     Args:

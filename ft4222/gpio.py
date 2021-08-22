@@ -54,7 +54,11 @@ class Gpio(Generic[T], CommonHandle[GpioHandle]):
                 "GPIO has been uninitialized!"
             )
 
-    def read_trigger_queue(self, port_id: PortId, max_read_size: int) -> List[GpioTrigger]:
+    def read_trigger_queue(
+        self,
+        port_id: PortId,
+        max_read_size: int
+    ) -> List[GpioTrigger]:
         if self._handle is not None:
             return read_trigger_queue(self._handle, port_id, max_read_size)
         else:

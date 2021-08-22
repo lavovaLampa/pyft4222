@@ -4,7 +4,7 @@ from typing import Generic, Type, TypeVar
 
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status
 from wrapper.ft4222.common import uninitialize
-from wrapper.ft4222.i2c.master import I2cMasterHandle, Status, TransactionFlag
+from wrapper.ft4222.i2c.master import I2cMasterHandle, CtrlStatus, TransactionFlag
 from wrapper.ft4222.i2c.master import get_status, read, read_ex, reset, reset_bus, write, write_ex
 
 T = TypeVar('T', bound=CommonHandle[FtHandle])
@@ -63,7 +63,7 @@ class I2CMaster(Generic[T], CommonHandle[I2cMasterHandle]):
                 "I2C Master has been uninitialized!"
             )
 
-    def get_status(self) -> Status:
+    def get_status(self) -> CtrlStatus:
         if self._handle is not None:
             return get_status(self._handle)
         else:

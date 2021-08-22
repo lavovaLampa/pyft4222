@@ -16,34 +16,34 @@ def main() -> None:
     print(f"Create Device Info List: {ft.create_device_info_list()}")
     print(f"Get Device Info List: {ft.get_device_info_list()}")
     print(f"Get Device Info Detail: {ft.get_device_info_detail(0)}")
-    print(f"Open: {ft.open(0)}")
+    print(f"Open: {ft.open_by_idx(0)}")
     # print(f"Open By Serial: {ft.open_by_serial('SVF_0061-0003A')}")
     print(f"Open By Description: {ft.open_by_description('FT4222 B')}")
     # print(f"Open By Location: {ft.open_by_location(10)}")
-    print(f"Close: {ft.close(FtHandle(c_void_p(None)))}")
+    print(f"Close: {ft.close_handle(FtHandle(c_void_p(None)))}")
     print(f"Get Device Info: {ft.get_device_info(FtHandle(c_void_p(None)))}")
     # print(f"Get Driver Version: {ft.get_driver_version(FtHandle(c_void_p(None)))}")
     print(
-        f"Purge: {ft.purge(FtHandle(c_void_p(None)), ft.PurgeType.RX | ft.PurgeType.TX)}")
+        f"Purge: {ft.purge_buffers(FtHandle(c_void_p(None)), ft.PurgeType.RX | ft.PurgeType.TX)}")
     print(f"Reset Device: {ft.reset_device(FtHandle(c_void_p(None)))}")
 
 
 def test_positif() -> None:
-    result = ft.open(0)
+    result = ft.open_by_idx(0)
     if result.tag == ResType.OK:
         handle = result.result
         print(f"Get Device Info: {ft.get_device_info(handle)}")
-        print(f"Purge: {ft.purge(handle, ft.PurgeType.RX)}")
+        print(f"Purge: {ft.purge_buffers(handle, ft.PurgeType.RX)}")
         print(f"Reset Device: {ft.reset_device(handle)}")
 
 def test_spi_slave() -> None:
-    result = ft.open(0)
+    result = ft.open_by_idx(0)
     if result.tag == ResType.OK:
         handle = result.result
         temp = slave.init_ex(handle, slave.IoProtocol.NO_PROTOCOL)
 
 def test_spi_master() -> None:
-    result = ft.open(0)
+    result = ft.open_by_idx(0)
     if result.tag == ResType.OK:
         handle = result.result
         temp = master.init(
@@ -57,7 +57,7 @@ def test_spi_master() -> None:
 
 
 def new_one() -> None:
-    result = pyft.open(0)
+    result = pyft.open_by_idx(0)
     if result.tag == ResType.OK:
         temp = result.result
 

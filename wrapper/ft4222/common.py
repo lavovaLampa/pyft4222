@@ -24,6 +24,8 @@ class _RawVersion(Structure):
 # External data types
 
 class ClockRate(IntEnum):
+    """Enum representing system clock rate.
+    """
     SYS_CLK_60 = 0
     SYS_CLK_24 = auto()
     SYS_CLK_48 = auto()
@@ -31,6 +33,15 @@ class ClockRate(IntEnum):
 
 
 class ChipVersion(IntEnum):
+    """Enum representing a chip revision.
+
+    Rev. A is oldest.
+    Rev. D is newest.
+
+    Note:
+        For list of errata, see:
+        https://ftdichip.com/wp-content/uploads/2020/08/TN_161_FT4222H-Errata-Technical-Note.pdf
+    """
     REV_A = 0x42220100
     REV_B = 0x42220200
     REV_C = 0x42220300
@@ -38,12 +49,14 @@ class ChipVersion(IntEnum):
 
 
 class Version(NamedTuple):
+    """NamedTuple representing a combination of library and chip versions.
+    """
     chip_version: ChipVersion
     dll_version: int
 
-    @staticmethod
-    def from_raw(raw_struct: _RawVersion) -> 'Version':
-        return Version(
+    @classmethod
+    def from_raw(cls, raw_struct: _RawVersion) -> 'Version':
+        return cls(
             ChipVersion(raw_struct.chip_version),
             raw_struct.dll_version
         )
@@ -152,7 +165,9 @@ def get_clock(ft_handle: FtHandle) -> ClockRate:
 
 def set_wakeup_interrupt(ft_handle: FtHandle, enable: bool) -> None:
     """Enable or disable wakeup/interrupt.
-    By default, wake-up/interrupt function is on.
+
+    Note:
+        By default, wake-up/interrupt function is on.
 
     When Wake up/Interrupt function is on, GPIO3 pin acts as an input pin for wakeup/interrupt.
     While system is in normal mode, GPIO3 acts as an interrupt pin.
@@ -173,7 +188,9 @@ def set_wakeup_interrupt(ft_handle: FtHandle, enable: bool) -> None:
 
 def set_interrupt_trigger(ft_handle: FtHandle, trigger: GpioTrigger) -> None:
     """Set trigger condition for the pin wakeup/interrupt.
-    By default, the trigger condition is 'GpioTrigger.RISING'.
+
+    Note:
+        By default, the trigger condition is 'GpioTrigger.RISING'.
 
     This function configures trigger condition for wakeup/interrupt.
 

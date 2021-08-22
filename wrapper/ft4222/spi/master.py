@@ -9,21 +9,26 @@ from .. import Ft4222Status, Ft4222Exception
 from ...dll_loader import ftlib
 from ... import FtHandle, Result, Ok, Err
 
-SpiMasterSingleHandle = NewType('SpiMasterSingleHandle', FtHandle)
-SpiMasterMultiHandle = NewType('SpiMasterMultiHandle', FtHandle)
+SpiMasterSingleHandle = NewType("SpiMasterSingleHandle", FtHandle)
+SpiMasterMultiHandle = NewType("SpiMasterMultiHandle", FtHandle)
 SpiMasterHandle = Union[SpiMasterSingleHandle, SpiMasterMultiHandle]
 
 
 class IoMode(IntEnum):
-    # Data are transferred full-duplex using MISO/MOSI lines
+    """Enum representing possible SPI data I/O modes/counts.
+    """
     IO_SINGLE = 1
-    # Data are transferred half-duplex using MISO, MOSI lines (bit0, bit1)
+    """Data are transferred full-duplex using MISO/MOSI lines."""
     IO_DUAL = 2
-    # Data are transferred half-duplex using MISO, MOSI, IO2, IO3 (bit0, bit1, bit2, bit3)
+    """Data are transferred half-duplex using MISO, MOSI lines (bit0, bit1)."""
     IO_QUAD = 4
+    """Data are transferred half-duples using
+    MISO, MOSI, IO2, IO3 lines (bit0, bit1, bit2, bit3).
+    """
 
 
 class ClkDiv(IntEnum):
+    """Enum representing possible clock divisors in SPI Master mode."""
     CLK_NONE = 0
     CLK_DIV_2 = auto()  # 1/2   System Clock
     CLK_DIV_4 = auto()  # 1/4   System Clock
@@ -37,11 +42,16 @@ class ClkDiv(IntEnum):
 
 
 class CsPolarity(IntEnum):
-    ACTIVE_LOW = 0          # Active-low chip select (DEFAULT)
-    ACTIVE_HIGH = auto()    # Active-high chip select
+    """Enum representing possible chip_select signal polarities.
+    """
+    ACTIVE_LOW = 0
+    """Active-low chip select (DEFAULT)."""
+    ACTIVE_HIGH = auto()
+    """Active-high chip select."""
 
 
 class SsoMap(IntFlag):
+    """Enum representing a slave select mapping flag."""
     SS_0 = 1
     SS_1 = 2
     SS_2 = 4
@@ -241,7 +251,7 @@ def single_read(
         Ft4222Exception:    In case of unexpected error
 
     Returns:
-        bytes:              Read data (count can be lower than requested) # TODO: Can it?
+        bytes:              Read data (length can be lower than requested)
     """
     assert 0 < read_byte_count < (2 ** 16),\
         "Number of bytes to read must be positive and less than 2^16"

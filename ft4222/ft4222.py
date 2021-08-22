@@ -1,6 +1,18 @@
+"""Module encapsulation all possible FT4222 USB stream modes.
+
+FT4222 chip can be set into one of 4 possible modes externally.
+Each mode has a specific set of available USB interfaces.
+
+Each class represents a specific mode of stream and encapsulates it.
+
+Important:
+    Do not use classes in this module directly. Use functions
+    from ft4222 module instead.
+"""
 from enum import Enum, auto
-from ft4222 import CommonHandle
 from typing import Literal, Union
+
+from ft4222 import CommonHandle
 
 from wrapper import FtHandle, ResType
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status, gpio
@@ -9,11 +21,11 @@ from wrapper.ft4222.spi import master as spi_master
 from wrapper.ft4222.i2c import slave as i2c_slave
 from wrapper.ft4222.i2c import master as i2c_master
 
+from .gpio import Gpio
 from .spi.master import SpiMasterMulti, SpiMasterSingle
 from .spi.slave import SpiSlaveProto, SpiSlaveRaw
 from .i2c.master import I2CMaster
 from .i2c.slave import I2CSlave
-from .gpio import Gpio
 
 
 class InterfaceType(Enum):
@@ -37,18 +49,34 @@ class InterfaceType(Enum):
     More info can be found in the FT4222H Datasheet:
     https://ftdichip.com/wp-content/uploads/2020/07/DS_FT4222H.pdf
     """
-    # In this mode all serial protocols are supported, excluding GPIO
     DATA_STREAM = auto()
-    # Only GPIO is supported
+    """All serial protocols are supported in this mode, excluding GPIO"""
     GPIO = auto()
-    # Only SPI Master mode is supported
+    """Only GPIO is supported"""
     SPI_MASTER = auto()
+    """Only SPI Master is supported"""
 
 
 class ProtocolHandle(CommonHandle[FtHandle]):
+    """A class representing an open FT4222 stream in "Data Stream" mode.
+
+    Attributes:
+        tag:    Can be used to disambiguate between different stream types
+    """
     tag: Literal[InterfaceType.DATA_STREAM]
 
     def __init__(self, ft_handle: FtHandle):
+        """Initialize ProtocolHandle with given FtHandle.
+
+        Args:
+            ft_handle:          Handle to an opened FT4222 device
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            ProtocolHandle:     FT4222 USB stream handle
+        """
         super().__init__(ft_handle)
         self.tag = InterfaceType.DATA_STREAM
 
@@ -59,6 +87,20 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
     ) -> SpiMasterSingle['ProtocolHandle']:
+        """Initialize SPI Master mode, using single data line.
+
+        Args:
+            clk_div:        Divisor of system clock to create serial clock
+            clk_polarity:   Serial clock polarity
+            clk_phase:      Serial clock phase
+            sso_map:        Slave select map
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiMasterSingle:    SPI Master mode handle
+        """
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
@@ -83,6 +125,20 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
     ) -> SpiMasterMulti['ProtocolHandle']:
+        """Initialize SPI Master mode, using two data lines.
+
+        Args:
+            clk_div:        Divisor of system clock to create serial clock
+            clk_polarity:   Serial clock polarity
+            clk_phase:      Serial clock phase
+            sso_map:        Slave select map
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiMasterMulti:     SPI Master mode handle
+        """
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
@@ -107,6 +163,20 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
     ) -> SpiMasterMulti['ProtocolHandle']:
+        """Initialize SPI Master mode, using four data lines.
+
+        Args:
+            clk_div:        Divisor of system clock to create serial clock
+            clk_polarity:   Serial clock polarity
+            clk_phase:      Serial clock phase
+            sso_map:        Slave select map
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiMasterMulti:     SPI Master mode handle
+        """
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
@@ -125,6 +195,14 @@ class ProtocolHandle(CommonHandle[FtHandle]):
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
     def init_raw_spi_slave(self) -> SpiSlaveRaw['ProtocolHandle']:
+        """Initialize SPI Slave in raw mode.
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiSlaveRaw:        SPI Slave raw mode handle
+        """
         if self._handle is not None:
             result = spi_slave.init_ex(
                 self._handle,
@@ -145,6 +223,19 @@ class ProtocolHandle(CommonHandle[FtHandle]):
             Literal[spi_slave.IoProtocol.WITH_PROTOCOL]
         ]
     ) -> SpiSlaveProto['ProtocolHandle']:
+        """Initialize SPI Slave in selected protocol mode.
+
+        For protocol details, see:
+        https://www.ftdichip.com/Support/Documents/AppNotes/AN_329_User_Guide_for_LibFT4222.pdf
+
+        Protocol details can be found in chapter 3.4.
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiSlaveProto:      SPI Slave protocol mode handle
+        """
         if self._handle is not None:
             result = spi_slave.init_ex(
                 self._handle,
@@ -159,6 +250,17 @@ class ProtocolHandle(CommonHandle[FtHandle]):
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
     def init_i2c_master(self, kbps: int) -> I2CMaster['ProtocolHandle']:
+        """Initialize I2C Master.
+
+        Args:
+            kbps:   I2C clock/transmission speed in kbit/s (60 - 3400)
+
+        Raises:
+            Ft4222Exception:    In case of an unexpected error
+
+        Returns:
+            I2CMaster:          I2C Master handle
+        """
         if self._handle is not None:
             result = i2c_master.init(self._handle, kbps)
             if result.tag == ResType.OK:
@@ -172,6 +274,14 @@ class ProtocolHandle(CommonHandle[FtHandle]):
     def init_i2c_slave(
         self
     ) -> I2CSlave['ProtocolHandle']:
+        """Initialize I2C Slave.
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            I2CSlave:           I2C Slave handle
+        """
         if self._handle is not None:
             result = i2c_slave.init(self._handle)
             if result.tag == ResType.OK:
@@ -184,13 +294,37 @@ class ProtocolHandle(CommonHandle[FtHandle]):
 
 
 class GpioHandle(CommonHandle[FtHandle]):
+    """A class representing an open FT4222 stream in "GPIO" mode.
+
+    Attributes:
+        tab:    Can be used to disambiguate between different stream types
+    """
     tag: Literal[InterfaceType.GPIO]
 
     def __init__(self, ft_handle: FtHandle):
+        """Initialize GpioHandle with given FtHandle.
+
+        Args:
+            ft_handle:          Handle to an opened FT4222 device
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            GpioHandle:         FT4222 USB stream handle
+        """
         super().__init__(ft_handle)
         self.tag = InterfaceType.GPIO
 
     def init_gpio(self, dirs: gpio.DirTuple) -> Gpio['GpioHandle']:
+        """Initialize GPIO.
+
+            Raises:
+                Ft4222Exception:    In case of unexpected error
+
+            Returns:
+                Gpio:               GPIO handle
+        """
         if self._handle is not None:
             result = gpio.init(self._handle, dirs)
             if result.tag == ResType.OK:
@@ -203,9 +337,26 @@ class GpioHandle(CommonHandle[FtHandle]):
 
 
 class SpiMasterHandle(CommonHandle[FtHandle]):
+    """A class representing an open FT4222 stream in "SPI Master" mode.
+
+    Attributes:
+        tag:    Can be used to disambiguate between different stream types
+
+    """
     tag: Literal[InterfaceType.SPI_MASTER]
 
     def __init__(self, ft_handle: FtHandle):
+        """Initialize SpiMasterHandle with given FtHandle.
+
+        Args:
+            ft_handle:          Handle to an opened FT4222 device
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiMasterHandle
+        """
         super().__init__(ft_handle)
         self.tag = InterfaceType.SPI_MASTER
 
@@ -216,6 +367,20 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
     ) -> SpiMasterSingle['SpiMasterHandle']:
+        """Initialize SPI Master mode, using single data line.
+
+        Args:
+            clk_div:        Divisor of system clock to create serial clock
+            clk_polarity:   Serial clock polarity
+            clk_phase:      Serial clock phase
+            sso_map:        Slave select map
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiMasterSingle:    SPI Master mode handle
+        """
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
@@ -240,6 +405,20 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
     ) -> SpiMasterMulti['SpiMasterHandle']:
+        """Initialize SPI Master mode, using two data lines.
+
+        Args:
+            clk_div:        Divisor of system clock to create serial clock
+            clk_polarity:   Serial clock polarity
+            clk_phase:      Serial clock phase
+            sso_map:        Slave select map
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiMasterMulti:     SPI Master mode handle
+        """
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,
@@ -264,6 +443,20 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
     ) -> SpiMasterMulti['SpiMasterHandle']:
+        """Initialize SPI Master mode, using four data lines.
+
+        Args:
+            clk_div:        Divisor of system clock to create serial clock
+            clk_polarity:   Serial clock polarity
+            clk_phase:      Serial clock phase
+            sso_map:        Slave select map
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            SpiMasterMulti:     SPI Master mode handle
+        """
         if self._handle is not None:
             result = spi_master.init(
                 self._handle,

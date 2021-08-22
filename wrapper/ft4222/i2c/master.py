@@ -1,32 +1,50 @@
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint32, c_uint8, c_uint16
 
-from enum import IntEnum, IntFlag
+from enum import IntFlag
 from typing import NewType
 
 from ...dll_loader import ftlib
 from .. import Ft4222Status, Ft4222Exception
 from ... import FtHandle, Result, Ok, Err
 
-I2cMasterHandle = NewType('I2cMasterHandle', FtHandle)
+I2cMasterHandle = NewType("I2cMasterHandle", FtHandle)
 
 
-class TransactionFlag(IntEnum):
+class TransactionFlag(IntFlag):
+    """Enum representing possible special transaction flags.
+
+    This enum is used in functions 'read_ex()' and 'write_ex()'.
+    """
     NONE = 0x80
+    """No special transaction condition."""
     START = 0x02
+    """A start condition is signaled."""
     REPEATED_START = 0x03  # Repeated_START will not send master code in HS mode
+    """A repeated start condition is signaled."""
     STOP = 0x04
+    """A stop condition is signaled."""
     START_AND_STOP = 0x06  # START condition followed by SEND and STOP condition
+    """A combination of start and stop conditions is signaled."""
 
 
-class Status(IntFlag):
-    CONTROLLER_BUSY = 1 << 0    # Controller busy; all other status bits are invalid
-    ERROR = 1 << 1              # Error condition
-    SLAVE_ADDR_NACK = 1 << 2    # Slave address was not acknowledged during last operation
-    DATA_NACK = 1 << 3          # Data not acknowledged during last operation
-    ARBITRATION_LOST = 1 << 4   # Arbitration lost during last operation
-    IDLE = 1 << 5               # Controller idle
-    BUS_BUSY = 1 << 6           # Bus busy
+class CtrlStatus(IntFlag):
+    """Enum representing controller status flags.
+    """
+    CONTROLLER_BUSY = 1 << 0
+    """Controller busy. All other status bits are invalid."""
+    ERROR = 1 << 1
+    """Error condition."""
+    SLAVE_ADDR_NACK = 1 << 2
+    """Slave address was not acknowledged during the last operation."""
+    DATA_NACK = 1 << 3
+    """Data not acknowledged during the last operation."""
+    ARBITRATION_LOST = 1 << 4
+    """Arbitration lost during the last operation."""
+    IDLE = 1 << 5
+    """Controller idle."""
+    BUS_BUSY = 1 << 6
+    """Bus busy."""
 
 
 _init = ftlib.FT4222_I2CMaster_Init
@@ -66,8 +84,10 @@ _reset_bus.argtypes = [c_void_p]
 _reset_bus.restype = Ft4222Status
 
 
-# FIXME: Check kbps typing?
-def init(ft_handle: FtHandle, kbps: int) -> Result[I2cMasterHandle, Ft4222Status]:
+def init(
+    ft_handle: FtHandle,
+    kbps: int
+) -> Result[I2cMasterHandle, Ft4222Status]:
     """Initialize the FT4222H as an I2C master with the requested I2C speed. 
 
     Args:
@@ -77,7 +97,8 @@ def init(ft_handle: FtHandle, kbps: int) -> Result[I2cMasterHandle, Ft4222Status
     Returns:
         Result:    Handle to initialized FT4222 device in I2C Master mode
     """
-    assert 60 <= kbps <= 3400, "I2C transmission speed must be in range 60 to 3400"
+    assert 60 <= kbps <= 3400,\
+        "I2C transmission speed must be in range 60 to 3400"
 
     result: Ft4222Status = _init(
         ft_handle,
@@ -277,7 +298,7 @@ def reset(ft_handle: I2cMasterHandle) -> None:
         raise Ft4222Exception(result)
 
 
-def get_status(ft_handle: I2cMasterHandle) -> Status:
+def get_status(ft_handle: I2cMasterHandle) -> CtrlStatus:
     """Read the status of the I2C master controller.
 
     This can be used to poll a slave after I2C transmission is complete.
@@ -298,7 +319,7 @@ def get_status(ft_handle: I2cMasterHandle) -> Status:
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return Status(status.value)
+    return CtrlStatus(status.value)
 
 
 def reset_bus(ft_handle: I2cMasterHandle) -> None:

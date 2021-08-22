@@ -12,8 +12,8 @@ import sys
 
 
 def mode_test():
-    result0 = ftd.open(0)
-    result1 = ftd.open(1)
+    result0 = ftd.open_by_idx(0)
+    result1 = ftd.open_by_idx(1)
 
     if result0.tag == ResType.OK and result1.tag == ResType.OK:
         handle0 = result0.result
@@ -84,7 +84,7 @@ def spi_mode_test():
     for i in ftd.get_device_info_list():
         print(i)
 
-    handle3 = ftd.open(0)
+    handle3 = ftd.open_by_idx(0)
     if handle3.tag == ResType.OK:
         handle = handle3.result
 

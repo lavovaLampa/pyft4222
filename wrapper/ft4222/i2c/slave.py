@@ -8,7 +8,7 @@ from .. import Ft4222Exception, Ft4222Status
 from ... import FtHandle, Result, Ok, Err
 
 
-I2cSlaveHandle = NewType('I2cSlaveHandle', FtHandle)
+I2cSlaveHandle = NewType("I2cSlaveHandle", FtHandle)
 
 # Function prototypes
 
@@ -54,7 +54,8 @@ _set_resp_word.restype = Ft4222Status
 def init(ft_handle: FtHandle) -> Result[I2cSlaveHandle, Ft4222Status]:
     """Initialized FT4222H as an I2C slave.
 
-    After initialization, the I2C slave address is set to 0x40.
+    Note:
+        The I2C slave address is set to 0x40 after initialization.
 
     Args:
         ft_handle:      Handle to an opened FT4222 device
@@ -73,7 +74,8 @@ def init(ft_handle: FtHandle) -> Result[I2cSlaveHandle, Ft4222Status]:
 def reset(ft_handle: I2cSlaveHandle) -> None:
     """Reset the I2C slave device.
 
-    This function will maintain the original i2c slave setting and clear all cache in the device.
+    This function will maintain the original I2C slave settings
+    and clear all caches in the device.
 
     Args:
         ft_handle:      Handle to an initialized FT4222 device in I2C Slave mode
@@ -135,7 +137,7 @@ def get_rx_status(ft_handle: I2cSlaveHandle) -> int:
     """Get number of bytes in the receive queue.
 
     Args:
-        ft_handle:          Handle to an initialized FT4222 device in I2C Slave mode
+        ft_handle:  Handle to an initialized FT4222 device in I2C Slave mode
 
     Raises:
         Ft4222Exception:    In case of unexpected error

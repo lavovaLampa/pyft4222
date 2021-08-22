@@ -1,8 +1,13 @@
 from enum import IntEnum, IntFlag, auto
-from typing import Final, Optional, Set
+from typing import Optional
+from wrapper.ftd2xx import FtStatus
 
 
 class Ft4222Status(IntEnum):
+    """Enum representing the 'FT4222_STATUS' enum from ft4222 library.
+
+    This enum 'extends' the 'FT_STATUS' enum.
+    """
     OK = 0
     INVALID_HANDLE = auto()
     DEVICE_NOT_FOUND = auto()
@@ -24,7 +29,7 @@ class Ft4222Status(IntEnum):
     OTHER_ERROR = auto()
     DEVICE_LIST_NOT_READY = auto()
 
-    # FT_STATUS extending message
+    # FtStatus extending message
     DEVICE_NOT_SUPPORTED = 1000
     CLK_NOT_SUPPORTED = auto()
     VENDOR_CMD_NOT_SUPPORTED = auto()
@@ -49,20 +54,23 @@ class Ft4222Status(IntEnum):
     EVENT_NOT_SUPPORTED = auto()
     FUN_NOT_SUPPORT = auto()
 
-
-SOFT_ERROR_SET: Final[Set[Ft4222Status]] = {
-    Ft4222Status.OK, Ft4222Status.INVALID_HANDLE,
-    Ft4222Status.DEVICE_NOT_FOUND, Ft4222Status.DEVICE_NOT_OPENED,
-}
+    @classmethod
+    def from_ft_status(cls, ft_status: FtStatus) -> 'Ft4222Status':
+        return Ft4222Status(int(ft_status))
 
 
 class Ft4222Exception(Exception):
-    """A class wrapping the FT4222 driver exception.
+    """A class wrapping the FT4222 driver exceptions.
+
+    Params:
+        status:     FT4222 result enum
+        msg:        Optional human-readable message
     """
     status: Ft4222Status
     msg: Optional[str]
 
     def __init__(self, status: Ft4222Status, msg: Optional[str] = None):
+        super().__init__()
         self.status = status
         self.msg = msg
 
@@ -75,7 +83,12 @@ Message: {self.msg}
 
 
 class GpioTrigger(IntFlag):
-    RISING = 0x01       # Trigger on rising edge
-    FALLING = 0x02      # Trigger on falling edge
-    LEVEL_HIGH = 0x04   # Trigger on high level
-    LEVEL_LOW = 0X08    # Trigger on low level
+    """Enum representing possible GPIO triggers types."""
+    RISING = 0x01
+    """Trigger on rising edge."""
+    FALLING = 0x02
+    """Trigger on falling edge."""
+    LEVEL_HIGH = 0x04
+    """Trigger on high level."""
+    LEVEL_LOW = 0X08
+    """Trigger on low level."""

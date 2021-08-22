@@ -1,16 +1,22 @@
 from ctypes import c_void_p, c_uint8, c_uint
 
-from typing import Literal, Union
+from typing import Final, Literal, Set, Union
 from .slave import SpiSlaveHandle
 from .master import SpiMasterHandle
 
 from . import DriveStrength
 from ...dll_loader import ftlib
-from .. import Ft4222Exception, Ft4222Status, SOFT_ERROR_SET
+from .. import Ft4222Exception, Ft4222Status
 
 SpiHandle = Union[SpiMasterHandle, SpiSlaveHandle]
 
 TransactionIdx = Literal[0, 1, 2, 3]
+
+
+_SOFT_ERROR_SET: Final[Set[Ft4222Status]] = {
+    Ft4222Status.OK, Ft4222Status.INVALID_HANDLE,
+    Ft4222Status.DEVICE_NOT_FOUND, Ft4222Status.DEVICE_NOT_OPENED,
+}
 
 
 _reset = ftlib.FT4222_SPI_Reset
@@ -41,7 +47,7 @@ def reset(ft_handle: SpiHandle) -> None:
     """
     result: Ft4222Status = _reset(ft_handle)
 
-    if result not in SOFT_ERROR_SET:
+    if result not in _SOFT_ERROR_SET:
         raise Ft4222Exception(result)
 
 
@@ -61,7 +67,7 @@ def reset_transaction(ft_handle: SpiHandle, spi_idx: TransactionIdx) -> None:
 
     result: Ft4222Status = _reset_transaction(ft_handle, spi_idx)
 
-    if result not in SOFT_ERROR_SET:
+    if result not in _SOFT_ERROR_SET:
         raise Ft4222Exception(result)
 
 
@@ -90,5 +96,5 @@ def set_driving_strength(
         sso_strength
     )
 
-    if result not in SOFT_ERROR_SET:
+    if result not in _SOFT_ERROR_SET:
         raise Ft4222Exception(result)
