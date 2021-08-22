@@ -24,7 +24,7 @@ def main() -> None:
     print(f"Get Device Info: {ft.get_device_info(FtHandle(c_void_p(None)))}")
     # print(f"Get Driver Version: {ft.get_driver_version(FtHandle(c_void_p(None)))}")
     print(
-        f"Purge: {ft.purge_buffers(FtHandle(c_void_p(None)), ft.PurgeType.RX | ft.PurgeType.TX)}")
+        f"Purge: {ft.purge_buffers(FtHandle(c_void_p(None)), ft.BufferType.RX | ft.BufferType.TX)}")
     print(f"Reset Device: {ft.reset_device(FtHandle(c_void_p(None)))}")
 
 
@@ -33,7 +33,7 @@ def test_positif() -> None:
     if result.tag == ResType.OK:
         handle = result.result
         print(f"Get Device Info: {ft.get_device_info(handle)}")
-        print(f"Purge: {ft.purge_buffers(handle, ft.PurgeType.RX)}")
+        print(f"Purge: {ft.purge_buffers(handle, ft.BufferType.RX)}")
         print(f"Reset Device: {ft.reset_device(handle)}")
 
 def test_spi_slave() -> None:

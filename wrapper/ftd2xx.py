@@ -196,7 +196,7 @@ class _OpenExFlag(IntEnum):
     BY_LOCATION = 4
 
 
-class PurgeType(IntFlag):
+class BufferType(IntFlag):
     """Enum for selecting the buffer purge type."""
     RX = 1
     """Purge receive buffers."""
@@ -528,7 +528,7 @@ if SYSTEM_TYPE == "Windows":
         )
 
 
-def purge_buffers(ft_handle: FtHandle, purge_type_mask: PurgeType) -> None:
+def purge_buffers(ft_handle: FtHandle, purge_type_mask: BufferType) -> None:
     """This function purges receive and transmit buffers in the device.
 
     Args:

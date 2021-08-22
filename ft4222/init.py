@@ -77,6 +77,14 @@ class FtError(Enum):
 
 
 def _get_mode_handle(ft_handle: FtHandle) -> Result[Ft4222Handle, FtError]:
+    """Resolve and instantiate a correct device configuration class.
+
+    Args:
+        ft_handle:  Handle to open FT4222 device stream
+
+    Returns:
+        Result[Ft4222Handle, FtError]:
+    """
     dev_details = ftd.get_device_info(ft_handle)
     if dev_details is not None:
         handle_type = _MODE_MAP.get((
@@ -92,17 +100,25 @@ def _get_mode_handle(ft_handle: FtHandle) -> Result[Ft4222Handle, FtError]:
 
 
 def _validate_dev_idx(dev_idx: int) -> bool:
+    """Validate given D2XX device index.
+
+    Args:
+        dev_idx:    D2XX device index
+
+    Returns:
+        bool:       Is given device index valid?
+    """
     return 0 <= dev_idx < (2 ** 31)
 
 
-def get_device_info_list():
+def get_device_info_list() -> List[ftd.DeviceInfo]:
     """Get list containing information about available (connected) D2XX devices.
 
-        Raises:
-            FtException:        In case of unexpected error
+    Raises:
+        FtException:        In case of unexpected error
 
-        Returns:
-            List[DeviceInfo]:   List containing details about connected D2XX devices
+    Returns:
+        List[DeviceInfo]:   List containing details about connected D2XX devices
     """
     return ftd.get_device_info_list()
 
@@ -110,15 +126,15 @@ def get_device_info_list():
 def get_device_info_detail(dev_idx: int) -> Result[ftd.DeviceInfo, FtError]:
     """Get information about device at the given index (if any).
 
-        Args:
-            dev_idx:        Zero-base index of the device (0 to (2^31 - 1))
+    Args:
+        dev_idx:        Zero-base index of the device (0 to (2^31 - 1))
 
-        Raises:
-            FtException:    In case of unexpected error
+    Raises:
+        FtException:    In case of unexpected error
 
-        Returns:
-            Result[DeviceInfo, FtError]:    Structure containing information
-            about the device
+    Returns:
+        Result[DeviceInfo, FtError]:    Structure containing information
+        about the device
     """
     if _validate_dev_idx(dev_idx):
         result = ftd.get_device_info_detail(dev_idx)
@@ -129,7 +145,7 @@ def get_device_info_detail(dev_idx: int) -> Result[ftd.DeviceInfo, FtError]:
 
 
 def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtError]:
-    """Open FT4222 device using 'device index'.
+    """Open FT4222 device stream using 'device index'.
 
     The device index is 0-based and can be found by calling
     'get_device_info_list()' for example.
@@ -155,6 +171,14 @@ def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtError]:
 
 
 def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
+    """Open FT4222 device stream using 'device serial number'.
+
+    Args:
+        serial_num:     A device serial number string
+
+    Returns:
+        Result[Ft4222Handle, FtError]: 
+    """
     ft_handle = ftd.open_by_serial(serial_num)
     if ft_handle.tag == ResType.OK:
         return _get_mode_handle(ft_handle.result)
@@ -163,6 +187,14 @@ def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
 
 
 def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtError]:
+    """Open FT4222 device stream using 'device description'.
+
+    Args:
+        dev_description:    Device description string
+
+    Returns:
+        Result[Ft4222Handle, FtError]:
+    """
     ft_handle = ftd.open_by_description(dev_description)
     if ft_handle.tag == ResType.OK:
         return _get_mode_handle(ft_handle.result)
@@ -172,6 +204,14 @@ def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtError]:
 
 if OS_TYPE != "Linux":
     def open_by_location(location_id: int) -> Result[Ft4222Handle, FtError]:
+        """Open FT4222 device stream using 'device USB location ID'.
+
+        Args:
+            location_id:    Device USB location ID
+
+        Returns:
+            Result[Ft4222Handle, FtError]:  
+        """
         ft_handle = ftd.open_by_location(location_id)
         if ft_handle.tag == ResType.OK:
             return _get_mode_handle(ft_handle.result)

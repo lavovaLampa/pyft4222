@@ -25,18 +25,24 @@ class _RawVersion(Structure):
 
 class ClockRate(IntEnum):
     """Enum representing system clock rate.
+
+    All clocks are in MHz.
     """
     SYS_CLK_60 = 0
+    """60 MHz"""
     SYS_CLK_24 = auto()
+    """24 MHz"""
     SYS_CLK_48 = auto()
+    """48 MHz"""
     SYS_CLK_80 = auto()
+    """80 MHz"""
 
 
 class ChipVersion(IntEnum):
     """Enum representing a chip revision.
 
-    Rev. A is oldest.
     Rev. D is newest.
+    Rev. A is oldest.
 
     Note:
         For list of errata, see:
@@ -48,14 +54,14 @@ class ChipVersion(IntEnum):
     REV_D = 0x42220400
 
 
-class Version(NamedTuple):
+class SwChipVersion(NamedTuple):
     """NamedTuple representing a combination of library and chip versions.
     """
     chip_version: ChipVersion
     dll_version: int
 
     @classmethod
-    def from_raw(cls, raw_struct: _RawVersion) -> 'Version':
+    def from_raw(cls, raw_struct: _RawVersion) -> 'SwChipVersion':
         return cls(
             ChipVersion(raw_struct.chip_version),
             raw_struct.dll_version
@@ -271,7 +277,7 @@ def get_max_transfer_size(ft_handle: FtHandle) -> int:
     return max_size.value
 
 
-def get_version(ft_handle: FtHandle) -> Version:
+def get_version(ft_handle: FtHandle) -> SwChipVersion:
     """Get the version of FT4222H chip and LibFT4222 library.
 
     Args:
@@ -290,7 +296,7 @@ def get_version(ft_handle: FtHandle) -> Version:
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return Version.from_raw(version_struct)
+    return SwChipVersion.from_raw(version_struct)
 
 
 def chip_reset(ft_handle: FtHandle) -> None:

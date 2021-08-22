@@ -306,12 +306,6 @@ class GpioHandle(CommonHandle[FtHandle]):
 
         Args:
             ft_handle:          Handle to an opened FT4222 device
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-
-        Returns:
-            GpioHandle:         FT4222 USB stream handle
         """
         super().__init__(ft_handle)
         self.tag = InterfaceType.GPIO
