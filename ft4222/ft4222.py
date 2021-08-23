@@ -314,11 +314,14 @@ class GpioHandle(CommonHandle[FtHandle]):
     def init_gpio(self, dirs: gpio.DirTuple) -> Gpio['GpioHandle']:
         """Initialize GPIO.
 
-            Raises:
-                Ft4222Exception:    In case of unexpected error
+        Args:
+            dirs:       A 4-tuple selecting the direction of associated GPIO pin
 
-            Returns:
-                Gpio:               GPIO handle
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            Gpio:               GPIO handle
         """
         if self._handle is not None:
             result = gpio.init(self._handle, dirs)

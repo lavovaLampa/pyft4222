@@ -27,8 +27,7 @@ class SpiMasterCommon(Generic[T, U], CommonHandle[U], ABC):
 
         Args:
             ft_handle:      FT4222 handle initialized in any SPI Master mode
-            mode_class:     Type of constructing class.
-            This is used in 'uninitialize()' method.
+            mode_class:     Calling class type. Used in 'uninitialize()' method.
         """
         super().__init__(ft_handle)
         self._mode_class = mode_class

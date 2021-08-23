@@ -153,7 +153,12 @@ class SpiSlaveCommon(Generic[T, U], CommonHandle[U], ABC):
             bytes:              Read data
         """
         if self._handle is not None:
-            return read(self._handle, read_byte_count)
+            if 0 < read_byte_count < (2 ** 16):
+                return read(self._handle, read_byte_count)
+            else:
+                raise ValueError(
+                    "read_byte_count must be in range <1, 65_535>."
+                )
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,
@@ -173,7 +178,12 @@ class SpiSlaveCommon(Generic[T, U], CommonHandle[U], ABC):
             int:            Number of bytes written
         """
         if self._handle is not None:
-            return write(self._handle, write_data)
+            if 0 < len(write_data) < (2 ** 16):
+                return write(self._handle, write_data)
+            else:
+                raise ValueError(
+                    "write_data length must be in range <1, 65_535>."
+                )
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,
