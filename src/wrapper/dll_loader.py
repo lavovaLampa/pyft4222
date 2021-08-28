@@ -7,7 +7,7 @@ import sys
 from ctypes import cdll
 
 _MODULE_PATH: Final[Path] = Path(__file__).parent
-_DLL_ROOT_DIR: Final[Path] = _MODULE_PATH / "dll"
+_DLL_ROOT_DIR: Final[Path] = _MODULE_PATH / ".." / ".." / "dll"
 
 _MACHINE_TYPE: Final = platform.machine()
 OS_TYPE: Final = platform.system()
