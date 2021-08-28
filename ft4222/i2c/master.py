@@ -1,16 +1,17 @@
-from wrapper import FtHandle
-from ft4222 import CommonHandle
 from typing import Generic, Type, TypeVar
 
+from ..common import GenericHandle
+
+from wrapper import FtHandle
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status
 from wrapper.ft4222.common import uninitialize
 from wrapper.ft4222.i2c.master import I2cMasterHandle, CtrlStatus, TransactionFlag
 from wrapper.ft4222.i2c.master import get_status, read, read_ex, reset, reset_bus, write, write_ex
 
-T = TypeVar('T', bound=CommonHandle[FtHandle])
+T = TypeVar('T', bound=GenericHandle[FtHandle])
 
 
-class I2CMaster(Generic[T], CommonHandle[I2cMasterHandle]):
+class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
     """A class encapsulating I2C Master functions.
     """
     _mode_class: Type[T]

@@ -1,22 +1,28 @@
 from abc import ABC
 from ctypes import c_void_p
-from ft4222 import CommonHandle
-from typing import Generic, Type, TypeVar, Union
-from wrapper.ft4222.common import uninitialize
+from enum import Enum, auto
+from typing import Generic, Literal, Type, TypeVar, Union
 
-from wrapper.ft4222.spi import ClkPhase, ClkPolarity, DriveStrength
-from wrapper.ft4222 import Ft4222Exception, Ft4222Status
-from wrapper.ft4222.spi.common import TransactionIdx, reset, reset_transaction, set_driving_strength
+from ..common import GenericHandle
+
 from wrapper import FtHandle
-
+from wrapper.ft4222 import Ft4222Exception, Ft4222Status
+from wrapper.ft4222.common import uninitialize
+from wrapper.ft4222.spi import ClkPhase, ClkPolarity, DriveStrength
 from wrapper.ft4222.spi.slave import EventType, SpiSlaveHandle, SpiSlaveProtoHandle, SpiSlaveRawHandle, get_rx_status, read, set_mode, write
+from wrapper.ft4222.spi.common import TransactionIdx, reset, reset_transaction, set_driving_strength
 
 
-T = TypeVar('T', bound=CommonHandle[FtHandle])
+T = TypeVar('T', bound=GenericHandle[FtHandle])
 U = TypeVar('U', bound=SpiSlaveHandle)
 
 
-class SpiSlaveCommon(Generic[T, U], CommonHandle[U], ABC):
+class SpiModeTag(Enum):
+    RAW = auto()
+    PROTO = auto()
+
+
+class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
     """A class encapsulating functions common to all SPI Slave modes.
     """
     _mode_class: Type[T]
@@ -226,7 +232,12 @@ class SpiSlaveCommon(Generic[T, U], CommonHandle[U], ABC):
 
 class SpiSlaveProto(Generic[T], SpiSlaveCommon[T, SpiSlaveProtoHandle]):
     """A class encapsulating the SPI Slave protocol mode.
+
+    Attributes:
+        tag:    Can be used to disambiguate between SPI Slave in raw/protocol mode
     """
+
+    tag: Literal[SpiModeTag.PROTO]
 
     def __init__(self, ft_handle: SpiSlaveProtoHandle, mode_class: Type[T]):
         """Initialize the class with given FT4222 handle and a mode class type.
@@ -236,6 +247,7 @@ class SpiSlaveProto(Generic[T], SpiSlaveCommon[T, SpiSlaveProtoHandle]):
             mode_class: Calling class type. Used in 'uninitialize()' method.
         """
         super().__init__(ft_handle, mode_class)
+        self.tag = SpiModeTag.PROTO
 
     # FIXME: Proper typing
     def set_event_notification(self, mask: EventType, param: c_void_p) -> None:
@@ -246,7 +258,12 @@ class SpiSlaveProto(Generic[T], SpiSlaveCommon[T, SpiSlaveProtoHandle]):
 
 class SpiSlaveRaw(Generic[T], SpiSlaveCommon[T, SpiSlaveRawHandle]):
     """A class encapsulating the SPI Slave in raw mode.
+
+    Attributes:
+        tag:    Can be used to disambiguate between SPI Slave in raw/protocol mode
     """
+
+    tag: Literal[SpiModeTag.RAW]
 
     def __init__(self, ft_handle: SpiSlaveRawHandle, mode_class: Type[T]):
         """Initialize the class with given FT4222 handle and a mode class type.
@@ -256,6 +273,7 @@ class SpiSlaveRaw(Generic[T], SpiSlaveCommon[T, SpiSlaveRawHandle]):
             mode_class: Calling class type. Used in 'uninitialize()' method.
         """
         super().__init__(ft_handle, mode_class)
+        self.tag = SpiModeTag.RAW
 
 
 SpiSlave = Union[SpiSlaveProto[T], SpiSlaveRaw[T]]

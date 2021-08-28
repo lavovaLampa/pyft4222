@@ -1,5 +1,6 @@
-from ft4222 import CommonHandle
 from typing import Generic, List, Type, TypeVar
+
+from ft4222.common import GenericHandle
 
 from wrapper import FtHandle
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status, GpioTrigger
@@ -8,10 +9,10 @@ from wrapper.ft4222.common import uninitialize
 from wrapper.ft4222.gpio import GpioHandle, PortId
 from wrapper.ft4222.gpio import get_trigger_status, read, read_trigger_queue, set_input_trigger, set_waveform_mode, write
 
-T = TypeVar('T', bound=CommonHandle[FtHandle])
+T = TypeVar('T', bound=GenericHandle[FtHandle])
 
 
-class Gpio(Generic[T], CommonHandle[GpioHandle]):
+class Gpio(Generic[T], GenericHandle[GpioHandle]):
     """A class encapsulating GPIO functions.
     """
     _mode_handle: Type[T]

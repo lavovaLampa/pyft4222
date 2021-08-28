@@ -1,6 +1,8 @@
 from abc import ABC
-from ft4222 import CommonHandle
+from enum import Enum, auto
 from typing import Generic, Literal, Optional, Type, TypeVar, Union, overload
+
+from ..common import GenericHandle
 
 from wrapper import FtHandle
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status
@@ -12,11 +14,16 @@ from wrapper.ft4222.spi.common import reset, reset_transaction, set_driving_stre
 from wrapper.ft4222.spi.master import multi_read_write, set_cs_polarity, single_read, single_read_write, single_write
 
 
-T = TypeVar('T', bound=CommonHandle[FtHandle])
+T = TypeVar('T', bound=GenericHandle[FtHandle])
 U = TypeVar('U', bound=SpiMasterHandle)
 
 
-class SpiMasterCommon(Generic[T, U], CommonHandle[U], ABC):
+class SpiModeTag(Enum):
+    SINGLE = auto()
+    MULTI = auto()
+
+
+class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
     """An abstract class encapsulating functions
     common to all SPI Master modes.
     """
@@ -50,7 +57,7 @@ class SpiMasterCommon(Generic[T, U], CommonHandle[U], ABC):
             )
 
     def reset_transaction(self, transaction_idx: TransactionIdx) -> None:
-        """Purge transmit and received buffers, reset transaction state.
+        """Purge transmit and receive buffers, reset transaction state.
 
         Args:
             transaction_idx:    Index of SPI transaction (0 to 3),
@@ -205,7 +212,11 @@ class SpiMasterCommon(Generic[T, U], CommonHandle[U], ABC):
 
 class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
     """A class encapsulating the SPI Master in single I/O (full-duplex) mode.
+
+    Attributes:
+        tag:    Can be used to disambiguate between SPI Master in single/multi IO mode
     """
+    tag: Literal[SpiModeTag.SINGLE]
 
     def __init__(self, ft_handle: SpiMasterSingleHandle, mode_class: Type[T]):
         """Initialize the class with given FT4222 handle and a mode class type.
@@ -215,6 +226,7 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
             mode_class: Calling class type. Used in 'uninitialize()' method.
         """
         super().__init__(ft_handle, mode_class)
+        self.tag = SpiModeTag.SINGLE
 
     def single_read(self, read_byte_count: int, end_transaction: bool = True) -> bytes:
         """Read data from an SPI slave.
@@ -297,7 +309,12 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
 
 class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
     """A class encapsulating the SPI Master in dual or quad I/O (half-duplex) mode.
+
+    Attributes:
+        tag:    Can be used to disambiguate between SPI Master in single/multi IO mode
     """
+
+    tag: Literal[SpiModeTag.MULTI]
 
     def __init__(self, ft_handle: SpiMasterMultiHandle, mode_class: Type[T]):
         """Initialize the class with given FT4222 handle and a mode class type.
@@ -307,6 +324,7 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
             mode_class: Calling class type.  Used in 'uninitialize()' method.
         """
         super().__init__(ft_handle, mode_class)
+        self.tag = SpiModeTag.MULTI
 
     def multi_read_write(
         self,

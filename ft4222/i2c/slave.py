@@ -1,16 +1,18 @@
-from ft4222 import CommonHandle
 from typing import Generic, Type, TypeVar
+
+from ..common import GenericHandle
+
+from wrapper import FtHandle
 from wrapper.ft4222.common import uninitialize
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status
-from wrapper import FtHandle
 
 from wrapper.ft4222.i2c.slave import I2cSlaveHandle, get_address, get_rx_status, read, reset, set_address, set_clock_stretch, set_resp_word, write
 
 
-T = TypeVar('T', bound=CommonHandle[FtHandle])
+T = TypeVar('T', bound=GenericHandle[FtHandle])
 
 
-class I2CSlave(Generic[T], CommonHandle[I2cSlaveHandle]):
+class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
     """A class encapsulating I2C Slave functions.
     """
     _mode_class: Type[T]
@@ -119,7 +121,12 @@ class I2CSlave(Generic[T], CommonHandle[I2cSlaveHandle]):
             int:            Number of bytes written
         """
         if self._handle is not None:
-            return write(self._handle, write_data)
+            if 0 < len(write_data) < (2 ** 16):
+                return write(self._handle, write_data)
+            else:
+                raise ValueError(
+                    "write_data length must be in range <1, 65_535>."
+                )
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,

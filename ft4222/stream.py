@@ -13,7 +13,7 @@ Important:
 from enum import Enum, auto
 from typing import Literal, Union
 
-from ft4222 import CommonHandle
+from .common import GenericHandle
 
 from wrapper import FtHandle, ResType
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status, gpio
@@ -58,7 +58,7 @@ class InterfaceType(Enum):
     """Only SPI Master is supported"""
 
 
-class ProtocolHandle(CommonHandle[FtHandle]):
+class ProtocolStream(GenericHandle[FtHandle]):
     """A class representing an open FT4222 stream in "Data Stream" mode.
 
     Attributes:
@@ -87,7 +87,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
-    ) -> SpiMasterSingle['ProtocolHandle']:
+    ) -> SpiMasterSingle['ProtocolStream']:
         """Initialize SPI Master mode, using single data line.
 
         Args:
@@ -125,7 +125,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['ProtocolHandle']:
+    ) -> SpiMasterMulti['ProtocolStream']:
         """Initialize SPI Master mode, using two data lines.
 
         Args:
@@ -163,7 +163,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['ProtocolHandle']:
+    ) -> SpiMasterMulti['ProtocolStream']:
         """Initialize SPI Master mode, using four data lines.
 
         Args:
@@ -195,7 +195,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
-    def init_raw_spi_slave(self) -> SpiSlaveRaw['ProtocolHandle']:
+    def init_raw_spi_slave(self) -> SpiSlaveRaw['ProtocolStream']:
         """Initialize SPI Slave in raw mode.
 
         Raises:
@@ -223,7 +223,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
             Literal[spi_slave.IoProtocol.NO_ACK],
             Literal[spi_slave.IoProtocol.WITH_PROTOCOL]
         ]
-    ) -> SpiSlaveProto['ProtocolHandle']:
+    ) -> SpiSlaveProto['ProtocolStream']:
         """Initialize SPI Slave in selected protocol mode.
 
         For protocol details, see:
@@ -250,7 +250,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
-    def init_i2c_master(self, kbps: int) -> I2CMaster['ProtocolHandle']:
+    def init_i2c_master(self, kbps: int) -> I2CMaster['ProtocolStream']:
         """Initialize I2C Master.
 
         Args:
@@ -274,7 +274,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
 
     def init_i2c_slave(
         self
-    ) -> I2CSlave['ProtocolHandle']:
+    ) -> I2CSlave['ProtocolStream']:
         """Initialize I2C Slave.
 
         Raises:
@@ -294,7 +294,7 @@ class ProtocolHandle(CommonHandle[FtHandle]):
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
 
-class GpioHandle(CommonHandle[FtHandle]):
+class GpioStream(GenericHandle[FtHandle]):
     """A class representing an open FT4222 stream in "GPIO" mode.
 
     Attributes:
@@ -311,7 +311,7 @@ class GpioHandle(CommonHandle[FtHandle]):
         super().__init__(ft_handle)
         self.tag = InterfaceType.GPIO
 
-    def init_gpio(self, dirs: gpio.DirTuple) -> Gpio['GpioHandle']:
+    def init_gpio(self, dirs: gpio.DirTuple) -> Gpio['GpioStream']:
         """Initialize GPIO.
 
         Args:
@@ -334,7 +334,7 @@ class GpioHandle(CommonHandle[FtHandle]):
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
 
-class SpiMasterHandle(CommonHandle[FtHandle]):
+class SpiStream(GenericHandle[FtHandle]):
     """A class representing an open FT4222 stream in "SPI Master" mode.
 
     Attributes:
@@ -364,7 +364,7 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
-    ) -> SpiMasterSingle['SpiMasterHandle']:
+    ) -> SpiMasterSingle['SpiStream']:
         """Initialize SPI Master mode, using single data line.
 
         Args:
@@ -402,7 +402,7 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['SpiMasterHandle']:
+    ) -> SpiMasterMulti['SpiStream']:
         """Initialize SPI Master mode, using two data lines.
 
         Args:
@@ -440,7 +440,7 @@ class SpiMasterHandle(CommonHandle[FtHandle]):
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
         sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['SpiMasterHandle']:
+    ) -> SpiMasterMulti['SpiStream']:
         """Initialize SPI Master mode, using four data lines.
 
         Args:
