@@ -14,7 +14,7 @@ class GenericHandle(Generic[T], ABC):
     _handle: Optional[T]
 
     def __init__(self, ft_handle: T):
-        """Initialize CommonHandle with given FtHandle.
+        """Initialize GenericHandle with given FtHandle.
 
         Args:
             ft_handle:      Handle to an opened FT4222 device
