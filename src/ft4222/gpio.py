@@ -1,6 +1,6 @@
 from typing import Generic, List, Type, TypeVar
 
-from ft4222.common import GenericHandle
+from .handle import GenericHandle
 
 from wrapper import FtHandle
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status, GpioTrigger

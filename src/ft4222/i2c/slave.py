@@ -1,6 +1,6 @@
 from typing import Generic, Type, TypeVar
 
-from ..common import GenericHandle
+from ..handle import GenericHandle
 
 from wrapper import FtHandle
 from wrapper.ft4222.common import uninitialize

@@ -3,7 +3,7 @@ from ctypes import c_void_p
 from enum import Enum, auto
 from typing import Generic, Literal, Type, TypeVar, Union
 
-from ..common import GenericHandle
+from ..handle import GenericHandle
 
 from wrapper import FtHandle
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status

@@ -2,7 +2,7 @@ from abc import ABC
 from enum import Enum, auto
 from typing import Generic, Literal, Optional, Type, TypeVar, Union, overload
 
-from ..common import GenericHandle
+from ..handle import GenericHandle
 
 from wrapper import FtHandle
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status

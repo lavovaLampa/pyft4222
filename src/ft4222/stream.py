@@ -13,7 +13,7 @@ Important:
 from enum import Enum, auto
 from typing import Literal, Union
 
-from .common import GenericHandle
+from .handle import GenericHandle
 
 from wrapper import FtHandle, ResType
 from wrapper.ft4222 import Ft4222Exception, Ft4222Status, gpio
