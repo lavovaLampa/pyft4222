@@ -1,12 +1,12 @@
+from enum import IntEnum, auto
+from typing import Final, List, NewType, Tuple
 from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_bool, c_uint16
 
-from enum import IntEnum, auto
-from typing import Final, List, NewType, Tuple
-
-from ..dll_loader import ftlib
-from . import Ft4222Exception, Ft4222Status, GpioTrigger
-from .. import Err, FtHandle, Ok, Result
+from .dll_loader import ftlib
+from . import (
+    Err, FtHandle, Ok, Result, Ft4222Exception, Ft4222Status, GpioTrigger
+)
 
 GpioHandle = NewType('GpioHandle', FtHandle)
 

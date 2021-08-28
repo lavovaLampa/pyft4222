@@ -3,13 +3,11 @@ from ctypes import c_uint, c_void_p, c_bool, c_uint16
 from typing import NamedTuple, Union
 from enum import IntEnum, auto
 
-from wrapper.ft4222.i2c import I2cHandle
-from wrapper.ft4222.spi.common import SpiHandle
-from wrapper.ft4222.gpio import GpioHandle
-
-from . import Ft4222Status, Ft4222Exception, GpioTrigger
-from .. import FtHandle
-from ..dll_loader import ftlib
+from . import Ft4222Status, Ft4222Exception, GpioTrigger, FtHandle
+from .dll_loader import ftlib
+from .i2c import I2cHandle
+from .spi.common import SpiHandle
+from .gpio import GpioHandle
 
 
 # Internal data types

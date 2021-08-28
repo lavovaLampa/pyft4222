@@ -1,10 +1,19 @@
 from abc import ABC
 from typing import Generic, Optional, TypeVar
 
-from wrapper import SYSTEM_TYPE, FtHandle
-from wrapper.ftd2xx import DriverVersion, BufferType, ShortDeviceInfo, close_handle, get_device_info, get_driver_version, purge_buffers, reset_device
-from wrapper.ft4222 import Ft4222Exception, Ft4222Status, GpioTrigger
-from wrapper.ft4222.common import ClockRate, SwChipVersion, chip_reset, get_clock, get_version, set_clock, set_interrupt_trigger, set_suspend_out, set_wakeup_interrupt
+from pyft4222._wrapper import (
+    OS_TYPE, FtHandle, Ft4222Exception, Ft4222Status, GpioTrigger
+)
+from pyft4222._wrapper.ftd2xx import (
+    DriverVersion, BufferType, ShortDeviceInfo,
+    close_handle, get_device_info, get_driver_version,
+    purge_buffers, reset_device
+)
+from pyft4222._wrapper.common import (
+    ClockRate, SwChipVersion, chip_reset, get_clock,
+    get_version, set_clock, set_interrupt_trigger,
+    set_suspend_out, set_wakeup_interrupt
+)
 
 T = TypeVar('T', bound=FtHandle)
 
@@ -189,7 +198,7 @@ class GenericHandle(Generic[T], ABC):
                 "This handle is closed!"
             )
 
-    if SYSTEM_TYPE == "Windows":
+    if OS_TYPE == "Windows":
         def get_driver_version(self) -> DriverVersion:
             """Get D2XX driver version.
 

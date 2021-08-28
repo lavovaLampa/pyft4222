@@ -1,16 +1,17 @@
+from ctypes import cdll
 from pathlib import Path
 from typing import Final, Mapping, Tuple
 
 import platform
 import sys
 
-from ctypes import cdll
+from . import OS_TYPE
+
 
 _MODULE_PATH: Final[Path] = Path(__file__).parent
 _DLL_ROOT_DIR: Final[Path] = _MODULE_PATH / ".." / ".." / "dll"
 
 _MACHINE_TYPE: Final = platform.machine()
-OS_TYPE: Final = platform.system()
 
 _DLL_PATH_MAP: Final[Mapping[Tuple[str, str], Path]] = {
     # Windows

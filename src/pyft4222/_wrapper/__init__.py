@@ -1,6 +1,88 @@
-from enum import IntEnum, IntFlag, auto
-from typing import Optional
-from wrapper.ftd2xx import FtStatus
+from enum import Enum, IntEnum, IntFlag, auto
+from typing import Final, Generic, Literal, NewType, Optional, TypeVar, Union
+from ctypes import c_void_p
+
+import platform
+
+OS_TYPE: Final = platform.system()
+
+FtHandle = NewType('FtHandle', c_void_p)
+
+
+class ResType(Enum):
+    OK = auto()
+    ERR = auto()
+
+
+T = TypeVar('T')
+E = TypeVar('E')
+
+
+class Ok(Generic[T]):
+    tag: Literal[ResType.OK] = ResType.OK
+    result: T
+
+    def __init__(self, result: T):
+        self.result = result
+
+
+class Err(Generic[E]):
+    tag: Literal[ResType.ERR] = ResType.ERR
+    err: E
+
+    def __init__(self, err: E):
+        self.err = err
+
+
+Result = Union[Ok[T], Err[E]]
+
+
+class FtStatus(IntEnum):
+    """Class representing a D2XX 'FT_RESULT' enum.
+    """
+    OK = 0
+    INVALID_HANDLE = auto()
+    DEVICE_NOT_FOUND = auto()
+    DEVICE_NOT_OPENED = auto()
+    IO_ERROR = auto()
+    INSUFFICIENT_RESOURCES = auto()
+    INVALID_PARAMETER = auto()
+    INVALID_BAUD_RATE = auto()
+    DEVICE_NOT_OPENED_FOR_ERASE = auto()
+    DEVICE_NOT_OPENED_FOR_WRITE = auto()
+    FAILED_TO_WRITE_DEVICE = auto()
+    EEPROM_READ_FAILED = auto()
+    EEPROM_WRITE_FAILED = auto()
+    EEPROM_ERASE_FAILED = auto()
+    EEPROM_NOT_PRESENT = auto()
+    EEPROM_NOT_PROGRAMMED = auto()
+    INVALID_ARGS = auto()
+    NOT_SUPPORTED = auto()
+    OTHER_ERROR = auto()
+    DEVICE_LIST_NOT_READY = auto()
+
+
+class FtException(Exception):
+    """A class wrapping the D2XX driver exceptions.
+
+    Attributes:
+        status:     D2XX result enum
+        msg:        Optional human-readable message
+    """
+    status: FtStatus
+    msg: Optional[str]
+
+    def __init__(self, status: FtStatus, msg: Optional[str] = None):
+        super().__init__()
+        self.status = status
+        self.msg = msg
+
+    def __str__(self) -> str:
+        return f"""
+Exception during call to FTD2XX library.
+FT return code: {self.status.name}
+Message: {self.msg}
+        """
 
 
 class Ft4222Status(IntEnum):

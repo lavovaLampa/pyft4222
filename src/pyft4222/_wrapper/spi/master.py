@@ -5,9 +5,8 @@ from enum import IntEnum, IntFlag, auto
 from typing import Literal, NewType, Optional, Union, overload
 
 from . import ClkPhase, ClkPolarity
-from .. import Ft4222Status, Ft4222Exception
-from ...dll_loader import ftlib
-from ... import FtHandle, Result, Ok, Err
+from .. import FtHandle, Result, Ok, Err, Ft4222Status, Ft4222Exception
+from ..dll_loader import ftlib
 
 SpiMasterSingleHandle = NewType("SpiMasterSingleHandle", FtHandle)
 SpiMasterMultiHandle = NewType("SpiMasterMultiHandle", FtHandle)

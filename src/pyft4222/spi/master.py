@@ -2,16 +2,21 @@ from abc import ABC
 from enum import Enum, auto
 from typing import Generic, Literal, Optional, Type, TypeVar, Union, overload
 
-from ..handle import GenericHandle
+from pyft4222.handle import GenericHandle
 
-from wrapper import FtHandle
-from wrapper.ft4222 import Ft4222Exception, Ft4222Status
-from wrapper.ft4222.common import uninitialize
-from wrapper.ft4222.spi import DriveStrength
-from wrapper.ft4222.spi.common import TransactionIdx
-from wrapper.ft4222.spi.master import CsPolarity, IoMode, SpiMasterHandle, SpiMasterSingleHandle, SpiMasterMultiHandle
-from wrapper.ft4222.spi.common import reset, reset_transaction, set_driving_strength
-from wrapper.ft4222.spi.master import multi_read_write, set_cs_polarity, single_read, single_read_write, single_write
+from pyft4222._wrapper import FtHandle, Ft4222Exception, Ft4222Status
+from pyft4222._wrapper.common import uninitialize
+from pyft4222._wrapper.spi import DriveStrength
+from pyft4222._wrapper.spi.master import (
+    CsPolarity, IoMode, SpiMasterHandle,
+    SpiMasterSingleHandle, SpiMasterMultiHandle,
+    multi_read_write, set_cs_polarity, single_read,
+    single_read_write, single_write
+)
+from pyft4222._wrapper.spi.common import (
+    TransactionIdx,
+    reset, reset_transaction, set_driving_strength
+)
 
 
 T = TypeVar('T', bound=GenericHandle[FtHandle])

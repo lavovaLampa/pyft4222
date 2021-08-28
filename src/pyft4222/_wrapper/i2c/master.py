@@ -4,9 +4,8 @@ from ctypes import c_void_p, c_uint32, c_uint8, c_uint16
 from enum import IntFlag
 from typing import NewType
 
-from ...dll_loader import ftlib
-from .. import Ft4222Status, Ft4222Exception
-from ... import FtHandle, Result, Ok, Err
+from ..dll_loader import ftlib
+from .. import FtHandle, Result, Ok, Err, Ft4222Status, Ft4222Exception
 
 I2cMasterHandle = NewType("I2cMasterHandle", FtHandle)
 

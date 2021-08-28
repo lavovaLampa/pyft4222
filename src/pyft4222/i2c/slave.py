@@ -1,12 +1,13 @@
 from typing import Generic, Type, TypeVar
 
-from ..handle import GenericHandle
-
-from wrapper import FtHandle
-from wrapper.ft4222.common import uninitialize
-from wrapper.ft4222 import Ft4222Exception, Ft4222Status
-
-from wrapper.ft4222.i2c.slave import I2cSlaveHandle, get_address, get_rx_status, read, reset, set_address, set_clock_stretch, set_resp_word, write
+from pyft4222.handle import GenericHandle
+from pyft4222._wrapper import FtHandle
+from pyft4222._wrapper import Ft4222Exception, Ft4222Status
+from pyft4222._wrapper.common import uninitialize
+from pyft4222._wrapper.i2c.slave import (
+    I2cSlaveHandle, get_address, get_rx_status, read,
+    reset, set_address, set_clock_stretch, set_resp_word, write
+)
 
 
 T = TypeVar('T', bound=GenericHandle[FtHandle])

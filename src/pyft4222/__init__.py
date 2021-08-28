@@ -5,13 +5,14 @@
 from enum import Enum, auto
 from typing import Callable, List, Union, Final, Dict, Tuple, Type
 
-from wrapper import ftd2xx as ftd
-from wrapper import Err, FtHandle, Ok, Result, ResType
-from wrapper.dll_loader import OS_TYPE
-from wrapper.ft4222 import gpio
-from wrapper.ft4222.common import uninitialize
+from pyft4222._wrapper import (
+    gpio,
+    Err, FtHandle, Ok, Result, ResType, OS_TYPE,
+    ftd2xx as ftd
+)
+from pyft4222._wrapper.common import uninitialize
 
-from .stream import ProtocolStream, GpioStream, SpiStream
+from pyft4222.stream import ProtocolStream, GpioStream, SpiStream
 
 
 _DEFAULT_GPIO_DIRS: Final[gpio.DirTuple] = (
@@ -178,7 +179,7 @@ def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
         serial_num:     A device serial number string
 
     Returns:
-        Result[Ft4222Handle, FtError]: 
+        Result[Ft4222Handle, FtError]:
     """
     ft_handle = ftd.open_by_serial(serial_num)
     if ft_handle.tag == ResType.OK:

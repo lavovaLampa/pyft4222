@@ -1,59 +1,11 @@
+from enum import IntEnum, IntFlag, auto
+from typing import Final, List, NamedTuple, Optional
 from ctypes import POINTER, byref, create_string_buffer, Structure
 from ctypes import c_uint, c_void_p, c_int, c_char_p, c_char, c_uint32
 
-from enum import IntEnum, IntFlag, auto
-from typing import Final, List, NamedTuple, Optional
-
 from .dll_loader import ftlib
-from . import FtHandle, Ok, Err, Result, SYSTEM_TYPE
+from . import OS_TYPE, FtHandle, Ok, Err, Result, FtStatus, FtException
 
-
-class FtStatus(IntEnum):
-    """Class representing a D2XX 'FT_RESULT' enum.
-    """
-    OK = 0
-    INVALID_HANDLE = auto()
-    DEVICE_NOT_FOUND = auto()
-    DEVICE_NOT_OPENED = auto()
-    IO_ERROR = auto()
-    INSUFFICIENT_RESOURCES = auto()
-    INVALID_PARAMETER = auto()
-    INVALID_BAUD_RATE = auto()
-    DEVICE_NOT_OPENED_FOR_ERASE = auto()
-    DEVICE_NOT_OPENED_FOR_WRITE = auto()
-    FAILED_TO_WRITE_DEVICE = auto()
-    EEPROM_READ_FAILED = auto()
-    EEPROM_WRITE_FAILED = auto()
-    EEPROM_ERASE_FAILED = auto()
-    EEPROM_NOT_PRESENT = auto()
-    EEPROM_NOT_PROGRAMMED = auto()
-    INVALID_ARGS = auto()
-    NOT_SUPPORTED = auto()
-    OTHER_ERROR = auto()
-    DEVICE_LIST_NOT_READY = auto()
-
-
-class FtException(Exception):
-    """A class wrapping the D2XX driver exceptions.
-
-    Attributes:
-        status:     D2XX result enum
-        msg:        Optional human-readable message
-    """
-    status: FtStatus
-    msg: Optional[str]
-
-    def __init__(self, status: FtStatus, msg: Optional[str] = None):
-        super().__init__()
-        self.status = status
-        self.msg = msg
-
-    def __str__(self) -> str:
-        return f"""
-Exception during call to FTD2XX library.
-FT return code: {self.status.name}
-Message: {self.msg}
-        """
 
 # DLL function protoypes declaration
 
@@ -407,7 +359,7 @@ def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
 
 # This function is not supported on Linux and Windows CE
 # REVIEW: Windows CE is unsupported by Python so no need to check?
-if SYSTEM_TYPE != "Linux":
+if OS_TYPE != "Linux":
     def open_by_location(location_id: int) -> Result[FtHandle, FtStatus]:
         """Open the specified device using 'location ID' and return a device handle.
 
@@ -500,7 +452,7 @@ def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
         raise FtException(result)
 
 
-if SYSTEM_TYPE == "Windows":
+if OS_TYPE == "Windows":
     def get_driver_version(ft_handle: FtHandle) -> DriverVersion:
         """This function returns the D2XX driver version number.
 

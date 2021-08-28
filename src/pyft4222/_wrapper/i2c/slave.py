@@ -3,9 +3,8 @@ from ctypes import c_void_p, c_uint8, c_uint16, c_bool
 
 from typing import NewType
 
-from ...dll_loader import ftlib
-from .. import Ft4222Exception, Ft4222Status
-from ... import FtHandle, Result, Ok, Err
+from ..dll_loader import ftlib
+from .. import FtHandle, Result, Ok, Err, Ft4222Exception, Ft4222Status
 
 
 I2cSlaveHandle = NewType("I2cSlaveHandle", FtHandle)

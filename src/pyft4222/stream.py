@@ -13,20 +13,20 @@ Important:
 from enum import Enum, auto
 from typing import Literal, Union
 
-from .handle import GenericHandle
+from pyft4222.handle import GenericHandle
 
-from wrapper import FtHandle, ResType
-from wrapper.ft4222 import Ft4222Exception, Ft4222Status, gpio
-from wrapper.ft4222.spi import slave as spi_slave
-from wrapper.ft4222.spi import master as spi_master
-from wrapper.ft4222.i2c import slave as i2c_slave
-from wrapper.ft4222.i2c import master as i2c_master
+from pyft4222._wrapper import FtHandle, ResType, Ft4222Exception, Ft4222Status
+from pyft4222._wrapper import gpio
+from pyft4222._wrapper.spi import slave as spi_slave
+from pyft4222._wrapper.spi import master as spi_master
+from pyft4222._wrapper.i2c import slave as i2c_slave
+from pyft4222._wrapper.i2c import master as i2c_master
 
-from .gpio import Gpio
-from .spi.master import SpiMasterMulti, SpiMasterSingle
-from .spi.slave import SpiSlaveProto, SpiSlaveRaw
-from .i2c.master import I2CMaster
-from .i2c.slave import I2CSlave
+from pyft4222.gpio import Gpio
+from pyft4222.spi.master import SpiMasterMulti, SpiMasterSingle
+from pyft4222.spi.slave import SpiSlaveProto, SpiSlaveRaw
+from pyft4222.i2c.master import I2CMaster
+from pyft4222.i2c.slave import I2CSlave
 
 
 class InterfaceType(Enum):
