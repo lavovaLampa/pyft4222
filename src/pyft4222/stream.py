@@ -15,12 +15,12 @@ from typing import Literal, Union
 
 from pyft4222.handle import GenericHandle
 
-from pyft4222._wrapper import FtHandle, ResType, Ft4222Exception, Ft4222Status
-from pyft4222._wrapper import gpio
-from pyft4222._wrapper.spi import slave as spi_slave
-from pyft4222._wrapper.spi import master as spi_master
-from pyft4222._wrapper.i2c import slave as i2c_slave
-from pyft4222._wrapper.i2c import master as i2c_master
+from pyft4222.wrapper import FtHandle, ResType, Ft4222Exception, Ft4222Status
+from pyft4222.wrapper import gpio
+from pyft4222.wrapper.spi import slave as spi_slave
+from pyft4222.wrapper.spi import master as spi_master
+from pyft4222.wrapper.i2c import slave as i2c_slave
+from pyft4222.wrapper.i2c import master as i2c_master
 
 from pyft4222.gpio import Gpio
 from pyft4222.spi.master import SpiMasterMulti, SpiMasterSingle

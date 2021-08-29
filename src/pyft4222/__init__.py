@@ -5,21 +5,22 @@
 from enum import Enum, auto
 from typing import Callable, List, Union, Final, Dict, Tuple, Type
 
-from pyft4222._wrapper import (
-    gpio,
+from pyft4222.wrapper import (
+    gpio as wgpio,
     Err, FtHandle, Ok, Result, ResType, OS_TYPE,
     ftd2xx as ftd
 )
-from pyft4222._wrapper.common import uninitialize
+from pyft4222.wrapper.common import uninitialize
+
 
 from pyft4222.stream import ProtocolStream, GpioStream, SpiStream
 
 
-_DEFAULT_GPIO_DIRS: Final[gpio.DirTuple] = (
-    gpio.Direction.INPUT,
-    gpio.Direction.INPUT,
-    gpio.Direction.INPUT,
-    gpio.Direction.INPUT
+_DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
+    wgpio.Direction.INPUT,
+    wgpio.Direction.INPUT,
+    wgpio.Direction.INPUT,
+    wgpio.Direction.INPUT
 )
 
 
@@ -35,7 +36,7 @@ def _disambiguate_modes(handle: FtHandle) -> Union[GpioStream, SpiStream]:
     Returns:
         Union[GpioHandle, SpiMasterHandle]:     Returns disambiguated handle
     """
-    result = gpio.init(handle, _DEFAULT_GPIO_DIRS)
+    result = wgpio.init(handle, _DEFAULT_GPIO_DIRS)
     if result.tag == ResType.OK:
         return GpioStream(uninitialize(result.result))
     else:

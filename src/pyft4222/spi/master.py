@@ -4,16 +4,16 @@ from typing import Generic, Literal, Optional, Type, TypeVar, Union, overload
 
 from pyft4222.handle import GenericHandle
 
-from pyft4222._wrapper import FtHandle, Ft4222Exception, Ft4222Status
-from pyft4222._wrapper.common import uninitialize
-from pyft4222._wrapper.spi import DriveStrength
-from pyft4222._wrapper.spi.master import (
+from pyft4222.wrapper import FtHandle, Ft4222Exception, Ft4222Status
+from pyft4222.wrapper.common import uninitialize
+from pyft4222.wrapper.spi import DriveStrength
+from pyft4222.wrapper.spi.master import (
     CsPolarity, IoMode, SpiMasterHandle,
     SpiMasterSingleHandle, SpiMasterMultiHandle,
     multi_read_write, set_cs_polarity, single_read,
     single_read_write, single_write
 )
-from pyft4222._wrapper.spi.common import (
+from pyft4222.wrapper.spi.common import (
     TransactionIdx,
     reset, reset_transaction, set_driving_strength
 )

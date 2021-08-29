@@ -1,19 +1,21 @@
 from abc import ABC
 from typing import Generic, Optional, TypeVar
 
-from pyft4222._wrapper import (
+from pyft4222.wrapper import (
     OS_TYPE, FtHandle, Ft4222Exception, Ft4222Status, GpioTrigger
 )
-from pyft4222._wrapper.ftd2xx import (
+from pyft4222.wrapper.ftd2xx import (
     DriverVersion, BufferType, ShortDeviceInfo,
-    close_handle, get_device_info, get_driver_version,
-    purge_buffers, reset_device
+    close_handle, get_device_info, purge_buffers, reset_device
 )
-from pyft4222._wrapper.common import (
+from pyft4222.wrapper.common import (
     ClockRate, SwChipVersion, chip_reset, get_clock,
     get_version, set_clock, set_interrupt_trigger,
     set_suspend_out, set_wakeup_interrupt
 )
+
+if OS_TYPE == "Windows":
+    from pyft4222.wrapper.ftd2xx import get_driver_version
 
 T = TypeVar('T', bound=FtHandle)
 

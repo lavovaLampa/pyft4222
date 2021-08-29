@@ -1,10 +1,10 @@
 from typing import Generic, List, Type, TypeVar
 
 from pyft4222.handle import GenericHandle
-from pyft4222._wrapper import FtHandle
-from pyft4222._wrapper import Ft4222Exception, Ft4222Status, GpioTrigger
-from pyft4222._wrapper.common import uninitialize
-from pyft4222._wrapper.gpio import (
+from pyft4222.wrapper import FtHandle
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, GpioTrigger
+from pyft4222.wrapper.common import uninitialize
+from pyft4222.wrapper.gpio import (
     GpioHandle, PortId,
     get_trigger_status, read, read_trigger_queue,
     set_input_trigger, set_waveform_mode, write

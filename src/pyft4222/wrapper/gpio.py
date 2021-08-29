@@ -14,7 +14,7 @@ _GPIO_COUNT: Final[int] = 4
 
 
 class Direction(IntEnum):
-    OUTPUT = 0,
+    OUTPUT = 0
     INPUT = auto()
 
 

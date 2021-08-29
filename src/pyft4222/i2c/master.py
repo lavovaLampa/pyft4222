@@ -1,13 +1,13 @@
 from typing import Generic, Type, TypeVar
 
 from pyft4222.handle import GenericHandle
-from pyft4222._wrapper import FtHandle
-from pyft4222._wrapper import Ft4222Exception, Ft4222Status
-from pyft4222._wrapper.common import uninitialize
-from pyft4222._wrapper.i2c.master import (
+from pyft4222.wrapper import FtHandle
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status
+from pyft4222.wrapper.common import uninitialize
+from pyft4222.wrapper.i2c.master import (
     I2cMasterHandle, CtrlStatus, TransactionFlag
 )
-from pyft4222._wrapper.i2c.master import (
+from pyft4222.wrapper.i2c.master import (
     get_status, read, read_ex, reset, reset_bus, write, write_ex
 )
 

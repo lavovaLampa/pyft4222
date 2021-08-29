@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 
-from wrapper import ResType, ftd2xx as ftd
+from pyft4222.wrapper import ResType, ftd2xx as ftd
 
-from wrapper.ft4222.common import ClockRate, set_wakeup_interrupt, set_suspend_out, set_clock
-from wrapper.ft4222 import gpio
+from pyft4222.wrapper.common import ClockRate, set_wakeup_interrupt, set_suspend_out, set_clock
+from pyft4222.wrapper import gpio
 
-from wrapper.ft4222.spi import ClkPhase, ClkPolarity, master as spi_master
-from wrapper.ft4222.gpio import Direction, PortId
+from pyft4222.wrapper.spi import ClkPhase, ClkPolarity, master as spi_master
+from pyft4222.wrapper.gpio import Direction, PortId
 
 import sys
 

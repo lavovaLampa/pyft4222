@@ -3,51 +3,51 @@ from typing import Final, List, NamedTuple, Optional
 from ctypes import POINTER, byref, create_string_buffer, Structure
 from ctypes import c_uint, c_void_p, c_int, c_char_p, c_char, c_uint32
 
-from .dll_loader import ftlib
+from .dll_loader import d2lib
 from . import OS_TYPE, FtHandle, Ok, Err, Result, FtStatus, FtException
 
 
 # DLL function protoypes declaration
 
 
-_create_device_info_list = ftlib.FT_CreateDeviceInfoList
+_create_device_info_list = d2lib.FT_CreateDeviceInfoList
 _create_device_info_list.argtypes = [POINTER(c_uint)]
 _create_device_info_list.restype = FtStatus
 
-_get_device_info_list = ftlib.FT_GetDeviceInfoList
+_get_device_info_list = d2lib.FT_GetDeviceInfoList
 _get_device_info_list.argtypes = []
 _get_device_info_list.restype = FtStatus
 
-_get_device_info_detail = ftlib.FT_GetDeviceInfoDetail
+_get_device_info_detail = d2lib.FT_GetDeviceInfoDetail
 _get_device_info_detail.argtypes = []
 _get_device_info_detail.restype = FtStatus
 
-_open = ftlib.FT_Open
+_open = d2lib.FT_Open
 _open.argtypes = [c_int, POINTER(c_void_p)]
 _open.restype = FtStatus
 
-_open_ex = ftlib.FT_OpenEx
+_open_ex = d2lib.FT_OpenEx
 _open_ex.argtypes = [c_void_p, c_uint, POINTER(c_void_p)]
 _open_ex.restype = FtStatus
 
-_close = ftlib.FT_Close
+_close = d2lib.FT_Close
 _close.argtypes = [c_void_p]
 _close.restype = FtStatus
 
-_get_device_info = ftlib.FT_GetDeviceInfo
+_get_device_info = d2lib.FT_GetDeviceInfo
 _get_device_info.argtypes = [c_void_p, POINTER(
     c_uint), POINTER(c_uint), c_char_p, c_char_p, c_void_p]
 _get_device_info.restype = FtStatus
 
-_get_driver_version = ftlib.FT_GetDriverVersion
+_get_driver_version = d2lib.FT_GetDriverVersion
 _get_driver_version.argtypes = [c_void_p, POINTER(c_uint)]
 _get_driver_version.restype = FtStatus
 
-_purge = ftlib.FT_Purge
+_purge = d2lib.FT_Purge
 _purge.argtypes = [c_void_p, c_uint]
 _purge.restype = FtStatus
 
-_reset_device = ftlib.FT_ResetDevice
+_reset_device = d2lib.FT_ResetDevice
 _reset_device.argtypes = [c_void_p]
 _reset_device.restype = FtStatus
 
