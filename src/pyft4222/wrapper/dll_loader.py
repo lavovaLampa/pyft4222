@@ -50,9 +50,7 @@ def _get_d2xx_lib() -> Optional[CDLL]:
     if _dll_path is not None:
         if OS_TYPE == "Windows":
             try:
-                path = res.files(_dll_path[0]).joinpath("ftd2xx64.dll")
-                with res.as_file(path) as fjel:
-                    return cdll.LoadLibrary(str(fjel))
+                return cdll.LoadLibrary("ftd2xx.dll")
             except OSError as e:
                 print(
                     "Unable to load D2XX shared library (required on Windows)!",
