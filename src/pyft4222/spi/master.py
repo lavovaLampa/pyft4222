@@ -165,14 +165,17 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
             SpiMaster:          A class encapsulating the selected mode
         """
         if self._handle is not None:
+            temp_handle = self._handle
+            self._handle = None
+
             if io_mode == IoMode.SINGLE:
                 return SpiMasterSingle(
-                    SpiMasterSingleHandle(self._handle),
+                    SpiMasterSingleHandle(temp_handle),
                     self._mode_class
                 )
             else:
                 return SpiMasterMulti(
-                    SpiMasterMultiHandle(self._handle),
+                    SpiMasterMultiHandle(temp_handle),
                     self._mode_class
                 )
         else:
