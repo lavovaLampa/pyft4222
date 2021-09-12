@@ -5,17 +5,22 @@ from pyft4222.wrapper import FtHandle
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, GpioTrigger
 from pyft4222.wrapper.common import uninitialize
 from pyft4222.wrapper.gpio import (
-    GpioHandle, PortId,
-    get_trigger_status, read, read_trigger_queue,
-    set_input_trigger, set_waveform_mode, write
+    GpioHandle,
+    PortId,
+    get_trigger_status,
+    read,
+    read_trigger_queue,
+    set_input_trigger,
+    set_waveform_mode,
+    write,
 )
 
-T = TypeVar('T', bound=GenericHandle[FtHandle])
+T = TypeVar("T", bound=GenericHandle[FtHandle])
 
 
 class Gpio(Generic[T], GenericHandle[GpioHandle]):
-    """A class encapsulating GPIO functions.
-    """
+    """A class encapsulating GPIO functions."""
+
     _mode_handle: Type[T]
 
     def __init__(self, ft_handle: GpioHandle, mode_handle: Type[T]):
@@ -44,8 +49,7 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
             return read(self._handle, port_id)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "GPIO has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
 
     def write(self, port_id: PortId, state: bool) -> None:
@@ -62,8 +66,7 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
             write(self._handle, port_id, state)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "GPIO has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
 
     def set_input_trigger(self, port_id: PortId, triggers: GpioTrigger) -> None:
@@ -80,8 +83,7 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
             set_input_trigger(self._handle, port_id, triggers)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "GPIO has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
 
     def get_queued_trigger_event_count(self, port_id: PortId) -> int:
@@ -100,14 +102,11 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
             return get_trigger_status(self._handle, port_id)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "GPIO has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
 
     def read_trigger_queue(
-        self,
-        port_id: PortId,
-        event_read_count: int
+        self, port_id: PortId, event_read_count: int
     ) -> List[GpioTrigger]:
         """Read events from the trigger event queue.
 
@@ -125,8 +124,7 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
             return read_trigger_queue(self._handle, port_id, event_read_count)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "GPIO has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
 
     def set_waveform_mode(self, enable: bool) -> None:
@@ -144,8 +142,7 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
             set_waveform_mode(self._handle, enable)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "GPIO has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
 
     def close(self) -> None:
@@ -177,6 +174,5 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
             return self._mode_handle(uninitialize(handle))
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "GPIO has been uninitialized already!"
+                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized already!"
             )

@@ -9,16 +9,25 @@ from pyft4222.wrapper import Ft4222Exception, Ft4222Status
 from pyft4222.wrapper.common import uninitialize
 from pyft4222.wrapper.spi import ClkPhase, ClkPolarity, DriveStrength
 from pyft4222.wrapper.spi.slave import (
-    EventType, SpiSlaveHandle, SpiSlaveProtoHandle,
-    SpiSlaveRawHandle, get_rx_status, read, set_mode, write
+    EventType,
+    SpiSlaveHandle,
+    SpiSlaveProtoHandle,
+    SpiSlaveRawHandle,
+    get_rx_status,
+    read,
+    set_mode,
+    write,
 )
 from pyft4222.wrapper.spi.common import (
-    TransactionIdx, reset, reset_transaction, set_driving_strength
+    TransactionIdx,
+    reset,
+    reset_transaction,
+    set_driving_strength,
 )
 
 
-T = TypeVar('T', bound=GenericHandle[FtHandle])
-U = TypeVar('U', bound=SpiSlaveHandle)
+T = TypeVar("T", bound=GenericHandle[FtHandle])
+U = TypeVar("U", bound=SpiSlaveHandle)
 
 
 class SpiModeTag(Enum):
@@ -27,8 +36,8 @@ class SpiModeTag(Enum):
 
 
 class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
-    """A class encapsulating functions common to all SPI Slave modes.
-    """
+    """A class encapsulating functions common to all SPI Slave modes."""
+
     _mode_class: Type[T]
 
     def __init__(self, ft_handle: U, mode_class: Type[T]):
@@ -55,8 +64,7 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
             reset(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
     # FIXME: De-duplicate with SPI Master
@@ -74,8 +82,7 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
             reset_transaction(self._handle, transaction_idx)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
     # FIXME: De-duplicate with SPI Master
@@ -83,7 +90,7 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
         self,
         clk_strength: DriveStrength,
         io_strength: DriveStrength,
-        sso_strength: DriveStrength
+        sso_strength: DriveStrength,
     ) -> None:
         """Set driving strength of clk, io and sso pins.
 
@@ -99,16 +106,10 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
             Ft4222Exception:    In case of unexpected error
         """
         if self._handle is not None:
-            set_driving_strength(
-                self._handle,
-                clk_strength,
-                io_strength,
-                sso_strength
-            )
+            set_driving_strength(self._handle, clk_strength, io_strength, sso_strength)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
     def set_mode(self, clk_polarity: ClkPolarity, clk_phase: ClkPhase) -> None:
@@ -125,8 +126,7 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
             set_mode(self._handle, clk_polarity, clk_phase)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
     def get_rx_status(self) -> int:
@@ -142,8 +142,7 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
             return get_rx_status(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
     def read(self, read_byte_count: int) -> bytes:
@@ -166,13 +165,10 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
             if 0 < read_byte_count < (2 ** 16):
                 return read(self._handle, read_byte_count)
             else:
-                raise ValueError(
-                    "read_byte_count must be in range <1, 65_535>."
-                )
+                raise ValueError("read_byte_count must be in range <1, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
     def write(self, write_data: bytes) -> int:
@@ -191,13 +187,10 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
             if 0 < len(write_data) < (2 ** 16):
                 return write(self._handle, write_data)
             else:
-                raise ValueError(
-                    "write_data length must be in range <1, 65_535>."
-                )
+                raise ValueError("write_data length must be in range <1, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
     def close(self) -> None:
@@ -230,7 +223,7 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized already!"
+                "SPI Slave has been uninitialized already!",
             )
 
 
@@ -255,8 +248,7 @@ class SpiSlaveProto(Generic[T], SpiSlaveCommon[T, SpiSlaveProtoHandle]):
 
     # FIXME: Proper typing
     def set_event_notification(self, mask: EventType, param: c_void_p) -> None:
-        """TODO: Implement and document
-        """
+        """TODO: Implement and document"""
         pass
 
 

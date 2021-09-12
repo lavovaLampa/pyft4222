@@ -20,11 +20,9 @@ _COMMON_DLL_PREFIX: str = "pyft4222.wrapper.dll."
 _DLL_IMPORT_MAP: Final[Mapping[Tuple[str, str], Tuple[str, str]]] = {
     # Windows
     ("Windows", "AMD64"): (_COMMON_DLL_PREFIX + "win.amd64", "LibFT4222-64.dll"),
-
     # Linux
     ("Linux", "x86_64"): (_COMMON_DLL_PREFIX + "linux.amd64", "libft4222.so"),
     ("Linux", "aarch64"): (_COMMON_DLL_PREFIX + "linux.aarch64", "libft4222.so"),
-
     # macOs
     # TODO: Implement!
 }
@@ -54,7 +52,7 @@ def _get_d2xx_lib() -> Optional[CDLL]:
             except OSError as e:
                 print(
                     "Unable to load D2XX shared library (required on Windows)!",
-                    file=sys.stderr
+                    file=sys.stderr,
                 )
                 print(e)
                 sys.exit(1)

@@ -35,8 +35,14 @@ _close.argtypes = [c_void_p]
 _close.restype = FtStatus
 
 _get_device_info = d2lib.FT_GetDeviceInfo
-_get_device_info.argtypes = [c_void_p, POINTER(
-    c_uint), POINTER(c_uint), c_char_p, c_char_p, c_void_p]
+_get_device_info.argtypes = [
+    c_void_p,
+    POINTER(c_uint),
+    POINTER(c_uint),
+    c_char_p,
+    c_char_p,
+    c_void_p,
+]
 _get_device_info.restype = FtStatus
 
 _get_driver_version = d2lib.FT_GetDriverVersion
@@ -65,18 +71,19 @@ _DESCRIPTION_MAX_LEN: Final[int] = 64
 
 class _RawDeviceInfoListNode(Structure):
     _fields_ = [
-        ('flags', c_uint),
-        ('type', c_uint),
-        ('id', c_uint),
-        ('loc_id', c_uint),
-        ('serial_number', c_char * _SERIAL_NUMBER_MAX_LEN),
-        ('description', c_char * _DESCRIPTION_MAX_LEN),
-        ('handle', c_void_p)
+        ("flags", c_uint),
+        ("type", c_uint),
+        ("id", c_uint),
+        ("loc_id", c_uint),
+        ("serial_number", c_char * _SERIAL_NUMBER_MAX_LEN),
+        ("description", c_char * _DESCRIPTION_MAX_LEN),
+        ("handle", c_void_p),
     ]
 
 
 class DeviceFlags(IntFlag):
     """Class representing the D2XX 'device information flags' enum."""
+
     OPEN = 1
     """Device is currently opened."""
     HIGH_SPEED = 2
@@ -85,6 +92,7 @@ class DeviceFlags(IntFlag):
 
 class DeviceType(IntEnum):
     """Class representing the 'FT_DEVICE' D2XX enum."""
+
     DEV_BM = 0
     DEV_AM = auto()
     DEV_100AX = auto()
@@ -105,8 +113,8 @@ class DeviceType(IntEnum):
 
 
 class DeviceInfo(NamedTuple):
-    """NamedTuple encapsulating the 'FT_DEVICE_INFO_LIST_NODE' D2XX data struct.
-    """
+    """NamedTuple encapsulating the 'FT_DEVICE_INFO_LIST_NODE' D2XX data struct."""
+
     flags: DeviceFlags
     """Special device flags. See 'DeviceFlags'."""
     dev_type: DeviceType
@@ -123,20 +131,21 @@ class DeviceInfo(NamedTuple):
     """A C pointer to device handle; NULL if not opened"""
 
     @classmethod
-    def from_raw(cls, raw_node: _RawDeviceInfoListNode) -> 'DeviceInfo':
+    def from_raw(cls, raw_node: _RawDeviceInfoListNode) -> "DeviceInfo":
         return cls(
             flags=DeviceFlags(raw_node.flags),
             dev_type=DeviceType(raw_node.type),
             idx=raw_node.id,
             loc_id=raw_node.loc_id,
-            serial_number=raw_node.serial_number.decode('utf-8'),
-            description=raw_node.description.decode('utf-8'),
-            handle=FtHandle(raw_node.handle)
+            serial_number=raw_node.serial_number.decode("utf-8"),
+            description=raw_node.description.decode("utf-8"),
+            handle=FtHandle(raw_node.handle),
         )
 
 
 class DriverVersion(NamedTuple):
     """NamedTuple encapsulating the driver version information."""
+
     major: int
     minor: int
     build_version: int
@@ -150,6 +159,7 @@ class _OpenExFlag(IntEnum):
 
 class BufferType(IntFlag):
     """Enum for selecting the buffer purge type."""
+
     RX = 1
     """Purge receive buffers."""
     TX = 2
@@ -158,6 +168,7 @@ class BufferType(IntFlag):
 
 class ShortDeviceInfo(NamedTuple):
     """NamedTuple encapsulating the short device information."""
+
     dev_type: DeviceType
     """Device type. See 'DeviceType' enum."""
     dev_idx: int
@@ -223,7 +234,7 @@ def get_device_info_list() -> List[DeviceInfo]:
     if result != FtStatus.OK:
         raise FtException(result)
 
-    return list(map(DeviceInfo.from_raw, raw_list))[:array_elem_count.value]
+    return list(map(DeviceInfo.from_raw, raw_list))[: array_elem_count.value]
 
 
 def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
@@ -238,8 +249,7 @@ def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
     Returns:
         device details (if id exists)
     """
-    assert 0 <= dev_idx <= (2 ** 31) - 1,\
-        "Device ID must be a non-negative integer"
+    assert 0 <= dev_idx <= (2 ** 31) - 1, "Device ID must be a non-negative integer"
 
     idx = c_uint(dev_idx)
     flags = c_uint()
@@ -258,7 +268,7 @@ def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
         byref(loc_id),
         serial_number,
         description,
-        byref(handle)
+        byref(handle),
     )
 
     if result == FtStatus.OK:
@@ -267,9 +277,9 @@ def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
             dev_type=DeviceType(dev_type.value),
             idx=idx.value,
             loc_id=loc_id.value,
-            serial_number=serial_number.value.decode('utf-8'),
-            description=description.value.decode('utf-8'),
-            handle=FtHandle(handle)
+            serial_number=serial_number.value.decode("utf-8"),
+            description=description.value.decode("utf-8"),
+            handle=FtHandle(handle),
         )
     elif result in {FtStatus.DEVICE_NOT_FOUND, FtStatus.INVALID_HANDLE}:
         return None
@@ -293,8 +303,7 @@ def open_by_idx(dev_idx: int) -> Result[FtHandle, FtStatus]:
     Returns:
         D2XX device handle (optional)
     """
-    assert 0 <= dev_idx <= (2 ** 31) - 1,\
-        "Device ID must be a non-negative integer"
+    assert 0 <= dev_idx <= (2 ** 31) - 1, "Device ID must be a non-negative integer"
 
     ft_handle = c_void_p()
     result: FtStatus = _open(dev_idx, byref(ft_handle))
@@ -320,9 +329,7 @@ def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
     """
     ft_handle = c_void_p()
     result: FtStatus = _open_ex(
-        serial_num.encode('utf-8'),
-        _OpenExFlag.BY_SERIAL_NUMBER,
-        byref(ft_handle)
+        serial_num.encode("utf-8"), _OpenExFlag.BY_SERIAL_NUMBER, byref(ft_handle)
     )
 
     if result == FtStatus.OK:
@@ -346,9 +353,7 @@ def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
     """
     ft_handle = c_void_p()
     result: FtStatus = _open_ex(
-        dev_description.encode('utf-8'),
-        _OpenExFlag.BY_DESCRIPTION,
-        byref(ft_handle)
+        dev_description.encode("utf-8"), _OpenExFlag.BY_DESCRIPTION, byref(ft_handle)
     )
 
     if result == FtStatus.OK:
@@ -360,6 +365,7 @@ def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
 # This function is not supported on Linux and Windows CE
 # REVIEW: Windows CE is unsupported by Python so no need to check?
 if OS_TYPE != "Linux":
+
     def open_by_location(location_id: int) -> Result[FtHandle, FtStatus]:
         """Open the specified device using 'location ID' and return a device handle.
 
@@ -378,9 +384,7 @@ if OS_TYPE != "Linux":
         """
         ft_handle = c_void_p()
         result: FtStatus = _open_ex(
-            location_id,
-            _OpenExFlag.BY_LOCATION,
-            byref(ft_handle)
+            location_id, _OpenExFlag.BY_LOCATION, byref(ft_handle)
         )
 
         if result == FtStatus.OK:
@@ -427,25 +431,20 @@ def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
     description = create_string_buffer(_DESCRIPTION_MAX_LEN)
 
     result: FtStatus = _get_device_info(
-        ft_handle,
-        byref(dev_type),
-        byref(dev_id),
-        serial_number,
-        description,
-        None
+        ft_handle, byref(dev_type), byref(dev_id), serial_number, description, None
     )
 
     if result == FtStatus.OK:
         return ShortDeviceInfo(
             dev_type=DeviceType(dev_type.value),
             dev_idx=dev_id.value,
-            serial_number=serial_number.value.decode('utf-8'),
-            description=description.value.decode('utf-8')
+            serial_number=serial_number.value.decode("utf-8"),
+            description=description.value.decode("utf-8"),
         )
     elif result in {
         FtStatus.DEVICE_NOT_FOUND,
         FtStatus.DEVICE_NOT_OPENED,
-        FtStatus.INVALID_HANDLE
+        FtStatus.INVALID_HANDLE,
     }:
         return None
     else:
@@ -453,6 +452,7 @@ def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
 
 
 if OS_TYPE == "Windows":
+
     def get_driver_version(ft_handle: FtHandle) -> DriverVersion:
         """This function returns the D2XX driver version number.
 
@@ -467,8 +467,7 @@ if OS_TYPE == "Windows":
         """
         driver_version = c_uint32()
 
-        result: FtStatus = _get_driver_version(
-            ft_handle, byref(driver_version))
+        result: FtStatus = _get_driver_version(ft_handle, byref(driver_version))
 
         if result != FtStatus.OK:
             raise FtException(result)
@@ -476,7 +475,7 @@ if OS_TYPE == "Windows":
         return DriverVersion(
             build_version=driver_version.value & 0xFF,
             minor=(driver_version.value >> 8) & 0xFF,
-            major=(driver_version.value >> 16) & 0xFF
+            major=(driver_version.value >> 16) & 0xFF,
         )
 
 
@@ -493,8 +492,10 @@ def purge_buffers(ft_handle: FtHandle, purge_type_mask: BufferType) -> None:
     result: FtStatus = _purge(ft_handle, purge_type_mask)
 
     if result not in {
-        FtStatus.OK, FtStatus.INVALID_HANDLE,
-        FtStatus.DEVICE_NOT_FOUND, FtStatus.DEVICE_NOT_OPENED
+        FtStatus.OK,
+        FtStatus.INVALID_HANDLE,
+        FtStatus.DEVICE_NOT_FOUND,
+        FtStatus.DEVICE_NOT_OPENED,
     }:
         raise FtException(result)
 
@@ -511,7 +512,9 @@ def reset_device(ft_handle: FtHandle) -> None:
     result: FtStatus = _reset_device(ft_handle)
 
     if result not in {
-        FtStatus.OK, FtStatus.INVALID_HANDLE,
-        FtStatus.DEVICE_NOT_FOUND, FtStatus.DEVICE_NOT_OPENED
+        FtStatus.OK,
+        FtStatus.INVALID_HANDLE,
+        FtStatus.DEVICE_NOT_FOUND,
+        FtStatus.DEVICE_NOT_OPENED,
     }:
         raise FtException(result)

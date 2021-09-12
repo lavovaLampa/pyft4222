@@ -15,7 +15,7 @@ from typing import Literal, Union
 
 from pyft4222.handle import GenericHandle
 
-from pyft4222.wrapper import FtHandle, ResType, Ft4222Exception, Ft4222Status
+from pyft4222.wrapper import FtHandle, Result, Ft4222Exception, Ft4222Status
 from pyft4222.wrapper import gpio
 from pyft4222.wrapper.spi import slave as spi_slave
 from pyft4222.wrapper.spi import master as spi_master
@@ -50,6 +50,7 @@ class InterfaceType(Enum):
     More info can be found in the FT4222H Datasheet:
     https://ftdichip.com/wp-content/uploads/2020/07/DS_FT4222H.pdf
     """
+
     DATA_STREAM = auto()
     """All serial protocols are supported in this mode, excluding GPIO"""
     GPIO = auto()
@@ -64,6 +65,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
     Attributes:
         tag:    Can be used to disambiguate between different stream types
     """
+
     tag: Literal[InterfaceType.DATA_STREAM]
 
     def __init__(self, ft_handle: FtHandle):
@@ -86,8 +88,8 @@ class ProtocolStream(GenericHandle[FtHandle]):
         clk_div: spi_master.ClkDiv,
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
-        sso_map: spi_master.SsoMap
-    ) -> SpiMasterSingle['ProtocolStream']:
+        sso_map: spi_master.SsoMap,
+    ) -> SpiMasterSingle["ProtocolStream"]:
         """Initialize SPI Master mode, using single data line.
 
         Args:
@@ -109,11 +111,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_div,
                 clk_polarity,
                 clk_phase,
-                sso_map
+                sso_map,
             )
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiMasterSingle(result.result, self.__class__)
+                return SpiMasterSingle(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
@@ -124,8 +126,8 @@ class ProtocolStream(GenericHandle[FtHandle]):
         clk_div: spi_master.ClkDiv,
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
-        sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['ProtocolStream']:
+        sso_map: spi_master.SsoMap,
+    ) -> SpiMasterMulti["ProtocolStream"]:
         """Initialize SPI Master mode, using two data lines.
 
         Args:
@@ -147,11 +149,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_div,
                 clk_polarity,
                 clk_phase,
-                sso_map
+                sso_map,
             )
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiMasterMulti(result.result, self.__class__)
+                return SpiMasterMulti(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
@@ -162,8 +164,8 @@ class ProtocolStream(GenericHandle[FtHandle]):
         clk_div: spi_master.ClkDiv,
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
-        sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['ProtocolStream']:
+        sso_map: spi_master.SsoMap,
+    ) -> SpiMasterMulti["ProtocolStream"]:
         """Initialize SPI Master mode, using four data lines.
 
         Args:
@@ -185,17 +187,17 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_div,
                 clk_polarity,
                 clk_phase,
-                sso_map
+                sso_map,
             )
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiMasterMulti(result.result, self.__class__)
+                return SpiMasterMulti(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
-    def init_raw_spi_slave(self) -> SpiSlaveRaw['ProtocolStream']:
+    def init_raw_spi_slave(self) -> SpiSlaveRaw["ProtocolStream"]:
         """Initialize SPI Slave in raw mode.
 
         Raises:
@@ -209,9 +211,9 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 self._handle,
                 spi_slave.IoProtocol.NO_PROTOCOL,
             )
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiSlaveRaw(result.result, self.__class__)
+                return SpiSlaveRaw(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
@@ -221,9 +223,9 @@ class ProtocolStream(GenericHandle[FtHandle]):
         self,
         proto_type: Union[
             Literal[spi_slave.IoProtocol.NO_ACK],
-            Literal[spi_slave.IoProtocol.WITH_PROTOCOL]
-        ]
-    ) -> SpiSlaveProto['ProtocolStream']:
+            Literal[spi_slave.IoProtocol.WITH_PROTOCOL],
+        ],
+    ) -> SpiSlaveProto["ProtocolStream"]:
         """Initialize SPI Slave in selected protocol mode.
 
         For protocol details, see:
@@ -238,19 +240,16 @@ class ProtocolStream(GenericHandle[FtHandle]):
             SpiSlaveProto:      SPI Slave protocol mode handle
         """
         if self._handle is not None:
-            result = spi_slave.init_ex(
-                self._handle,
-                proto_type
-            )
-            if result.tag == ResType.OK:
+            result = spi_slave.init_ex(self._handle, proto_type)
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiSlaveProto(result.result, self.__class__)
+                return SpiSlaveProto(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
-    def init_i2c_master(self, kbps: int) -> I2CMaster['ProtocolStream']:
+    def init_i2c_master(self, kbps: int) -> I2CMaster["ProtocolStream"]:
         """Initialize I2C Master.
 
         Args:
@@ -264,17 +263,15 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = i2c_master.init(self._handle, kbps)
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return I2CMaster(result.result, self.__class__)
+                return I2CMaster(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
-    def init_i2c_slave(
-        self
-    ) -> I2CSlave['ProtocolStream']:
+    def init_i2c_slave(self) -> I2CSlave["ProtocolStream"]:
         """Initialize I2C Slave.
 
         Raises:
@@ -285,9 +282,9 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = i2c_slave.init(self._handle)
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return I2CSlave(result.result, self.__class__)
+                return I2CSlave(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
@@ -300,6 +297,7 @@ class GpioStream(GenericHandle[FtHandle]):
     Attributes:
         tab:    Can be used to disambiguate between different stream types
     """
+
     tag: Literal[InterfaceType.GPIO]
 
     def __init__(self, ft_handle: FtHandle):
@@ -311,7 +309,7 @@ class GpioStream(GenericHandle[FtHandle]):
         super().__init__(ft_handle)
         self.tag = InterfaceType.GPIO
 
-    def init_gpio(self, dirs: gpio.DirTuple) -> Gpio['GpioStream']:
+    def init_gpio(self, dirs: gpio.DirTuple) -> Gpio["GpioStream"]:
         """Initialize GPIO.
 
         Args:
@@ -325,9 +323,9 @@ class GpioStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = gpio.init(self._handle, dirs)
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return Gpio(result.result, self.__class__)
+                return Gpio(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
@@ -341,6 +339,7 @@ class SpiStream(GenericHandle[FtHandle]):
         tag:    Can be used to disambiguate between different stream types
 
     """
+
     tag: Literal[InterfaceType.SPI_MASTER]
 
     def __init__(self, ft_handle: FtHandle):
@@ -363,8 +362,8 @@ class SpiStream(GenericHandle[FtHandle]):
         clk_div: spi_master.ClkDiv,
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
-        sso_map: spi_master.SsoMap
-    ) -> SpiMasterSingle['SpiStream']:
+        sso_map: spi_master.SsoMap,
+    ) -> SpiMasterSingle["SpiStream"]:
         """Initialize SPI Master mode, using single data line.
 
         Args:
@@ -386,11 +385,11 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_div,
                 clk_polarity,
                 clk_phase,
-                sso_map
+                sso_map,
             )
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiMasterSingle(result.result, self.__class__)
+                return SpiMasterSingle(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
@@ -401,8 +400,8 @@ class SpiStream(GenericHandle[FtHandle]):
         clk_div: spi_master.ClkDiv,
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
-        sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['SpiStream']:
+        sso_map: spi_master.SsoMap,
+    ) -> SpiMasterMulti["SpiStream"]:
         """Initialize SPI Master mode, using two data lines.
 
         Args:
@@ -424,11 +423,11 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_div,
                 clk_polarity,
                 clk_phase,
-                sso_map
+                sso_map,
             )
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiMasterMulti(result.result, self.__class__)
+                return SpiMasterMulti(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:
@@ -439,8 +438,8 @@ class SpiStream(GenericHandle[FtHandle]):
         clk_div: spi_master.ClkDiv,
         clk_polarity: spi_master.ClkPolarity,
         clk_phase: spi_master.ClkPhase,
-        sso_map: spi_master.SsoMap
-    ) -> SpiMasterMulti['SpiStream']:
+        sso_map: spi_master.SsoMap,
+    ) -> SpiMasterMulti["SpiStream"]:
         """Initialize SPI Master mode, using four data lines.
 
         Args:
@@ -462,11 +461,11 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_div,
                 clk_polarity,
                 clk_phase,
-                sso_map
+                sso_map,
             )
-            if result.tag == ResType.OK:
+            if result.tag == Result.OK:
                 self._handle = None
-                return SpiMasterMulti(result.result, self.__class__)
+                return SpiMasterMulti(result.ok, self.__class__)
             else:
                 raise Ft4222Exception(result.err)
         else:

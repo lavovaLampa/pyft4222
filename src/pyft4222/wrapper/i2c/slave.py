@@ -1,4 +1,4 @@
-from ctypes import POINTER, byref
+from ctypes import POINTER, byref, c_char_p
 from ctypes import c_void_p, c_uint8, c_uint16, c_bool
 
 from typing import NewType
@@ -32,13 +32,11 @@ _get_rx_status.argtypes = [c_void_p, POINTER(c_uint16)]
 _get_rx_status.restype = Ft4222Status
 
 _read = ftlib.FT4222_I2CSlave_Read
-_read.argtypes = [c_void_p, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16)]
+_read.argtypes = [c_void_p, POINTER(c_uint8), c_uint16, POINTER(c_uint16)]
 _read.restype = Ft4222Status
 
 _write = ftlib.FT4222_I2CSlave_Write
-_write.argtypes = [c_void_p, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16)]
+_write.argtypes = [c_void_p, c_char_p, c_uint16, POINTER(c_uint16)]
 _write.restype = Ft4222Status
 
 _set_clock_stretch = ftlib.FT4222_I2CSlave_SetClockStretch
@@ -104,8 +102,7 @@ def get_address(ft_handle: I2cSlaveHandle) -> int:
     """
     addr = c_uint8()
 
-    result: Ft4222Status = _get_address(
-        ft_handle, byref(addr))
+    result: Ft4222Status = _get_address(ft_handle, byref(addr))
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -123,8 +120,9 @@ def set_address(ft_handle: I2cSlaveHandle, addr: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    assert 0 <= addr < (2 ** 16),\
-        "Device address must be an unsigned 16b integer (range 0 - 65 535)"
+    assert (
+        0 <= addr < (2 ** 7)
+    ), "Device address must be an unsigned 16b integer (range 0 - 65 535)"
 
     result: Ft4222Status = _set_address(ft_handle, addr)
 
@@ -146,8 +144,7 @@ def get_rx_status(ft_handle: I2cSlaveHandle) -> int:
     """
     rx_size = c_uint16()
 
-    result: Ft4222Status = _get_rx_status(
-        ft_handle, byref(rx_size))
+    result: Ft4222Status = _get_rx_status(ft_handle, byref(rx_size))
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -168,23 +165,21 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data
     """
-    assert 0 < read_byte_count < (2 ** 16),\
-        "Number of bytes to read must be positive and less than 2^16"
+    assert (
+        0 < read_byte_count < (2 ** 16)
+    ), "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
     result: Ft4222Status = _read(
-        ft_handle,
-        read_buffer,
-        len(read_buffer),
-        byref(bytes_read)
+        ft_handle, read_buffer, len(read_buffer), byref(bytes_read)
     )
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return bytes(read_buffer[:bytes_read.value])
+    return bytes(read_buffer[: bytes_read.value])
 
 
 def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
@@ -200,16 +195,14 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:            Number of bytes written
     """
-    assert 0 < len(write_data) < (2 ** 16),\
-        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert (
+        0 < len(write_data) < (2 ** 16)
+    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write(
-        ft_handle,
-        write_data,
-        len(write_data),
-        byref(bytes_written)
+        ft_handle, write_data, len(write_data), byref(bytes_written)
     )
 
     if result != Ft4222Status.OK:
@@ -236,8 +229,7 @@ def set_clock_stretch(ft_handle: I2cSlaveHandle, enable: bool) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    result: Ft4222Status = _set_clock_stretch(
-        ft_handle, enable)
+    result: Ft4222Status = _set_clock_stretch(ft_handle, enable)
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -259,11 +251,11 @@ def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    assert 0 <= response_word < (2 ** 8),\
-        "The response word must be an 8b unsigned integer (range 0 - 255)"
+    assert (
+        0 <= response_word < (2 ** 8)
+    ), "The response word must be an 8b unsigned integer (range 0 - 255)"
 
-    result: Ft4222Status = _set_resp_word(
-        ft_handle, response_word)
+    result: Ft4222Status = _set_resp_word(ft_handle, response_word)
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)

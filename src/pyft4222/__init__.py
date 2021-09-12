@@ -7,8 +7,13 @@ from typing import Callable, List, Union, Final, Dict, Tuple, Type
 
 from pyft4222.wrapper import (
     gpio as wgpio,
-    Err, FtHandle, Ok, Result, ResType, OS_TYPE,
-    ftd2xx as ftd
+    Err,
+    FtHandle,
+    Ok,
+    Result,
+    ResType,
+    OS_TYPE,
+    ftd2xx as ftd,
 )
 from pyft4222.wrapper.common import uninitialize
 
@@ -20,7 +25,7 @@ _DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
     wgpio.Direction.INPUT,
     wgpio.Direction.INPUT,
     wgpio.Direction.INPUT,
-    wgpio.Direction.INPUT
+    wgpio.Direction.INPUT,
 )
 
 
@@ -38,7 +43,7 @@ def _disambiguate_modes(handle: FtHandle) -> Union[GpioStream, SpiStream]:
     """
     result = wgpio.init(handle, _DEFAULT_GPIO_DIRS)
     if result.tag == ResType.OK:
-        return GpioStream(uninitialize(result.result))
+        return GpioStream(uninitialize(result.ok))
     else:
         return SpiStream(handle)
 
@@ -47,28 +52,22 @@ _Ft4222HandleType = Union[
     Type[ProtocolStream],
     Type[GpioStream],
     Type[SpiStream],
-    Callable[[FtHandle], Union[GpioStream, SpiStream]]
+    Callable[[FtHandle], Union[GpioStream, SpiStream]],
 ]
 
-Ft4222Handle = Union[
-    ProtocolStream,
-    GpioStream,
-    SpiStream
-]
+Ft4222Handle = Union[ProtocolStream, GpioStream, SpiStream]
 
 _MODE_MAP: Final[Dict[Tuple[str, ftd.DeviceType], _Ft4222HandleType]] = {
     # Mode 0
     ("FT4222 A", ftd.DeviceType.DEV_4222H_0): ProtocolStream,
     ("FT4222 B", ftd.DeviceType.DEV_4222H_0): GpioStream,
-
     # Mode 1 or Mode 2
     ("FT4222 A", ftd.DeviceType.DEV_4222H_1_2): SpiStream,
     ("FT4222 B", ftd.DeviceType.DEV_4222H_1_2): SpiStream,
     ("FT4222 C", ftd.DeviceType.DEV_4222H_1_2): SpiStream,
     ("FT4222 D", ftd.DeviceType.DEV_4222H_1_2): _disambiguate_modes,
-
     # Mode 3
-    ("FT4222", ftd.DeviceType.DEV_4222H_3): ProtocolStream
+    ("FT4222", ftd.DeviceType.DEV_4222H_3): ProtocolStream,
 }
 
 
@@ -90,10 +89,7 @@ def _get_mode_handle(ft_handle: FtHandle) -> Result[Ft4222Handle, FtError]:
     """
     dev_details = ftd.get_device_info(ft_handle)
     if dev_details is not None:
-        handle_type = _MODE_MAP.get((
-            dev_details.description,
-            dev_details.dev_type
-        ))
+        handle_type = _MODE_MAP.get((dev_details.description, dev_details.dev_type))
         if handle_type is not None:
             return Ok(handle_type(ft_handle))
         else:
@@ -166,7 +162,7 @@ def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtError]:
     if _validate_dev_idx(dev_idx):
         ft_handle = ftd.open_by_idx(dev_idx)
         if ft_handle.tag == ResType.OK:
-            return _get_mode_handle(ft_handle.result)
+            return _get_mode_handle(ft_handle.ok)
         else:
             return Err(FtError.INVALID_HANDLE)
     else:
@@ -184,7 +180,7 @@ def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
     """
     ft_handle = ftd.open_by_serial(serial_num)
     if ft_handle.tag == ResType.OK:
-        return _get_mode_handle(ft_handle.result)
+        return _get_mode_handle(ft_handle.ok)
     else:
         return Err(FtError.INVALID_HANDLE)
 
@@ -200,12 +196,13 @@ def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtError]:
     """
     ft_handle = ftd.open_by_description(dev_description)
     if ft_handle.tag == ResType.OK:
-        return _get_mode_handle(ft_handle.result)
+        return _get_mode_handle(ft_handle.ok)
     else:
         return Err(FtError.INVALID_HANDLE)
 
 
 if OS_TYPE != "Linux":
+
     def open_by_location(location_id: int) -> Result[Ft4222Handle, FtError]:
         """Open FT4222 device stream using 'device USB location ID'.
 
@@ -213,10 +210,10 @@ if OS_TYPE != "Linux":
             location_id:    Device USB location ID
 
         Returns:
-            Result[Ft4222Handle, FtError]:  
+            Result[Ft4222Handle, FtError]:
         """
         ft_handle = ftd.open_by_location(location_id)
         if ft_handle.tag == ResType.OK:
-            return _get_mode_handle(ft_handle.result)
+            return _get_mode_handle(ft_handle.ok)
         else:
             return Err(FtError.INVALID_HANDLE)

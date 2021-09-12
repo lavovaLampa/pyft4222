@@ -1,4 +1,4 @@
-from ctypes import POINTER, byref
+from ctypes import POINTER, byref, c_char_p
 from ctypes import c_void_p, c_uint, c_uint16, c_uint8
 
 from enum import IntEnum, IntFlag, auto
@@ -8,8 +8,8 @@ from . import ClkPhase, ClkPolarity
 from .. import FtHandle, Result, Ok, Err, Ft4222Exception, Ft4222Status
 from ..dll_loader import ftlib
 
-SpiSlaveRawHandle = NewType('SpiSlaveRawHandle', FtHandle)
-SpiSlaveProtoHandle = NewType('SpiSlaveProtoHandle', FtHandle)
+SpiSlaveRawHandle = NewType("SpiSlaveRawHandle", FtHandle)
+SpiSlaveProtoHandle = NewType("SpiSlaveProtoHandle", FtHandle)
 SpiSlaveHandle = Union[SpiSlaveRawHandle, SpiSlaveProtoHandle]
 
 
@@ -40,13 +40,11 @@ _get_rx_status.argtypes = [c_void_p, POINTER(c_uint16)]
 _get_rx_status.restype = Ft4222Status
 
 _read = ftlib.FT4222_SPISlave_Read
-_read.argtypes = [c_void_p, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16)]
+_read.argtypes = [c_void_p, POINTER(c_uint8), c_uint16, POINTER(c_uint16)]
 _read.restype = Ft4222Status
 
 _write = ftlib.FT4222_SPISlave_Write
-_write.argtypes = [c_void_p, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16)]
+_write.argtypes = [c_void_p, c_char_p, c_uint16, POINTER(c_uint16)]
 _write.restype = Ft4222Status
 
 _set_event_notification = ftlib.FT4222_SetEventNotification
@@ -75,24 +73,31 @@ def init(ft_handle: FtHandle) -> Result[SpiSlaveProtoHandle, Ft4222Status]:
 
 @overload
 def init_ex(
-    ft_handle: FtHandle,
-    protocol: Literal[IoProtocol.NO_PROTOCOL]
-) -> Result[SpiSlaveRawHandle, Ft4222Status]: ...
+    ft_handle: FtHandle, protocol: Literal[IoProtocol.NO_PROTOCOL]
+) -> Result[SpiSlaveRawHandle, Ft4222Status]:
+    ...
 
 
 @overload
 def init_ex(
-    ft_handle: FtHandle,
-    protocol: Literal[IoProtocol.WITH_PROTOCOL, IoProtocol.NO_ACK]
-) -> Result[SpiSlaveProtoHandle, Ft4222Status]: ...
+    ft_handle: FtHandle, protocol: Literal[IoProtocol.WITH_PROTOCOL, IoProtocol.NO_ACK]
+) -> Result[SpiSlaveProtoHandle, Ft4222Status]:
+    ...
+
+
+@overload
+def init_ex(
+    ft_handle: FtHandle, protocol: IoProtocol
+) -> Union[
+    Result[SpiSlaveProtoHandle, Ft4222Status], Result[SpiSlaveRawHandle, Ft4222Status]
+]:
+    ...
 
 
 def init_ex(
-    ft_handle: FtHandle,
-    protocol: IoProtocol
+    ft_handle: FtHandle, protocol: IoProtocol
 ) -> Union[
-        Result[SpiSlaveProtoHandle, Ft4222Status],
-        Result[SpiSlaveRawHandle, Ft4222Status]
+    Result[SpiSlaveProtoHandle, Ft4222Status], Result[SpiSlaveRawHandle, Ft4222Status]
 ]:
     """Initialize the FT4222H as an SPI slave.
 
@@ -117,9 +122,7 @@ def init_ex(
 
 
 def set_mode(
-    ft_handle: SpiSlaveHandle,
-    clk_polarity: ClkPolarity,
-    clk_phase: ClkPhase
+    ft_handle: SpiSlaveHandle, clk_polarity: ClkPolarity, clk_phase: ClkPhase
 ) -> None:
     """Set clock polarity and phase.
 
@@ -131,11 +134,7 @@ def set_mode(
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    result: Ft4222Status = _set_mode(
-        ft_handle,
-        clk_polarity,
-        clk_phase
-    )
+    result: Ft4222Status = _set_mode(ft_handle, clk_polarity, clk_phase)
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -155,10 +154,7 @@ def get_rx_status(ft_handle: SpiSlaveHandle) -> int:
     """
     rx_size = c_uint16()
 
-    result: Ft4222Status = _get_rx_status(
-        ft_handle,
-        byref(rx_size)
-    )
+    result: Ft4222Status = _get_rx_status(ft_handle, byref(rx_size))
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -179,23 +175,21 @@ def read(ft_handle: SpiSlaveHandle, read_byte_count: int) -> bytes:
     Returns:
         bytes:              Read data (if any)
     """
-    assert 0 < read_byte_count < (2 ** 16),\
-        "Number of bytes to read must be positive and less than 2^16"
+    assert (
+        0 < read_byte_count < (2 ** 16)
+    ), "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
     result: Ft4222Status = _read(
-        ft_handle,
-        read_buffer,
-        len(read_buffer),
-        byref(bytes_read)
+        ft_handle, read_buffer, len(read_buffer), byref(bytes_read)
     )
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return bytes(read_buffer[:bytes_read.value])
+    return bytes(read_buffer[: bytes_read.value])
 
 
 def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
@@ -214,16 +208,14 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
     Returns:
         int:                Number of bytes written into Tx queue
     """
-    assert 0 < len(write_data) < (2 ** 16),\
-        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert (
+        0 < len(write_data) < (2 ** 16)
+    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write(
-        ft_handle,
-        write_data,
-        len(write_data),
-        byref(bytes_written)
+        ft_handle, write_data, len(write_data), byref(bytes_written)
     )
 
     if result != Ft4222Status.OK:
@@ -234,9 +226,7 @@ def write(ft_handle: SpiSlaveHandle, write_data: bytes) -> int:
 
 # FIXME: Proper typing
 def set_event_notification(
-    ft_handle: SpiSlaveProtoHandle,
-    mask: EventType,
-    param: c_void_p
+    ft_handle: SpiSlaveProtoHandle, mask: EventType, param: c_void_p
 ) -> None:
     """Sets conditions for event notification.
 
@@ -245,7 +235,7 @@ def set_event_notification(
     When the conditions are met, the event is set, and the application thread unblocked.
     Usually, the event is set to notify the application to check the condition.
     The application needs to check the condition again before it goes to handle the condition.
-    The API is only valid when the device acts as SPI slave and SPI slave protocol is not 'IoProtocol.No_PROTOCOL'. 
+    The API is only valid when the device acts as SPI slave and SPI slave protocol is not 'IoProtocol.No_PROTOCOL'.
 
     Args:
         ft_handle:  Handle to an initialized FT4222 device in SPI Slave mode
@@ -255,8 +245,7 @@ def set_event_notification(
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    result: Ft4222Status = _set_event_notification(
-        ft_handle, mask.value, param)
+    result: Ft4222Status = _set_event_notification(ft_handle, mask.value, param)
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)

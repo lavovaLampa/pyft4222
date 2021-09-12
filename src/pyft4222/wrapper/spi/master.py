@@ -14,8 +14,8 @@ SpiMasterHandle = Union[SpiMasterSingleHandle, SpiMasterMultiHandle]
 
 
 class IoMode(IntEnum):
-    """Enum representing possible SPI data I/O modes/counts.
-    """
+    """Enum representing possible SPI data I/O modes/counts."""
+
     SINGLE = 1
     """Data are transferred full-duplex using MISO/MOSI lines."""
     DUAL = 2
@@ -28,6 +28,7 @@ class IoMode(IntEnum):
 
 class ClkDiv(IntEnum):
     """Enum representing possible clock divisors in SPI Master mode."""
+
     CLK_NONE = 0
     CLK_DIV_2 = auto()  # 1/2   System Clock
     CLK_DIV_4 = auto()  # 1/4   System Clock
@@ -41,8 +42,8 @@ class ClkDiv(IntEnum):
 
 
 class CsPolarity(IntEnum):
-    """Enum representing possible chip_select signal polarities.
-    """
+    """Enum representing possible chip_select signal polarities."""
+
     ACTIVE_LOW = 0
     """Active-low chip select (DEFAULT)."""
     ACTIVE_HIGH = auto()
@@ -51,6 +52,7 @@ class CsPolarity(IntEnum):
 
 class SsoMap(IntFlag):
     """Enum representing a slave select mapping flag."""
+
     SS_0 = 1
     SS_1 = 2
     SS_2 = 4
@@ -70,23 +72,40 @@ _set_lines.argtypes = [c_void_p, c_uint]
 _set_lines.restype = Ft4222Status
 
 _single_read = ftlib.FT4222_SPIMaster_SingleRead
-_single_read.argtypes = [c_void_p, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16), c_bool]
+_single_read.argtypes = [
+    c_void_p,
+    POINTER(c_uint8),
+    c_uint16,
+    POINTER(c_uint16),
+    c_bool,
+]
 _single_read.restype = Ft4222Status
 
 _single_write = ftlib.FT4222_SPIMaster_SingleWrite
-_single_write.argtypes = [c_void_p, c_char_p,
-                          c_uint16, POINTER(c_uint16), c_bool]
+_single_write.argtypes = [c_void_p, c_char_p, c_uint16, POINTER(c_uint16), c_bool]
 _single_write.restype = Ft4222Status
 
 _single_read_write = ftlib.FT4222_SPIMaster_SingleReadWrite
-_single_read_write.argtypes = [c_void_p, POINTER(
-    c_uint8), c_char_p, c_uint16, POINTER(c_uint16), c_bool]
+_single_read_write.argtypes = [
+    c_void_p,
+    POINTER(c_uint8),
+    c_char_p,
+    c_uint16,
+    POINTER(c_uint16),
+    c_bool,
+]
 _single_read_write.restype = Ft4222Status
 
 _multi_read_write = ftlib.FT4222_SPIMaster_MultiReadWrite
-_multi_read_write.argtypes = [c_void_p, POINTER(c_uint8), POINTER(
-    c_uint8), c_uint8, c_uint16, c_uint16, POINTER(c_uint32)]
+_multi_read_write.argtypes = [
+    c_void_p,
+    POINTER(c_uint8),
+    POINTER(c_uint8),
+    c_uint8,
+    c_uint16,
+    c_uint16,
+    POINTER(c_uint32),
+]
 _multi_read_write.restype = Ft4222Status
 
 
@@ -97,8 +116,9 @@ def init(
     clock_div: ClkDiv,
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
-    sso_map: SsoMap
-) -> Result[SpiMasterSingleHandle, Ft4222Status]: ...
+    sso_map: SsoMap,
+) -> Result[SpiMasterSingleHandle, Ft4222Status]:
+    ...
 
 
 @overload
@@ -108,8 +128,9 @@ def init(
     clock_div: ClkDiv,
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
-    sso_map: SsoMap
-) -> Result[SpiMasterMultiHandle, Ft4222Status]: ...
+    sso_map: SsoMap,
+) -> Result[SpiMasterMultiHandle, Ft4222Status]:
+    ...
 
 
 @overload
@@ -119,11 +140,12 @@ def init(
     clock_div: ClkDiv,
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
-    sso_map: SsoMap
+    sso_map: SsoMap,
 ) -> Union[
     Result[SpiMasterSingleHandle, Ft4222Status],
     Result[SpiMasterMultiHandle, Ft4222Status],
-]: ...
+]:
+    ...
 
 
 def init(
@@ -132,7 +154,7 @@ def init(
     clock_div: ClkDiv,
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
-    sso_map: SsoMap
+    sso_map: SsoMap,
 ) -> Union[
     Result[SpiMasterSingleHandle, Ft4222Status],
     Result[SpiMasterMultiHandle, Ft4222Status],
@@ -151,12 +173,7 @@ def init(
         Result:         Handle to initialized SPI Master FT4222 device
     """
     result: Ft4222Status = _init(
-        ft_handle,
-        io_mode,
-        clock_div,
-        clk_polarity,
-        clk_phase,
-        sso_map
+        ft_handle, io_mode, clock_div, clk_polarity, clk_phase, sso_map
     )
 
     if result == Ft4222Status.OK:
@@ -190,16 +207,21 @@ def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None
 
 @overload
 def set_lines(
-    ft_handle: SpiMasterHandle,
-    io_mode: Literal[IoMode.SINGLE]
-) -> SpiMasterSingleHandle: ...
+    ft_handle: SpiMasterHandle, io_mode: Literal[IoMode.SINGLE]
+) -> SpiMasterSingleHandle:
+    ...
 
 
 @overload
 def set_lines(
-    ft_handle: SpiMasterHandle,
-    io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
-) -> SpiMasterMultiHandle: ...
+    ft_handle: SpiMasterHandle, io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
+) -> SpiMasterMultiHandle:
+    ...
+
+
+@overload
+def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
+    ...
 
 
 def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
@@ -228,16 +250,11 @@ def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
     elif io_mode in [IoMode.DUAL, IoMode.QUAD]:
         return SpiMasterMultiHandle(ft_handle)
     else:
-        raise Ft4222Exception(
-            result,
-            "Invalid IoMode! Cannot use 'IoMode.NONE'."
-        )
+        raise Ft4222Exception(result, "Invalid IoMode! Cannot use 'IoMode.NONE'.")
 
 
 def single_read(
-    ft_handle: SpiMasterSingleHandle,
-    read_byte_count: int,
-    end_transaction: bool = True
+    ft_handle: SpiMasterSingleHandle, read_byte_count: int, end_transaction: bool = True
 ) -> bytes:
     """Under SPI single mode, read data from an SPI slave.
 
@@ -252,18 +269,15 @@ def single_read(
     Returns:
         bytes:              Read data (length can be lower than requested)
     """
-    assert 0 < read_byte_count < (2 ** 16),\
-        "Number of bytes to read must be positive and less than 2^16"
+    assert (
+        0 < read_byte_count < (2 ** 16)
+    ), "Number of bytes to read must be positive and less than 2^16"
 
     buffer = (c_uint8 * read_byte_count)()
     bytes_transferred = c_uint16()
 
     result: Ft4222Status = _single_read(
-        ft_handle,
-        buffer,
-        read_byte_count,
-        byref(bytes_transferred),
-        end_transaction
+        ft_handle, buffer, read_byte_count, byref(bytes_transferred), end_transaction
     )
 
     if result != Ft4222Status.OK:
@@ -273,9 +287,7 @@ def single_read(
 
 
 def single_write(
-    ft_handle: SpiMasterSingleHandle,
-    write_data: bytes,
-    end_transaction: bool = True
+    ft_handle: SpiMasterSingleHandle, write_data: bytes, end_transaction: bool = True
 ) -> int:
     """Under SPI single mode, write data to an SPI slave.
 
@@ -290,8 +302,9 @@ def single_write(
     Returns:
         int:                Number of transmitted bytes
     """
-    assert 0 < len(write_data) < (2 ** 16),\
-        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert (
+        0 < len(write_data) < (2 ** 16)
+    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
     result: Ft4222Status = _single_write(
@@ -299,7 +312,7 @@ def single_write(
         write_data,
         len(write_data),
         byref(bytes_transferred),
-        end_transaction
+        end_transaction,
     )
 
     if result != Ft4222Status.OK:
@@ -309,9 +322,7 @@ def single_write(
 
 
 def single_read_write(
-    ft_handle: SpiMasterSingleHandle,
-    write_data: bytes,
-    end_transaction: bool = True
+    ft_handle: SpiMasterSingleHandle, write_data: bytes, end_transaction: bool = True
 ) -> bytes:
     """Under SPI single mode, full-duplex write data to and read data from an SPI slave.
 
@@ -326,8 +337,9 @@ def single_read_write(
     Returns:
         bytes:              Received data
     """
-    assert 0 < len(write_data) < (2 ** 16),\
-        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert (
+        0 < len(write_data) < (2 ** 16)
+    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
     read_buffer = (c_uint8 * len(write_data))()
@@ -338,7 +350,7 @@ def single_read_write(
         write_data,
         len(write_data),
         byref(bytes_transferred),
-        end_transaction
+        end_transaction,
     )
 
     if result != Ft4222Status.OK:
@@ -352,13 +364,13 @@ def multi_read_write(
     write_data: Optional[bytes],
     single_write_byte_count: int,
     multi_write_byte_count: int,
-    multi_read_byte_count: int
+    multi_read_byte_count: int,
 ) -> bytes:
     """Under SPI dual or quad mode, write data to and read data from an SPI slave.
 
     It is a mixed protocol initiated with a single write transmission,
     which may be an SPI command and dummy cycles,
-    and followed by multi-io-write and multi-io-read transmission that use 2/4 signals in parallel for the data. 
+    and followed by multi-io-write and multi-io-read transmission that use 2/4 signals in parallel for the data.
     All three parts of the protocol are optional.
 
     Args:
@@ -374,22 +386,29 @@ def multi_read_write(
     Returns:
         bytes:                      Read data (if any)
     """
-    assert 0 <= single_write_byte_count < (2 ** 4),\
-        "Number of single-write bytes must be non-negative and less than 16"
-    assert 0 <= multi_write_byte_count < (2 ** 16),\
-        "Number of multi-write bytes must be non-negative and less than 2^16 (65 536)"
-    assert 0 <= multi_read_byte_count < (2 ** 16),\
-        "Number of multi-read bytes must be non-negative and less than 2^16 (65 536)"
-    assert (single_write_byte_count + multi_write_byte_count + multi_read_byte_count) > 0,\
-        "Total number of bytes written/read must be non-zero"
+    assert (
+        0 <= single_write_byte_count < (2 ** 4)
+    ), "Number of single-write bytes must be non-negative and less than 16"
+    assert (
+        0 <= multi_write_byte_count < (2 ** 16)
+    ), "Number of multi-write bytes must be non-negative and less than 2^16 (65 536)"
+    assert (
+        0 <= multi_read_byte_count < (2 ** 16)
+    ), "Number of multi-read bytes must be non-negative and less than 2^16 (65 536)"
+    assert (
+        single_write_byte_count + multi_write_byte_count + multi_read_byte_count
+    ) > 0, "Total number of bytes written/read must be non-zero"
     if write_data is None:
-        assert (single_write_byte_count + multi_write_byte_count) == 0,\
-            "Number of bytes to write must be zero in case the write data are None"
+        assert (
+            single_write_byte_count + multi_write_byte_count
+        ) == 0, "Number of bytes to write must be zero in case the write data are None"
     else:
-        assert len(write_data) < (2 ** 16),\
-            "Data to be written must have size less than 2^16 bytes"
-        assert (single_write_byte_count + multi_write_byte_count) <= len(write_data),\
-            "Length of data to write is longer than given data"
+        assert len(write_data) < (
+            2 ** 16
+        ), "Data to be written must have size less than 2^16 bytes"
+        assert (single_write_byte_count + multi_write_byte_count) <= len(
+            write_data
+        ), "Length of data to write is longer than given data"
 
     read_buffer = (c_uint8 * multi_read_byte_count)()
     bytes_read = c_uint16()
@@ -400,7 +419,7 @@ def multi_read_write(
         single_write_byte_count,
         multi_write_byte_count,
         multi_read_byte_count,
-        byref(bytes_read)
+        byref(bytes_read),
     )
 
     if result != Ft4222Status.OK:

@@ -6,7 +6,7 @@ import platform
 
 OS_TYPE: Final = platform.system()
 
-FtHandle = NewType('FtHandle', c_void_p)
+FtHandle = NewType("FtHandle", c_void_p)
 
 
 class ResType(Enum):
@@ -14,16 +14,16 @@ class ResType(Enum):
     ERR = auto()
 
 
-T = TypeVar('T')
-E = TypeVar('E')
+T = TypeVar("T")
+E = TypeVar("E")
 
 
 class Ok(Generic[T]):
     tag: Literal[ResType.OK] = ResType.OK
-    result: T
+    ok: T
 
     def __init__(self, result: T):
-        self.result = result
+        self.ok = result
 
 
 class Err(Generic[E]):
@@ -38,8 +38,8 @@ Result = Union[Ok[T], Err[E]]
 
 
 class FtStatus(IntEnum):
-    """Class representing a D2XX 'FT_RESULT' enum.
-    """
+    """Class representing a D2XX 'FT_RESULT' enum."""
+
     OK = 0
     INVALID_HANDLE = auto()
     DEVICE_NOT_FOUND = auto()
@@ -69,6 +69,7 @@ class FtException(Exception):
         status:     D2XX result enum
         msg:        Optional human-readable message
     """
+
     status: FtStatus
     msg: Optional[str]
 
@@ -90,6 +91,7 @@ class Ft4222Status(IntEnum):
 
     This enum 'extends' the 'FT_STATUS' enum.
     """
+
     OK = 0
     INVALID_HANDLE = auto()
     DEVICE_NOT_FOUND = auto()
@@ -137,7 +139,7 @@ class Ft4222Status(IntEnum):
     FUN_NOT_SUPPORT = auto()
 
     @classmethod
-    def from_ft_status(cls, ft_status: FtStatus) -> 'Ft4222Status':
+    def from_ft_status(cls, ft_status: FtStatus) -> "Ft4222Status":
         return Ft4222Status(int(ft_status))
 
 
@@ -148,6 +150,7 @@ class Ft4222Exception(Exception):
         status:     FT4222 result enum
         msg:        Optional human-readable message
     """
+
     status: Ft4222Status
     msg: Optional[str]
 
@@ -166,11 +169,12 @@ Message: {self.msg}
 
 class GpioTrigger(IntFlag):
     """Enum representing possible GPIO triggers types."""
+
     RISING = 0x01
     """Trigger on rising edge."""
     FALLING = 0x02
     """Trigger on falling edge."""
     LEVEL_HIGH = 0x04
     """Trigger on high level."""
-    LEVEL_LOW = 0X08
+    LEVEL_LOW = 0x08
     """Trigger on low level."""

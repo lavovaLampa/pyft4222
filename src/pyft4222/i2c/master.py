@@ -4,19 +4,23 @@ from pyft4222.handle import GenericHandle
 from pyft4222.wrapper import FtHandle
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status
 from pyft4222.wrapper.common import uninitialize
+from pyft4222.wrapper.i2c.master import I2cMasterHandle, CtrlStatus, TransactionFlag
 from pyft4222.wrapper.i2c.master import (
-    I2cMasterHandle, CtrlStatus, TransactionFlag
-)
-from pyft4222.wrapper.i2c.master import (
-    get_status, read, read_ex, reset, reset_bus, write, write_ex
+    get_status,
+    read,
+    read_ex,
+    reset,
+    reset_bus,
+    write,
+    write_ex,
 )
 
-T = TypeVar('T', bound=GenericHandle[FtHandle])
+T = TypeVar("T", bound=GenericHandle[FtHandle])
 
 
 class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
-    """A class encapsulating I2C Master functions.
-    """
+    """A class encapsulating I2C Master functions."""
+
     _mode_class: Type[T]
 
     def __init__(self, ft_handle: I2cMasterHandle, mode_class: Type[T]):
@@ -44,19 +48,14 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
         """
         if self._handle is not None:
             if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError(
-                    "dev_address must be in range <0, 65_535>."
-                )
+                raise ValueError("dev_address must be in range <0, 65_535>.")
             if not (0 < read_byte_count < (2 ** 16)):
-                raise ValueError(
-                    "read_byte_count must be in range <1, 65_535>."
-                )
+                raise ValueError("read_byte_count must be in range <1, 65_535>.")
 
             return read(self._handle, dev_address, read_byte_count)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
 
     def write(self, dev_address: int, write_data: bytes) -> int:
@@ -74,26 +73,18 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
         """
         if self._handle is not None:
             if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError(
-                    "dev_address must be in range <0, 65_535>."
-                )
+                raise ValueError("dev_address must be in range <0, 65_535>.")
             if not (0 < len(write_data) < (2 ** 16)):
-                raise ValueError(
-                    "write_data length must be in range <1, 65_535>."
-                )
+                raise ValueError("write_data length must be in range <1, 65_535>.")
 
             return write(self._handle, dev_address, write_data)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
 
     def read_ex(
-        self,
-        dev_address: int,
-        flags: TransactionFlag,
-        read_byte_count: int
+        self, dev_address: int, flags: TransactionFlag, read_byte_count: int
     ) -> bytes:
         """Read data from the specified I2C slave with the specified I2C flags.
 
@@ -110,26 +101,18 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
         """
         if self._handle is not None:
             if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError(
-                    "dev_address must be in range <0, 65_535>."
-                )
+                raise ValueError("dev_address must be in range <0, 65_535>.")
             if not (0 < read_byte_count < (2 ** 16)):
-                raise ValueError(
-                    "read_byte_count must be in range <1, 65_535>."
-                )
+                raise ValueError("read_byte_count must be in range <1, 65_535>.")
 
             return read_ex(self._handle, dev_address, flags, read_byte_count)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
 
     def write_ex(
-        self,
-        dev_address: int,
-        flags: TransactionFlag,
-        write_data: bytes
+        self, dev_address: int, flags: TransactionFlag, write_data: bytes
     ) -> int:
         """Write data into the specified I2C slave with the specified I2C flags.
 
@@ -146,19 +129,14 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
         """
         if self._handle is not None:
             if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError(
-                    "dev_address must be in range <0, 65_535>."
-                )
+                raise ValueError("dev_address must be in range <0, 65_535>.")
             if not (0 < len(write_data) < (2 ** 16)):
-                raise ValueError(
-                    "write_data length must be in range <1, 65_535>."
-                )
+                raise ValueError("write_data length must be in range <1, 65_535>.")
 
             return write_ex(self._handle, dev_address, flags, write_data)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
 
     def get_status(self) -> CtrlStatus:
@@ -174,8 +152,7 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
             return get_status(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
 
     def reset(self) -> None:
@@ -192,8 +169,7 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
             reset(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
 
     def reset_bus(self) -> None:
@@ -213,8 +189,7 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
             reset_bus(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
 
     def close(self) -> None:
@@ -247,5 +222,5 @@ class I2CMaster(Generic[T], GenericHandle[I2cMasterHandle]):
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Master has been uninitialized already!"
+                "I2C Master has been uninitialized already!",
             )

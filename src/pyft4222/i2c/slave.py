@@ -5,17 +5,24 @@ from pyft4222.wrapper import FtHandle
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status
 from pyft4222.wrapper.common import uninitialize
 from pyft4222.wrapper.i2c.slave import (
-    I2cSlaveHandle, get_address, get_rx_status, read,
-    reset, set_address, set_clock_stretch, set_resp_word, write
+    I2cSlaveHandle,
+    get_address,
+    get_rx_status,
+    read,
+    reset,
+    set_address,
+    set_clock_stretch,
+    set_resp_word,
+    write,
 )
 
 
-T = TypeVar('T', bound=GenericHandle[FtHandle])
+T = TypeVar("T", bound=GenericHandle[FtHandle])
 
 
 class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
-    """A class encapsulating I2C Slave functions.
-    """
+    """A class encapsulating I2C Slave functions."""
+
     _mode_class: Type[T]
 
     def __init__(self, ft_handle: I2cSlaveHandle, mode_class: Type[T]):
@@ -41,8 +48,7 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             return get_address(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def set_address(self, addr: int) -> None:
@@ -58,13 +64,10 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             if 0 <= addr < (2 ** 16):
                 set_address(self._handle, addr)
             else:
-                raise ValueError(
-                    "addr must be in range <0, 65_535>."
-                )
+                raise ValueError("addr must be in range <0, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def get_rx_status(self) -> int:
@@ -80,8 +83,7 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             return get_rx_status(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def read(self, read_byte_count: int) -> bytes:
@@ -100,13 +102,10 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             if 0 < read_byte_count < (2 ** 16):
                 return read(self._handle, read_byte_count)
             else:
-                raise ValueError(
-                    "read_byte_count must be in range <1, 65_535>."
-                )
+                raise ValueError("read_byte_count must be in range <1, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def write(self, write_data: bytes) -> int:
@@ -125,13 +124,10 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             if 0 < len(write_data) < (2 ** 16):
                 return write(self._handle, write_data)
             else:
-                raise ValueError(
-                    "write_data length must be in range <1, 65_535>."
-                )
+                raise ValueError("write_data length must be in range <1, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def set_clock_stretch(self, enable: bool) -> None:
@@ -150,8 +146,7 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             set_clock_stretch(self._handle, enable)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def set_resp_word(self, response_word: int) -> None:
@@ -174,13 +169,10 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             if 0 <= response_word < (2 ** 8):
                 set_resp_word(self._handle, response_word)
             else:
-                raise ValueError(
-                    "response_word must be in range <0, 255>."
-                )
+                raise ValueError("response_word must be in range <0, 255>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def reset(self) -> None:
@@ -197,8 +189,7 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             reset(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )
 
     def close(self) -> None:
@@ -230,6 +221,5 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
             return self._mode_class(uninitialize(handle))
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "I2C Slave has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
             )

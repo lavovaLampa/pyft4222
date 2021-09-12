@@ -12,20 +12,20 @@ from .gpio import GpioHandle
 
 # Internal data types
 
+
 class _RawVersion(Structure):
-    _fields_ = [
-        ("chip_version", c_uint),
-        ("dll_version", c_uint)
-    ]
+    _fields_ = [("chip_version", c_uint), ("dll_version", c_uint)]
 
 
 # External data types
+
 
 class ClockRate(IntEnum):
     """Enum representing system clock rate.
 
     All clocks are in MHz.
     """
+
     SYS_CLK_60 = 0
     """60 MHz"""
     SYS_CLK_24 = auto()
@@ -46,6 +46,7 @@ class ChipVersion(IntEnum):
         For list of errata, see:
         https://ftdichip.com/wp-content/uploads/2020/08/TN_161_FT4222H-Errata-Technical-Note.pdf
     """
+
     REV_A = 0x42220100
     REV_B = 0x42220200
     REV_C = 0x42220300
@@ -53,17 +54,14 @@ class ChipVersion(IntEnum):
 
 
 class SwChipVersion(NamedTuple):
-    """NamedTuple representing a combination of library and chip versions.
-    """
+    """NamedTuple representing a combination of library and chip versions."""
+
     chip_version: ChipVersion
     dll_version: int
 
     @classmethod
-    def from_raw(cls, raw_struct: _RawVersion) -> 'SwChipVersion':
-        return cls(
-            ChipVersion(raw_struct.chip_version),
-            raw_struct.dll_version
-        )
+    def from_raw(cls, raw_struct: _RawVersion) -> "SwChipVersion":
+        return cls(ChipVersion(raw_struct.chip_version), raw_struct.dll_version)
 
 
 InitializedHandle = Union[GpioHandle, SpiHandle, I2cHandle]
@@ -218,8 +216,7 @@ def set_interrupt_trigger(ft_handle: FtHandle, trigger: GpioTrigger) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    result: Ft4222Status = _set_interrupt_trigger(
-        ft_handle, trigger.value)
+    result: Ft4222Status = _set_interrupt_trigger(ft_handle, trigger.value)
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -250,7 +247,7 @@ def set_suspend_out(ft_handle: FtHandle, enable: bool) -> None:
         raise Ft4222Exception(result)
 
 
-def get_max_transfer_size(ft_handle: FtHandle) -> int:
+def get_max_transfer_size(ft_handle: InitializedHandle) -> int:
     """Get the maximum packet size in a transaction.
 
     It will be affected by different bus speeds, chip modes, and functions.
@@ -266,8 +263,7 @@ def get_max_transfer_size(ft_handle: FtHandle) -> int:
         int:    Maximum packet size in a transaction
     """
     max_size = c_uint16()
-    result: Ft4222Status = _get_max_transfer_size(
-        ft_handle, byref(max_size))
+    result: Ft4222Status = _get_max_transfer_size(ft_handle, byref(max_size))
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -288,8 +284,7 @@ def get_version(ft_handle: FtHandle) -> SwChipVersion:
         Version:    NamedTuple containing version information
     """
     version_struct = _RawVersion()
-    result: Ft4222Status = _get_version(
-        ft_handle, byref(version_struct))
+    result: Ft4222Status = _get_version(ft_handle, byref(version_struct))
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)

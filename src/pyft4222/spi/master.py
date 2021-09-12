@@ -8,19 +8,27 @@ from pyft4222.wrapper import FtHandle, Ft4222Exception, Ft4222Status
 from pyft4222.wrapper.common import uninitialize
 from pyft4222.wrapper.spi import DriveStrength
 from pyft4222.wrapper.spi.master import (
-    CsPolarity, IoMode, SpiMasterHandle,
-    SpiMasterSingleHandle, SpiMasterMultiHandle,
-    multi_read_write, set_cs_polarity, single_read,
-    single_read_write, single_write
+    CsPolarity,
+    IoMode,
+    SpiMasterHandle,
+    SpiMasterSingleHandle,
+    SpiMasterMultiHandle,
+    multi_read_write,
+    set_cs_polarity,
+    single_read,
+    single_read_write,
+    single_write,
 )
 from pyft4222.wrapper.spi.common import (
     TransactionIdx,
-    reset, reset_transaction, set_driving_strength
+    reset,
+    reset_transaction,
+    set_driving_strength,
 )
 
 
-T = TypeVar('T', bound=GenericHandle[FtHandle])
-U = TypeVar('U', bound=SpiMasterHandle)
+T = TypeVar("T", bound=GenericHandle[FtHandle])
+U = TypeVar("U", bound=SpiMasterHandle)
 
 
 class SpiModeTag(Enum):
@@ -32,6 +40,7 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
     """An abstract class encapsulating functions
     common to all SPI Master modes.
     """
+
     _mode_class: Type[T]
 
     def __init__(self, ft_handle: U, mode_class: Type[T]):
@@ -57,8 +66,7 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
             reset(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
     def reset_transaction(self, transaction_idx: TransactionIdx) -> None:
@@ -75,15 +83,14 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
             reset_transaction(self._handle, transaction_idx)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
     def set_driving_strength(
         self,
         clk_strength: DriveStrength,
         io_strength: DriveStrength,
-        sso_strength: DriveStrength
+        sso_strength: DriveStrength,
     ) -> None:
         """Set driving strength of clk, io and sso pins.
 
@@ -99,16 +106,10 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
             Ft4222Exception:    In case of unexpected error
         """
         if self._handle is not None:
-            set_driving_strength(
-                self._handle,
-                clk_strength,
-                io_strength,
-                sso_strength
-            )
+            set_driving_strength(self._handle, clk_strength, io_strength, sso_strength)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
     def set_cs_polarity(self, cs_polarity: CsPolarity) -> None:
@@ -124,32 +125,28 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
             set_cs_polarity(self._handle, cs_polarity)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
     @overload
-    def set_io_mode(
-        self,
-        io_mode: Literal[IoMode.SINGLE]
-    ) -> 'SpiMasterSingle[T]': ...
+    def set_io_mode(self, io_mode: Literal[IoMode.SINGLE]) -> "SpiMasterSingle[T]":
+        ...
 
     @overload
     def set_io_mode(
-        self,
-        io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
-    ) -> 'SpiMasterMulti[T]': ...
+        self, io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
+    ) -> "SpiMasterMulti[T]":
+        ...
 
     @overload
     def set_io_mode(
-        self,
-        io_mode: IoMode
-    ) -> Union['SpiMasterSingle[T]', 'SpiMasterMulti[T]']: ...
+        self, io_mode: IoMode
+    ) -> Union["SpiMasterSingle[T]", "SpiMasterMulti[T]"]:
+        ...
 
     def set_io_mode(
-        self,
-        io_mode: IoMode
-    ) -> Union['SpiMasterSingle[T]', 'SpiMasterMulti[T]']:
+        self, io_mode: IoMode
+    ) -> Union["SpiMasterSingle[T]", "SpiMasterMulti[T]"]:
         """Set I/O mode of the SPI Master (i.e., single, dual, quad)
 
         Note:
@@ -170,18 +167,15 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
 
             if io_mode == IoMode.SINGLE:
                 return SpiMasterSingle(
-                    SpiMasterSingleHandle(temp_handle),
-                    self._mode_class
+                    SpiMasterSingleHandle(temp_handle), self._mode_class
                 )
             else:
                 return SpiMasterMulti(
-                    SpiMasterMultiHandle(temp_handle),
-                    self._mode_class
+                    SpiMasterMultiHandle(temp_handle), self._mode_class
                 )
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
     def close(self) -> None:
@@ -214,7 +208,7 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized already!"
+                "SPI Master has been uninitialized already!",
             )
 
 
@@ -224,6 +218,7 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
     Attributes:
         tag:    Can be used to disambiguate between SPI Master in single/multi IO mode
     """
+
     tag: Literal[SpiModeTag.SINGLE]
 
     def __init__(self, ft_handle: SpiMasterSingleHandle, mode_class: Type[T]):
@@ -253,13 +248,10 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
             if 0 < read_byte_count < (2 ** 16):
                 return single_read(self._handle, read_byte_count, end_transaction)
             else:
-                raise ValueError(
-                    "read_byte_count value must be in range <1, 65_535>."
-                )
+                raise ValueError("read_byte_count value must be in range <1, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
     def single_write(self, write_data: bytes, end_transaction: bool = True) -> int:
@@ -279,16 +271,15 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
             if 0 < len(write_data) < (2 ** 16):
                 return single_write(self._handle, write_data, end_transaction)
             else:
-                raise ValueError(
-                    "write_data length must be in range <1, 65_535>."
-                )
+                raise ValueError("write_data length must be in range <1, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
-    def single_read_write(self, write_data: bytes, end_transaction: bool = True) -> bytes:
+    def single_read_write(
+        self, write_data: bytes, end_transaction: bool = True
+    ) -> bytes:
         """Write and read data concurrently (i.e., full-duplex) from an SPI slave.
 
         Args:
@@ -305,13 +296,10 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
             if 0 < len(write_data) < (2 ** 16):
                 return single_read_write(self._handle, write_data, end_transaction)
             else:
-                raise ValueError(
-                    "write_data length must be in range <1, 65_535>."
-                )
+                raise ValueError("write_data length must be in range <1, 65_535>.")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
 
@@ -339,7 +327,7 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
         write_data: Optional[bytes],
         single_write_byte_count: int,
         multi_write_byte_count: int,
-        multi_read_byte_count: int
+        multi_read_byte_count: int,
     ) -> bytes:
         """Write and read data from an SPI slave.
 
@@ -378,21 +366,13 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
         """
         if self._handle is not None:
             if not (0 <= single_write_byte_count < (2 ** 4)):
-                raise ValueError(
-                    "single_write_bytes must be in range <0, 15>."
-                )
+                raise ValueError("single_write_bytes must be in range <0, 15>.")
             if not (0 <= multi_write_byte_count < (2 ** 16)):
-                raise ValueError(
-                    "multi_write_bytes must be in range <0, 65_535>."
-                )
+                raise ValueError("multi_write_bytes must be in range <0, 65_535>.")
             if not (0 <= multi_read_byte_count < (2 ** 16)):
-                raise ValueError(
-                    "multi_read_bytes must be in range <0, 65_535>."
-                )
+                raise ValueError("multi_read_bytes must be in range <0, 65_535>.")
             if (
-                single_write_byte_count +
-                multi_write_byte_count +
-                multi_read_byte_count
+                single_write_byte_count + multi_write_byte_count + multi_read_byte_count
             ) <= 0:
                 raise ValueError(
                     "Total number of bytes to read and write must be non-zero."
@@ -417,12 +397,11 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
                 write_data,
                 single_write_byte_count,
                 multi_write_byte_count,
-                multi_read_byte_count
+                multi_read_byte_count,
             )
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized!"
+                Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
 

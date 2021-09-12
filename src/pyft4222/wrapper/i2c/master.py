@@ -1,4 +1,4 @@
-from ctypes import POINTER, byref
+from ctypes import POINTER, byref, c_char_p
 from ctypes import c_void_p, c_uint32, c_uint8, c_uint16
 
 from enum import IntFlag
@@ -15,6 +15,7 @@ class TransactionFlag(IntFlag):
 
     This enum is used in functions 'read_ex()' and 'write_ex()'.
     """
+
     NONE = 0x80
     """No special transaction condition."""
     START = 0x02
@@ -28,8 +29,8 @@ class TransactionFlag(IntFlag):
 
 
 class CtrlStatus(IntFlag):
-    """Enum representing controller status flags.
-    """
+    """Enum representing controller status flags."""
+
     CONTROLLER_BUSY = 1 << 0
     """Controller busy. All other status bits are invalid."""
     ERROR = 1 << 1
@@ -51,23 +52,33 @@ _init.argtypes = [c_void_p, c_uint32]
 _init.restype = Ft4222Status
 
 _read = ftlib.FT4222_I2CMaster_Read
-_read.argtypes = [c_void_p, c_uint16, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16)]
+_read.argtypes = [c_void_p, c_uint16, POINTER(c_uint8), c_uint16, POINTER(c_uint16)]
 _read.restype = Ft4222Status
 
 _write = ftlib.FT4222_I2CMaster_Write
-_write.argtypes = [c_void_p, c_uint16, POINTER(
-    c_uint8), c_uint16, POINTER(c_uint16)]
+_write.argtypes = [c_void_p, c_uint16, c_char_p, c_uint16, POINTER(c_uint16)]
 _write.restype = Ft4222Status
 
 _read_ex = ftlib.FT4222_I2CMaster_ReadEx
-_read_ex.argtypes = [c_void_p, c_uint16, c_uint8,
-                     POINTER(c_uint8), c_uint16, POINTER(c_uint16)]
+_read_ex.argtypes = [
+    c_void_p,
+    c_uint16,
+    c_uint8,
+    POINTER(c_uint8),
+    c_uint16,
+    POINTER(c_uint16),
+]
 _read_ex.restype = Ft4222Status
 
 _write_ex = ftlib.FT4222_I2CMaster_WriteEx
-_write_ex.argtypes = [c_void_p, c_uint16, c_uint8,
-                      POINTER(c_uint8), c_uint16, POINTER(c_uint16)]
+_write_ex.argtypes = [
+    c_void_p,
+    c_uint16,
+    c_uint8,
+    c_char_p,
+    c_uint16,
+    POINTER(c_uint16),
+]
 _write_ex.restype = Ft4222Status
 
 _reset = ftlib.FT4222_I2CMaster_Reset
@@ -83,11 +94,8 @@ _reset_bus.argtypes = [c_void_p]
 _reset_bus.restype = Ft4222Status
 
 
-def init(
-    ft_handle: FtHandle,
-    kbps: int
-) -> Result[I2cMasterHandle, Ft4222Status]:
-    """Initialize the FT4222H as an I2C master with the requested I2C speed. 
+def init(ft_handle: FtHandle, kbps: int) -> Result[I2cMasterHandle, Ft4222Status]:
+    """Initialize the FT4222H as an I2C master with the requested I2C speed.
 
     Args:
         ft_handle:          Handle to an opened FT4222 device
@@ -96,13 +104,9 @@ def init(
     Returns:
         Result:    Handle to initialized FT4222 device in I2C Master mode
     """
-    assert 60 <= kbps <= 3400,\
-        "I2C transmission speed must be in range 60 to 3400"
+    assert 60 <= kbps <= 3400, "I2C transmission speed must be in range 60 to 3400"
 
-    result: Ft4222Status = _init(
-        ft_handle,
-        kbps
-    )
+    result: Ft4222Status = _init(ft_handle, kbps)
 
     if result == Ft4222Status.OK:
         return Ok(I2cMasterHandle(ft_handle))
@@ -110,11 +114,7 @@ def init(
         return Err(result)
 
 
-def read(
-    ft_handle: I2cMasterHandle,
-    dev_address: int,
-    read_byte_count: int
-) -> bytes:
+def read(ft_handle: I2cMasterHandle, dev_address: int, read_byte_count: int) -> bytes:
     """Read data from the specified I2C slave device with START and STOP conditions.
 
     Args:
@@ -128,33 +128,27 @@ def read(
     Returns:
         bytes:              Read data
     """
-    assert 0 <= dev_address < (2 ** 16),\
-        "Device address must be an 16b unsigned integer (range 0 - 65 535)"
-    assert 0 < read_byte_count < (2 ** 16),\
-        "Number of bytes to read must be positive and less than 2^16"
+    assert (
+        0 <= dev_address < (2 ** 16)
+    ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
+    assert (
+        0 < read_byte_count < (2 ** 16)
+    ), "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
     result: Ft4222Status = _read(
-        ft_handle,
-        dev_address,
-        read_buffer,
-        len(read_buffer),
-        byref(bytes_read)
+        ft_handle, dev_address, read_buffer, len(read_buffer), byref(bytes_read)
     )
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return bytes(read_buffer[:bytes_read.value])
+    return bytes(read_buffer[: bytes_read.value])
 
 
-def write(
-    ft_handle: I2cMasterHandle,
-    dev_address: int,
-    write_data: bytes
-) -> int:
+def write(ft_handle: I2cMasterHandle, dev_address: int, write_data: bytes) -> int:
     """Write data to the specified I2C slave device with START and STOP conditions.
 
     Args:
@@ -168,19 +162,17 @@ def write(
     Returns:
         int:            Number of bytes written
     """
-    assert 0 <= dev_address < (2 ** 16),\
-        "Device address must be an 16b unsigned integer (range 0 - 65 535)"
-    assert 0 < len(write_data) < (2 ** 16),\
-        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert (
+        0 <= dev_address < (2 ** 16)
+    ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
+    assert (
+        0 < len(write_data) < (2 ** 16)
+    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write(
-        ft_handle,
-        dev_address,
-        write_data,
-        len(write_data),
-        byref(bytes_written)
+        ft_handle, dev_address, write_data, len(write_data), byref(bytes_written)
     )
 
     if result != Ft4222Status.OK:
@@ -193,7 +185,7 @@ def read_ex(
     ft_handle: I2cMasterHandle,
     dev_address: int,
     flag: TransactionFlag,
-    read_byte_count: int
+    read_byte_count: int,
 ) -> bytes:
     """Read data from the specified I2C slave device with the specified I2C condition.
 
@@ -211,34 +203,31 @@ def read_ex(
     Returns:
         bytes:              Read data
     """
-    assert 0 <= dev_address < (2 ** 16),\
-        "Device address must be an 16b unsigned integer (range 0 - 65 535)"
-    assert 0 < read_byte_count < (2 ** 16),\
-        "Number of bytes to read must be positive and less than 2^16"
+    assert (
+        0 <= dev_address < (2 ** 16)
+    ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
+    assert (
+        0 < read_byte_count < (2 ** 16)
+    ), "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
     bytes_read = c_uint16()
 
     result: Ft4222Status = _read_ex(
-        ft_handle,
-        dev_address,
-        flag,
-        read_buffer,
-        len(read_buffer),
-        byref(bytes_read)
+        ft_handle, dev_address, flag, read_buffer, len(read_buffer), byref(bytes_read)
     )
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return bytes(read_buffer[:bytes_read.value])
+    return bytes(read_buffer[: bytes_read.value])
 
 
 def write_ex(
     ft_handle: I2cMasterHandle,
     dev_address: int,
     flag: TransactionFlag,
-    write_data: bytes
+    write_data: bytes,
 ) -> int:
     """Write data to a specified I2C slave device with the specified I2C condition.
 
@@ -256,20 +245,17 @@ def write_ex(
     Returns:
         int:            Number of bytes written
     """
-    assert 0 <= dev_address < (2 ** 16),\
-        "Device address must be an 16b unsigned integer (range 0 - 65 535)"
-    assert 0 < len(write_data) < (2 ** 16),\
-        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert (
+        0 <= dev_address < (2 ** 16)
+    ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
+    assert (
+        0 < len(write_data) < (2 ** 16)
+    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
 
     result: Ft4222Status = _write_ex(
-        ft_handle,
-        dev_address,
-        flag,
-        write_data,
-        len(write_data),
-        byref(bytes_written)
+        ft_handle, dev_address, flag, write_data, len(write_data), byref(bytes_written)
     )
 
     if result != Ft4222Status.OK:

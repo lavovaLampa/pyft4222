@@ -4,11 +4,9 @@ from ctypes import POINTER, byref
 from ctypes import c_void_p, c_uint, c_bool, c_uint16
 
 from .dll_loader import ftlib
-from . import (
-    Err, FtHandle, Ok, Result, Ft4222Exception, Ft4222Status, GpioTrigger
-)
+from . import Err, FtHandle, Ok, Result, Ft4222Exception, Ft4222Status, GpioTrigger
 
-GpioHandle = NewType('GpioHandle', FtHandle)
+GpioHandle = NewType("GpioHandle", FtHandle)
 
 _GPIO_COUNT: Final[int] = 4
 
@@ -49,7 +47,12 @@ _get_trigger_status.restype = Ft4222Status
 
 _read_trigger_queue = ftlib.FT4222_GPIO_ReadTriggerQueue
 _read_trigger_queue.argtypes = [
-    c_void_p, c_uint, POINTER(c_uint), c_uint16, POINTER(c_uint16)]
+    c_void_p,
+    c_uint,
+    POINTER(c_uint),
+    c_uint16,
+    POINTER(c_uint16),
+]
 _read_trigger_queue.restype = Ft4222Status
 
 _set_waveform_mode = ftlib.FT4222_GPIO_SetWaveFormMode
@@ -94,11 +97,7 @@ def read(ft_handle: GpioHandle, port_id: PortId) -> bool:
     """
     gpio_state = c_bool()
 
-    result: Ft4222Status = _read(
-        ft_handle,
-        port_id,
-        byref(gpio_state)
-    )
+    result: Ft4222Status = _read(ft_handle, port_id, byref(gpio_state))
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -117,20 +116,14 @@ def write(ft_handle: GpioHandle, port_id: PortId, state: bool) -> None:
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    result: Ft4222Status = _write(
-        ft_handle,
-        port_id,
-        state
-    )
+    result: Ft4222Status = _write(ft_handle, port_id, state)
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
 
 def set_input_trigger(
-    ft_handle: GpioHandle,
-    port_id: PortId,
-    trigger: GpioTrigger
+    ft_handle: GpioHandle, port_id: PortId, trigger: GpioTrigger
 ) -> None:
     """Set software trigger conditions on the specified GPIO pin.
 
@@ -153,11 +146,7 @@ def set_input_trigger(
     Raises:
         Ft4222Exception:    In case of unexpected error
     """
-    result: Ft4222Status = _set_input_trigger(
-        ft_handle,
-        port_id,
-        trigger
-    )
+    result: Ft4222Status = _set_input_trigger(ft_handle, port_id, trigger)
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -178,11 +167,7 @@ def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
     """
     queue_size = c_uint16()
 
-    result: Ft4222Status = _get_trigger_status(
-        ft_handle,
-        port_id,
-        byref(queue_size)
-    )
+    result: Ft4222Status = _get_trigger_status(ft_handle, port_id, byref(queue_size))
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
@@ -191,9 +176,7 @@ def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
 
 
 def read_trigger_queue(
-    ft_handle: GpioHandle,
-    port_id: PortId,
-    max_read_size: int = (2 ** 16) - 1
+    ft_handle: GpioHandle, port_id: PortId, max_read_size: int = (2 ** 16) - 1
 ) -> List[GpioTrigger]:
     """Get events recorded in the trigger event queue.
 
@@ -210,24 +193,21 @@ def read_trigger_queue(
     Returns:
         List[FT4222.GpioTrigger]:   List of trigger events (if any)
     """
-    assert 0 <= max_read_size < (
-        2 ** 16), "Max. read size must be a non-negative number smaller than 2^16."
+    assert (
+        0 <= max_read_size < (2 ** 16)
+    ), "Max. read size must be a non-negative number smaller than 2^16."
 
     event_buffer = (c_uint * max_read_size)()
     events_read = c_uint16()
 
     result: Ft4222Status = _read_trigger_queue(
-        ft_handle,
-        port_id,
-        event_buffer,
-        len(event_buffer),
-        byref(events_read)
+        ft_handle, port_id, event_buffer, len(event_buffer), byref(events_read)
     )
 
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return list(map(GpioTrigger, event_buffer[:events_read.value]))
+    return list(map(GpioTrigger, event_buffer[: events_read.value]))
 
 
 def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:

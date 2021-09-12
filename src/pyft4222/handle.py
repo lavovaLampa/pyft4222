@@ -2,26 +2,42 @@ from abc import ABC
 from typing import Generic, Optional, TypeVar
 
 from pyft4222.wrapper import (
-    OS_TYPE, FtHandle, Ft4222Exception, Ft4222Status, GpioTrigger
+    OS_TYPE,
+    FtHandle,
+    Ft4222Exception,
+    Ft4222Status,
+    GpioTrigger,
 )
 from pyft4222.wrapper.ftd2xx import (
-    DriverVersion, BufferType, ShortDeviceInfo,
-    close_handle, get_device_info, purge_buffers, reset_device
+    DriverVersion,
+    BufferType,
+    ShortDeviceInfo,
+    close_handle,
+    get_device_info,
+    purge_buffers,
+    reset_device,
 )
 from pyft4222.wrapper.common import (
-    ClockRate, SwChipVersion, chip_reset, get_clock,
-    get_version, set_clock, set_interrupt_trigger,
-    set_suspend_out, set_wakeup_interrupt
+    ClockRate,
+    SwChipVersion,
+    chip_reset,
+    get_clock,
+    get_version,
+    set_clock,
+    set_interrupt_trigger,
+    set_suspend_out,
+    set_wakeup_interrupt,
 )
 
 if OS_TYPE == "Windows":
     from pyft4222.wrapper.ftd2xx import get_driver_version
 
-T = TypeVar('T', bound=FtHandle)
+T = TypeVar("T", bound=FtHandle)
 
 
 class GenericHandle(Generic[T], ABC):
     """An abstract class encapsulating common FT4222 functions."""
+
     _handle: Optional[T]
 
     def __init__(self, ft_handle: T):
@@ -46,8 +62,7 @@ class GenericHandle(Generic[T], ABC):
             self._handle = None
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is already closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is already closed!"
             )
 
     def set_clock(self, clk_rate: ClockRate) -> None:
@@ -63,8 +78,7 @@ class GenericHandle(Generic[T], ABC):
             set_clock(self._handle, clk_rate)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def get_clock(self) -> ClockRate:
@@ -80,8 +94,7 @@ class GenericHandle(Generic[T], ABC):
             return get_clock(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def set_suspend_out(self, enable: bool) -> None:
@@ -103,8 +116,7 @@ class GenericHandle(Generic[T], ABC):
             set_suspend_out(self._handle, enable)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def set_wakeup_interrupt(self, enable: bool) -> None:
@@ -128,8 +140,7 @@ class GenericHandle(Generic[T], ABC):
             set_wakeup_interrupt(self._handle, enable)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def set_interrupt_trigger(self, trigger: GpioTrigger) -> None:
@@ -155,8 +166,7 @@ class GenericHandle(Generic[T], ABC):
             set_interrupt_trigger(self._handle, trigger)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def get_version(self) -> SwChipVersion:
@@ -172,8 +182,7 @@ class GenericHandle(Generic[T], ABC):
             return get_version(self._handle)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def get_device_info(self) -> ShortDeviceInfo:
@@ -190,17 +199,14 @@ class GenericHandle(Generic[T], ABC):
             if result is not None:
                 return result
             else:
-                raise Ft4222Exception(
-                    Ft4222Status.OTHER_ERROR,
-                    "Unknown error!"
-                )
+                raise Ft4222Exception(Ft4222Status.OTHER_ERROR, "Unknown error!")
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     if OS_TYPE == "Windows":
+
         def get_driver_version(self) -> DriverVersion:
             """Get D2XX driver version.
 
@@ -214,8 +220,7 @@ class GenericHandle(Generic[T], ABC):
                 return get_driver_version(self._handle)
             else:
                 raise Ft4222Exception(
-                    Ft4222Status.DEVICE_NOT_OPENED,
-                    "This handle is closed!"
+                    Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
                 )
 
     def reset_device(self) -> None:
@@ -233,8 +238,7 @@ class GenericHandle(Generic[T], ABC):
             self.close()
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def purge_buffers(self, buffer_mask: BufferType) -> None:
@@ -250,8 +254,7 @@ class GenericHandle(Generic[T], ABC):
             purge_buffers(self._handle, buffer_mask)
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
     def chip_reset(self) -> None:
@@ -269,6 +272,5 @@ class GenericHandle(Generic[T], ABC):
             self.close()
         else:
             raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "This handle is closed!"
+                Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )

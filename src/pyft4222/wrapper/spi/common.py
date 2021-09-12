@@ -14,8 +14,10 @@ TransactionIdx = Literal[0, 1, 2, 3]
 
 
 _SOFT_ERROR_SET: Final[Set[Ft4222Status]] = {
-    Ft4222Status.OK, Ft4222Status.INVALID_HANDLE,
-    Ft4222Status.DEVICE_NOT_FOUND, Ft4222Status.DEVICE_NOT_OPENED,
+    Ft4222Status.OK,
+    Ft4222Status.INVALID_HANDLE,
+    Ft4222Status.DEVICE_NOT_FOUND,
+    Ft4222Status.DEVICE_NOT_OPENED,
 }
 
 
@@ -75,7 +77,7 @@ def set_driving_strength(
     ft_handle: SpiHandle,
     clk_strength: DriveStrength,
     io_strength: DriveStrength,
-    sso_strength: DriveStrength
+    sso_strength: DriveStrength,
 ) -> None:
     """Set the driving strength of clk, io, and sso pins.
 
@@ -93,10 +95,7 @@ def set_driving_strength(
         Ft4222Exception:    In case of unexpected error
     """
     result: Ft4222Status = _set_driving_strength(
-        ft_handle,
-        clk_strength,
-        io_strength,
-        sso_strength
+        ft_handle, clk_strength, io_strength, sso_strength
     )
 
     if result not in _SOFT_ERROR_SET:
