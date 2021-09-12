@@ -15,7 +15,7 @@ from typing import Literal, Union
 
 from pyft4222.handle import GenericHandle
 
-from pyft4222.wrapper import FtHandle, Result, Ft4222Exception, Ft4222Status
+from pyft4222.wrapper import FtHandle, Ft4222Exception, Ft4222Status, ResType
 from pyft4222.wrapper import gpio
 from pyft4222.wrapper.spi import slave as spi_slave
 from pyft4222.wrapper.spi import master as spi_master
@@ -113,7 +113,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiMasterSingle(result.ok, self.__class__)
             else:
@@ -151,7 +151,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiMasterMulti(result.ok, self.__class__)
             else:
@@ -189,7 +189,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiMasterMulti(result.ok, self.__class__)
             else:
@@ -211,7 +211,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 self._handle,
                 spi_slave.IoProtocol.NO_PROTOCOL,
             )
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiSlaveRaw(result.ok, self.__class__)
             else:
@@ -241,7 +241,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = spi_slave.init_ex(self._handle, proto_type)
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiSlaveProto(result.ok, self.__class__)
             else:
@@ -263,7 +263,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = i2c_master.init(self._handle, kbps)
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return I2CMaster(result.ok, self.__class__)
             else:
@@ -282,7 +282,7 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = i2c_slave.init(self._handle)
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return I2CSlave(result.ok, self.__class__)
             else:
@@ -323,7 +323,7 @@ class GpioStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = gpio.init(self._handle, dirs)
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return Gpio(result.ok, self.__class__)
             else:
@@ -387,7 +387,7 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiMasterSingle(result.ok, self.__class__)
             else:
@@ -425,7 +425,7 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiMasterMulti(result.ok, self.__class__)
             else:
@@ -463,7 +463,7 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == Result.OK:
+            if result.tag == ResType.OK:
                 self._handle = None
                 return SpiMasterMulti(result.ok, self.__class__)
             else:
