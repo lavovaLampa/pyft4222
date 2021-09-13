@@ -1,6 +1,6 @@
 import pyft4222 as ft
 from pyft4222.stream import InterfaceType
-from pyft4222.wrapper import Result
+from pyft4222.wrapper import ResType
 from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 from pyft4222.wrapper.spi.master import ClkDiv, SsoMap
 
@@ -12,7 +12,7 @@ for dev in ft.get_device_info_list():
 dev = ft.open_by_idx(0)
 
 # Check if it was opened successfully
-if dev.tag == Result.OK:
+if dev.tag == ResType.OK:
     handle = dev.ok
 
     # Check if the FT4222 mode is as expected
