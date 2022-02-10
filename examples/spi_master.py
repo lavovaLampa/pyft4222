@@ -1,6 +1,6 @@
+from koda import Err, Ok
 import pyft4222 as ft
 from pyft4222.stream import InterfaceType
-from pyft4222.wrapper import ResType
 from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 from pyft4222.wrapper.spi.master import ClkDiv, SsoMap
 
@@ -12,30 +12,36 @@ for dev in ft.get_device_info_list():
 dev = ft.open_by_idx(0)
 
 # Check if it was opened successfully
-if dev.tag == ResType.OK:
-    handle = dev.ok
+# If using Python < 3.10, use "isinstance(dev, Ok)"
+match dev:
+    case Ok(handle):
 
-    # Check if the FT4222 mode is as expected
-    if handle.tag == InterfaceType.DATA_STREAM:
-        # Initialize FT4222 in spi master mode using a single-bit
-        # full-duplex transfer
-        spi_master = handle.init_single_spi_master(
-            ClkDiv.CLK_DIV_2,
-            ClkPolarity.CLK_IDLE_LOW,
-            ClkPhase.CLK_TRAILING,
-            SsoMap.SS_0,
-        )
+        # Check if the FT4222 mode is as expected
+        if handle.tag == InterfaceType.DATA_STREAM:
 
-        # Write and read back data simultaneously
-        read_data = spi_master.single_read_write(bytes([0x01, 0x02, 0x03, 0x04]))
+            # Use context manager to close the handle automatically at the end of scope
+            with handle:
 
-        print("Data read:")
-        print(read_data)
+                # Initialize FT4222 in SPI master mode using a single-bit
+                # full-duplex transfer
+                with handle.init_single_spi_master(
+                    ClkDiv.CLK_DIV_2,
+                    ClkPolarity.CLK_IDLE_LOW,
+                    ClkPhase.CLK_TRAILING,
+                    SsoMap.SS_0,
+                ) as spi_master:
 
-        # Close the device handle
-        spi_master.close()
-    else:
-        print("FT4222 is in invalid mode!")
-else:
-    print("Couldn't open the handle")
-    print(dev.err)
+                    # Write and read back data simultaneously
+                    read_data = spi_master.single_read_write(
+                        bytes([0x01, 0x02, 0x03, 0x04])
+                    )
+
+                    print("Data read: ")
+                    print(read_data)
+
+        else:
+            print("FT4222 is in invalid mode!")
+
+    case Err(err):
+        print("Couldn't open the handle")
+        print(err)
