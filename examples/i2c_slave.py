@@ -11,6 +11,7 @@ for dev in ft.get_device_info_list():
 dev = ft.open_by_idx(0)
 
 # Check if it was opened successfully
+# If using Python < 3.10, use "isinstance(dev, Ok)"
 match dev:
     case Ok(handle):
         # Check if the FT4222 mode is as expected
