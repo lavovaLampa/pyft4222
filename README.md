@@ -2,52 +2,46 @@
 
 A libft4222 library python wrapper.
 
-# Description
+## Description
 
+## Building
 
-
-# Building
-
-
-
-# Installation
+## Installation
 
 The pyft4222 package can be installed using pip:
 
-```
+```sh
 pip install pyft4222
 ```
 
-Use virtual environment prefferably.
+Use virtual environment preferably.
 
+### udev rule
 
-## udev rule
-
-The FT4222 device is not accesible by all users by default.
-You can create a rule in `/etc/udev/rules.d/99-ftdi.conf` to
+The FT4222 device is not accessible by all users by default.
+You can create a rule in `/etc/udev/rules.d/99-ftdi.rules` to
 make the device available to all users.
 
-```
+```conf
 # FTDI's ft4222 USB-I2C Adapter
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="601c", GROUP="plugdev", MODE="0666"
 ```
 
-# Documentation
+## Documentation
 
 Use mypy or other language server that supports Python types.
 Library functions are easier to use with type hints.
 
 WIP
 
-
-# Examples
+## Examples
 
 Open an SPI master stream:
 
 ```python
+from koda import Err, Ok
 import pyft4222 as ft
 from pyft4222.stream import InterfaceType
-from pyft4222.wrapper import ResType
 from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 from pyft4222.wrapper.spi.master import ClkDiv, SsoMap
 
@@ -59,33 +53,39 @@ for dev in ft.get_device_info_list():
 dev = ft.open_by_idx(0)
 
 # Check if it was opened successfully
-if dev.tag == ResType.OK:
-    handle = dev.result
+# If using Python < 3.10, use "isinstance(dev, Ok)"
+match dev:
+    case Ok(handle):
 
-    # Check if the FT4222 mode is as expected
-    if handle.tag == InterfaceType.DATA_STREAM:
-        # Initialize FT4222 in spi master mode using a single-bit
-        # full-duplex transfer
-        spi_master = handle.init_single_spi_master(
-            ClkDiv.CLK_DIV_2,
-            ClkPolarity.CLK_IDLE_LOW,
-            ClkPhase.CLK_TRAILING,
-            SsoMap.SS_0,
-        )
+        # Check if the FT4222 mode is as expected
+        if handle.tag == InterfaceType.DATA_STREAM:
 
-        # Write and read back data simultaneously
-        read_data = spi_master.single_read_write(bytes([0x01, 0x02, 0x03, 0x04]))
+            # Use context manager to close the handle automatically at the end of scope
+            with handle:
 
-        print("Data read:")
-        print(read_data)
+                # Initialize FT4222 in SPI master mode using a single-bit
+                # full-duplex transfer
+                with handle.init_single_spi_master(
+                    ClkDiv.CLK_DIV_2,
+                    ClkPolarity.CLK_IDLE_LOW,
+                    ClkPhase.CLK_TRAILING,
+                    SsoMap.SS_0,
+                ) as spi_master:
 
-        # Close the device handle
-        spi_master.close()
-    else:
-        print("FT4222 is in invalid mode!")
-else:
-    print("Couldn't open the handle")
-    print(dev.err)
+                    # Write and read back data simultaneously
+                    read_data = spi_master.single_read_write(
+                        bytes([0x01, 0x02, 0x03, 0x04])
+                    )
+
+                    print("Data read: ")
+                    print(read_data)
+
+        else:
+            print("FT4222 is in invalid mode!")
+
+    case Err(err):
+        print("Couldn't open the handle")
+        print(err)
 ```
 
 Open an I2C slave stream:
@@ -93,7 +93,8 @@ Open an I2C slave stream:
 ```python
 import pyft4222 as ft
 from pyft4222.stream import InterfaceType
-from pyft4222.wrapper import ResType
+
+from koda import Err, Ok
 
 # Print out list of connected devices
 for dev in ft.get_device_info_list():
@@ -103,34 +104,35 @@ for dev in ft.get_device_info_list():
 dev = ft.open_by_idx(0)
 
 # Check if it was opened successfully
-if dev.tag == ResType.OK:
-    handle = dev.result
+match dev:
+    case Ok(handle):
+        # Check if the FT4222 mode is as expected
+        if handle.tag == InterfaceType.DATA_STREAM:
+            # The handle is closed automatically at the end of scope
+            with handle:
+                # Initialize the FT4222 in I2C slave mode
+                # The handle is uninitialized automatically at the end of scope
+                with handle.init_i2c_slave() as iic_slave:
+                    # Set an I2C device address
+                    iic_slave.set_address(0x0340)
 
-    # Check if the FT4222 mode is as expected
-    if handle.tag == InterfaceType.DATA_STREAM:
-        # Initialize FT4222 in I2C slave mode
-        i2c_slave = handle.init_i2c_slave()
-        # Set an I2C device address
-        i2c_slave.set_address(0x0340)
+                    # Write data into the device buffer
+                    iic_slave.write(bytes([0xFF, 0x01, 0x02, 0x03]))
 
-        # Write data into the device buffer
-        i2c_slave.write(bytes([0xFF, 0x01, 0x02, 0x03]))
+        else:
+            print("FT4222 is in invalid mode!")
 
-        # Finally, close the device handle
-        i2c_slave.close()
-    else:
-        print("FT4222 is in invalid mode!")
-else:
-    print("Couldn't open the handle")
-    print(dev.err)
+    case Err(err):
+        print("Couldn't open the handle")
+        print(err)
 ```
 
 Open GPIO stream:
 
 ```python
+from koda import Err, Ok
 import pyft4222 as ft
 from pyft4222.stream import InterfaceType
-from pyft4222.wrapper import ResType
 from pyft4222.wrapper.gpio import Direction, PortId
 
 # Print out list of connected devices
@@ -138,40 +140,41 @@ for dev in ft.get_device_info_list():
     print(dev)
 
 # Open device using 'device index'
-dev = ft.open_by_idx(0)
+result = ft.open_by_idx(0)
 
 # Check if it was opened successfully
-if dev.tag == ResType.OK:
-    handle = dev.result
+# If using Python < 3.10, use "isinstance(dev, Ok)"
+match result:
+    case Ok(handle):
+        # Check if the FT4222 mode is as expected
+        if handle.tag == InterfaceType.GPIO:
+            # The handle is automatically closed at the end of the scope
+            with handle:
+                # The handle is automatically uninitialized at the end of the scope
+                with handle.init_gpio(
+                    (
+                        Direction.OUTPUT,
+                        Direction.INPUT,
+                        Direction.OUTPUT,
+                        Direction.OUTPUT,
+                    )
+                ) as gpio:
+                    # Disable suspend out, else we cannot control GPIO2
+                    gpio.set_suspend_out(False)
+                    # Disable wakeup interrupt, else we cannot control GPIO3
+                    gpio.set_wakeup_interrupt(False)
 
-    # Check if the FT4222 mode is as expected
-    if handle.tag == InterfaceType.GPIO:
-        gpio = handle.init_gpio(
-            (
-                Direction.OUTPUT,
-                Direction.INPUT,
-                Direction.OUTPUT,
-                Direction.OUTPUT,
-            )
-        )
-        # Disable suspend out, else we cannot control GPIO2
-        gpio.set_suspend_out(False)
-        # Disable wakeup interrupt, else we cannot control GPIO3
-        gpio.set_wakeup_interrupt(False)
+                    # Set GPIO port 0 into a logical 1 state
+                    gpio.write(PortId.PORT_0, True)
 
-        # Set GPIO port 0 into a logical 1 state
-        gpio.write(PortId.PORT_0, True)
+                    # Read GPIO port 1 input state
+                    port1_state = gpio.read(PortId.PORT_1)
+                    print(port1_state)
 
-        # Read GPIO1 input state
-        port1_state = gpio.read(PortId.PORT_1)
-        print(port1_state)
+        else:
+            print("FT4222 is in invalid mode!")
 
-        # Close the device handle
-        gpio.close()
-    else:
-        print("FT4222 is in invalid mode!")
-else:
-    print("Couldn't open the handle")
-    print(dev.err)
+    case Err(err):
+        print("Couldn't open the handle")
+        print(err)
 ```
-
