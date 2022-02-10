@@ -1,5 +1,7 @@
+from koda import Ok
+
 import pyft4222.wrapper.ftd2xx as ftd
-from pyft4222.wrapper import FtHandle, ResType
+from pyft4222.wrapper import FtHandle
 
 from ..fixtures import *
 
@@ -17,27 +19,27 @@ class TestOpenFunctions:
 
     def test_open_by_idx(self, valid_dev_idx: int):
         handle = ftd.open_by_idx(valid_dev_idx)
-        assert handle.tag == ResType.OK
-        assert handle.ok is not None
+        assert isinstance(handle, Ok)
+        assert handle.val is not None
 
         # Cleanup
-        ftd.close_handle(handle.ok)
+        ftd.close_handle(handle.val)
 
     def test_open_by_serial(self, valid_dev: ftd.DeviceInfo):
         handle = ftd.open_by_serial(valid_dev.serial_number)
-        assert handle.tag == ResType.OK
-        assert handle.ok is not None
+        assert isinstance(handle, Ok)
+        assert handle.val is not None
 
         # Cleanup
-        ftd.close_handle(handle.ok)
+        ftd.close_handle(handle.val)
 
     def test_open_by_description(self, valid_dev: ftd.DeviceInfo):
         handle = ftd.open_by_description(valid_dev.description)
-        assert handle.tag == ResType.OK
-        assert handle.ok is not None
+        assert isinstance(handle, Ok)
+        assert handle.val is not None
 
         # Cleanup
-        ftd.close_handle(handle.ok)
+        ftd.close_handle(handle.val)
 
 
 def test_close_handle(open_handle: FtHandle):
@@ -53,7 +55,7 @@ def test_purge_buffers(open_handle: FtHandle):
     buftypes = [
         ftd.BufferType.RX,
         ftd.BufferType.TX,
-        ftd.BufferType.RX | ftd.BufferType.TX
+        ftd.BufferType.RX | ftd.BufferType.TX,
     ]
 
     for buftype in buftypes:

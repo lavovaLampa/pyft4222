@@ -1,12 +1,22 @@
-from ctypes import POINTER, byref, c_char_p
-from ctypes import c_void_p, c_uint, c_uint8, c_uint16, c_bool, c_uint32
-
+from ctypes import (
+    POINTER,
+    byref,
+    c_bool,
+    c_char_p,
+    c_uint,
+    c_uint8,
+    c_uint16,
+    c_uint32,
+    c_void_p,
+)
 from enum import IntEnum, IntFlag, auto
 from typing import Literal, NewType, Optional, Union, overload
 
-from . import ClkPhase, ClkPolarity
-from .. import FtHandle, Result, Ok, Err, Ft4222Status, Ft4222Exception
+from koda import Err, Ok, Result
+
+from .. import Ft4222Exception, Ft4222Status, FtHandle
 from ..dll_loader import ftlib
+from . import ClkPhase, ClkPolarity
 
 SpiMasterSingleHandle = NewType("SpiMasterSingleHandle", FtHandle)
 SpiMasterMultiHandle = NewType("SpiMasterMultiHandle", FtHandle)
@@ -100,7 +110,7 @@ _multi_read_write = ftlib.FT4222_SPIMaster_MultiReadWrite
 _multi_read_write.argtypes = [
     c_void_p,
     POINTER(c_uint8),
-    POINTER(c_uint8),
+    c_char_p,
     c_uint8,
     c_uint16,
     c_uint16,
@@ -411,7 +421,7 @@ def multi_read_write(
         ), "Length of data to write is longer than given data"
 
     read_buffer = (c_uint8 * multi_read_byte_count)()
-    bytes_read = c_uint16()
+    bytes_read = c_uint32()
     result: Ft4222Status = _multi_read_write(
         ft_handle,
         read_buffer,
@@ -425,4 +435,4 @@ def multi_read_write(
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return bytes(read_buffer[:bytes_read])
+    return bytes(read_buffer[: bytes_read.value])

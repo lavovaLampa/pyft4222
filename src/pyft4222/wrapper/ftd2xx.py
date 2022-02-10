@@ -1,11 +1,22 @@
+from ctypes import (
+    POINTER,
+    Structure,
+    byref,
+    c_char,
+    c_char_p,
+    c_int,
+    c_uint,
+    c_uint32,
+    c_void_p,
+    create_string_buffer,
+)
 from enum import IntEnum, IntFlag, auto
 from typing import Final, List, NamedTuple, Optional
-from ctypes import POINTER, byref, create_string_buffer, Structure
-from ctypes import c_uint, c_void_p, c_int, c_char_p, c_char, c_uint32
 
+from koda import Err, Ok, Result
+
+from . import OS_TYPE, FtException, FtHandle, FtStatus
 from .dll_loader import d2lib
-from . import OS_TYPE, FtHandle, Ok, Err, Result, FtStatus, FtException
-
 
 # DLL function protoypes declaration
 

@@ -1,34 +1,31 @@
 from abc import ABC
 from enum import Enum, auto
-from typing import Generic, Literal, Optional, Type, TypeVar, Union, overload
+from typing import Any, Generic, Literal, Optional, TypeVar, Union, overload
 
-from pyft4222.handle import GenericHandle
-
-from pyft4222.wrapper import FtHandle, Ft4222Exception, Ft4222Status
-from pyft4222.wrapper.common import uninitialize
+from pyft4222.handle import GenericProtocolHandle, StreamHandleType
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status
 from pyft4222.wrapper.spi import DriveStrength
-from pyft4222.wrapper.spi.master import (
-    CsPolarity,
-    IoMode,
-    SpiMasterHandle,
-    SpiMasterSingleHandle,
-    SpiMasterMultiHandle,
-    multi_read_write,
-    set_cs_polarity,
-    single_read,
-    single_read_write,
-    single_write,
-)
 from pyft4222.wrapper.spi.common import (
     TransactionIdx,
     reset,
     reset_transaction,
     set_driving_strength,
 )
+from pyft4222.wrapper.spi.master import (
+    CsPolarity,
+    IoMode,
+    SpiMasterHandle,
+    SpiMasterMultiHandle,
+    SpiMasterSingleHandle,
+    multi_read_write,
+    set_cs_polarity,
+    single_read,
+    single_read_write,
+    single_write,
+)
 
-
-T = TypeVar("T", bound=GenericHandle[FtHandle])
-U = TypeVar("U", bound=SpiMasterHandle)
+SpiMasterHandleType = TypeVar("SpiMasterHandleType", bound=SpiMasterHandle)
+SpiMasterType = TypeVar("SpiMasterType", bound="SpiMasterCommon[Any, Any, Any]")
 
 
 class SpiModeTag(Enum):
@@ -36,22 +33,23 @@ class SpiModeTag(Enum):
     MULTI = auto()
 
 
-class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
+class SpiMasterCommon(
+    Generic[SpiMasterHandleType, SpiMasterType, StreamHandleType],
+    GenericProtocolHandle[SpiMasterHandleType, SpiMasterType, StreamHandleType],
+    ABC,
+):
     """An abstract class encapsulating functions
     common to all SPI Master modes.
     """
 
-    _mode_class: Type[T]
-
-    def __init__(self, ft_handle: U, mode_class: Type[T]):
+    def __init__(self, ft_handle: SpiMasterHandleType, stream_handle: StreamHandleType):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
             ft_handle:      FT4222 handle initialized in any SPI Master mode
-            mode_class:     Calling class type. Used in 'uninitialize()' method.
+            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle)
-        self._mode_class = mode_class
+        super().__init__(ft_handle, stream_handle)
 
     def reset_bus(self) -> None:
         """Reset the SPI bus.
@@ -129,24 +127,26 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
             )
 
     @overload
-    def set_io_mode(self, io_mode: Literal[IoMode.SINGLE]) -> "SpiMasterSingle[T]":
+    def set_io_mode(
+        self, io_mode: Literal[IoMode.SINGLE]
+    ) -> "SpiMasterSingle[StreamHandleType]":
         ...
 
     @overload
     def set_io_mode(
         self, io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
-    ) -> "SpiMasterMulti[T]":
+    ) -> "SpiMasterMulti[StreamHandleType]":
         ...
 
     @overload
     def set_io_mode(
         self, io_mode: IoMode
-    ) -> Union["SpiMasterSingle[T]", "SpiMasterMulti[T]"]:
+    ) -> Union["SpiMasterSingle[StreamHandleType]", "SpiMasterMulti[StreamHandleType]"]:
         ...
 
     def set_io_mode(
         self, io_mode: IoMode
-    ) -> Union["SpiMasterSingle[T]", "SpiMasterMulti[T]"]:
+    ) -> Union["SpiMasterSingle[StreamHandleType]", "SpiMasterMulti[StreamHandleType]"]:
         """Set I/O mode of the SPI Master (i.e., single, dual, quad)
 
         Note:
@@ -167,52 +167,22 @@ class SpiMasterCommon(Generic[T, U], GenericHandle[U], ABC):
 
             if io_mode == IoMode.SINGLE:
                 return SpiMasterSingle(
-                    SpiMasterSingleHandle(temp_handle), self._mode_class
+                    SpiMasterSingleHandle(temp_handle), self._stream_handle
                 )
             else:
                 return SpiMasterMulti(
-                    SpiMasterMultiHandle(temp_handle), self._mode_class
+                    SpiMasterMultiHandle(temp_handle), self._stream_handle
                 )
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
-    def close(self) -> None:
-        """Uninitialize and close the owned handle.
 
-        Note:
-            A new handle must be opened and initialized
-            after calling this method.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-        """
-        self.uninitialize().close()
-
-    def uninitialize(self) -> T:
-        """Uninitialize the owned handle from SPI Master mode.
-
-        The handle can be initialized into any other supported mode.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-
-        Returns:
-            T:                  A class encapsulating the opened stream type
-        """
-        if self._handle is not None:
-            handle = self._handle
-            self._handle = None
-            return self._mode_class(uninitialize(handle))
-        else:
-            raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Master has been uninitialized already!",
-            )
-
-
-class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
+class SpiMasterSingle(
+    Generic[StreamHandleType],
+    SpiMasterCommon[SpiMasterSingleHandle, "SpiMasterSingle", StreamHandleType],
+):
     """A class encapsulating the SPI Master in single I/O (full-duplex) mode.
 
     Attributes:
@@ -221,14 +191,16 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
 
     tag: Literal[SpiModeTag.SINGLE]
 
-    def __init__(self, ft_handle: SpiMasterSingleHandle, mode_class: Type[T]):
+    def __init__(
+        self, ft_handle: SpiMasterSingleHandle, stream_handle: StreamHandleType
+    ):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
-            ft_handle:  FT4222 handle initialized in single SPI Master mode
-            mode_class: Calling class type. Used in 'uninitialize()' method.
+            ft_handle:      FT4222 handle initialized in single SPI Master mode
+            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle, mode_class)
+        super().__init__(ft_handle, stream_handle)
         self.tag = SpiModeTag.SINGLE
 
     def single_read(self, read_byte_count: int, end_transaction: bool = True) -> bytes:
@@ -236,7 +208,7 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
 
         Args:
             read_byte_count:    Non-zero number of bytes to read (1 - 65_535)
-            end_transaction:    De-assert slave select after a read?
+            end_transaction:    De-assert chip select after a read?
 
         Raises:
             Ft4222Exception:    In case of unexpected error
@@ -245,10 +217,16 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
             bytes:              Read data
         """
         if self._handle is not None:
-            if 0 < read_byte_count < (2 ** 16):
-                return single_read(self._handle, read_byte_count, end_transaction)
-            else:
-                raise ValueError("read_byte_count value must be in range <1, 65_535>.")
+            result: bytes = bytes()
+
+            while read_byte_count > 0:
+                read_len: int = min(read_byte_count, (2 ** 16) - 1)
+                trans_end: bool = end_transaction if read_len < (2 ** 16) else False
+                result += single_read(self._handle, read_len, trans_end)
+
+                read_byte_count -= read_len
+
+            return result
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
@@ -256,6 +234,9 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
 
     def single_write(self, write_data: bytes, end_transaction: bool = True) -> int:
         """Write data to an SPI slave.
+
+        NOTE:
+            Data larger than 2^16 - 1 bytes will be done using multiple driver calls.
 
         Args:
             write_data:         Non-empty list of data to write
@@ -268,10 +249,21 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
             int:                Number of bytes written
         """
         if self._handle is not None:
-            if 0 < len(write_data) < (2 ** 16):
-                return single_write(self._handle, write_data, end_transaction)
-            else:
-                raise ValueError("write_data length must be in range <1, 65_535>.")
+            write_len: int = len(write_data)
+            offset: int = 0
+            result: int = 0
+
+            while write_len > 0:
+                write_amount: int = min(write_len, (2 ** 16) - 1)
+                trans_end: bool = end_transaction if write_len < (2 ** 16) else False
+                result += single_write(
+                    self._handle, write_data[offset : offset + write_amount], trans_end
+                )
+
+                write_len -= write_amount
+                offset += write_amount
+
+            return result
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
@@ -282,8 +274,11 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
     ) -> bytes:
         """Write and read data concurrently (i.e., full-duplex) from an SPI slave.
 
+        NOTE:
+            Data larger than 2^16 - 1 bytes will be done using multiple driver calls.
+
         Args:
-            write_data:         Non-empty list of data to write, length <1, 65_535>
+            write_data:         Non-empty list of data to write, length
             end_transaction:    De-assert slave select after a write?
 
         Raises:
@@ -293,17 +288,31 @@ class SpiMasterSingle(Generic[T], SpiMasterCommon[T, SpiMasterSingleHandle]):
             bytes:              Read data
         """
         if self._handle is not None:
-            if 0 < len(write_data) < (2 ** 16):
-                return single_read_write(self._handle, write_data, end_transaction)
-            else:
-                raise ValueError("write_data length must be in range <1, 65_535>.")
+            write_len: int = len(write_data)
+            offset: int = 0
+            result: bytes = bytes()
+
+            while write_len > 0:
+                write_amount: int = min(write_len, (2 ** 16) - 1)
+                trans_end: bool = end_transaction if write_len < (2 ** 16) else False
+                result += single_read_write(
+                    self._handle, write_data[offset : offset + write_amount], trans_end
+                )
+
+                write_len -= write_amount
+                offset += write_amount
+
+            return result
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
 
-class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
+class SpiMasterMulti(
+    Generic[StreamHandleType],
+    SpiMasterCommon[SpiMasterMultiHandle, "SpiMasterMulti", StreamHandleType],
+):
     """A class encapsulating the SPI Master in dual or quad I/O (half-duplex) mode.
 
     Attributes:
@@ -312,22 +321,23 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
 
     tag: Literal[SpiModeTag.MULTI]
 
-    def __init__(self, ft_handle: SpiMasterMultiHandle, mode_class: Type[T]):
+    def __init__(
+        self, ft_handle: SpiMasterMultiHandle, stream_handle: StreamHandleType
+    ):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
             ft_handle:  FT4222 handle initialized in dual or quad SPI Master mode
-            mode_class: Calling class type.  Used in 'uninitialize()' method.
+            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle, mode_class)
+        super().__init__(ft_handle, stream_handle)
         self.tag = SpiModeTag.MULTI
 
     def multi_read_write(
         self,
-        write_data: Optional[bytes],
-        single_write_byte_count: int,
-        multi_write_byte_count: int,
-        multi_read_byte_count: int,
+        single_write_data: Optional[bytes] = None,
+        multi_write_data: Optional[bytes] = None,
+        multi_read_byte_count: int = 0,
     ) -> bytes:
         """Write and read data from an SPI slave.
 
@@ -349,11 +359,9 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
         given data.
 
         Args:
-            write_data:                 Data to be write
-                length <0, 65_535>
-            single_write_byte_count:    Number of bytes to write using single I/O line,
+            single_write_data:          Data to write using single I/O line,
                 length <0, 15>              (1st phase)
-            multi_write_byte_count:     Number of bytes to write using multiple I/O lines,
+            multi_write_data:           Data to write using multiple I/O lines,
                 length <0, 65_535>          (2nd phase)
             multi_read_byte_count:      Number of bytes to read using multi I/O lines
                 length <0, 65_535>          (3rd phase)
@@ -364,39 +372,33 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
         Returns:
             bytes:              Read data
         """
+        single_write_bytes: bytes = (
+            single_write_data if single_write_data is not None else bytes()
+        )
+        multi_write_bytes: bytes = (
+            multi_write_data if multi_write_data is not None else bytes()
+        )
+        write_data_cat: bytes = single_write_bytes + multi_write_bytes
+
         if self._handle is not None:
-            if not (0 <= single_write_byte_count < (2 ** 4)):
+            if not (0 <= len(single_write_bytes) < (2 ** 4)):
                 raise ValueError("single_write_bytes must be in range <0, 15>.")
-            if not (0 <= multi_write_byte_count < (2 ** 16)):
+            if not (0 <= len(multi_write_bytes) < (2 ** 16)):
                 raise ValueError("multi_write_bytes must be in range <0, 65_535>.")
             if not (0 <= multi_read_byte_count < (2 ** 16)):
                 raise ValueError("multi_read_bytes must be in range <0, 65_535>.")
             if (
-                single_write_byte_count + multi_write_byte_count + multi_read_byte_count
+                len(single_write_bytes) + len(multi_write_bytes) + multi_read_byte_count
             ) <= 0:
                 raise ValueError(
                     "Total number of bytes to read and write must be non-zero."
                 )
-            if write_data is None:
-                if (single_write_byte_count + multi_write_byte_count) != 0:
-                    raise ValueError(
-                        "Number of bytes to write must be zero if the write_data are None."
-                    )
-            else:
-                if not (0 <= len(write_data) < (2 ** 16)):
-                    raise ValueError(
-                        "Length of write_data must be in range <0, 65_535>."
-                    )
-                if (single_write_byte_count + multi_write_byte_count) > len(write_data):
-                    raise ValueError(
-                        "Number of bytes to write is larger than write_data length."
-                    )
 
             return multi_read_write(
                 self._handle,
-                write_data,
-                single_write_byte_count,
-                multi_write_byte_count,
+                write_data_cat,
+                len(single_write_bytes),
+                len(multi_write_bytes),
                 multi_read_byte_count,
             )
         else:
@@ -405,4 +407,4 @@ class SpiMasterMulti(Generic[T], SpiMasterCommon[T, SpiMasterMultiHandle]):
             )
 
 
-SpiMaster = Union[SpiMasterSingle[T], SpiMasterMulti[T]]
+SpiMaster = Union[SpiMasterSingle[StreamHandleType], SpiMasterMulti[StreamHandleType]]

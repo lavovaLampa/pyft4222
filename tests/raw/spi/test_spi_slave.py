@@ -1,41 +1,40 @@
-import pytest
 import itertools
-from typing import Tuple, Final
+from typing import Generator
 
-from tests.fixtures import open_serial_io_handle
+import pytest
+from koda import Ok
 
-from pyft4222.wrapper.common import uninitialize
+from pyft4222.wrapper.common import FtHandle, uninitialize
 from pyft4222.wrapper.spi import slave as spi_periph
-from pyft4222.wrapper.common import FtHandle
-from pyft4222 import ResType
+from tests.fixtures import open_serial_io_handle
 
 
 @pytest.fixture
 def spi_periph_raw_handle(
     open_serial_io_handle: FtHandle,
-) -> spi_periph.SpiSlaveRawHandle:
+) -> Generator[spi_periph.SpiSlaveRawHandle, None, None]:
     result = spi_periph.init_ex(
         open_serial_io_handle, spi_periph.IoProtocol.NO_PROTOCOL
     )
-    if result.tag == ResType.OK:
-        yield result.ok
+    if isinstance(result, Ok):
+        yield result.val
 
-        uninitialize(result.ok)
+        uninitialize(result.val)
     else:
         raise RuntimeError("Unable to initialize SPI Peripheral handle!")
 
 
 def test_init(open_serial_io_handle: FtHandle):
     result = spi_periph.init(open_serial_io_handle)
-    assert result.tag == ResType.OK
+    assert isinstance(result, Ok)
 
 
 def test_init_ex(open_serial_io_handle: FtHandle):
     for proto_mode in spi_periph.IoProtocol:
         result = spi_periph.init_ex(open_serial_io_handle, proto_mode)
-        assert result.tag == ResType.OK
+        assert isinstance(result, Ok)
 
-        uninitialize(result.ok)
+        uninitialize(result.val)
 
 
 def test_set_mode(spi_periph_raw_handle: spi_periph.SpiSlaveRawHandle):

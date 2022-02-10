@@ -1,11 +1,13 @@
-import pytest
 import itertools
-from functools import reduce
 from ctypes import c_void_p
+from functools import reduce
 
+import pytest
+from koda import Err, Ok
 
-from pyft4222.wrapper import Ft4222Status, FtHandle, GpioTrigger, ResType, gpio
+from pyft4222.wrapper import Ft4222Status, FtHandle, GpioTrigger
 from pyft4222.wrapper import common as ft_common
+from pyft4222.wrapper import gpio
 
 from ..fixtures import *
 
@@ -22,11 +24,11 @@ def gpio_output_handle(open_gpio_handle: FtHandle) -> gpio.GpioHandle:
         ),
     )
 
-    if handle.tag == ResType.OK:
-        ft_common.set_suspend_out(handle.ok, False)
-        ft_common.set_wakeup_interrupt(handle.ok, False)
+    if isinstance(handle, Ok):
+        ft_common.set_suspend_out(handle.val, False)
+        ft_common.set_wakeup_interrupt(handle.val, False)
 
-        return handle.ok
+        return handle.val
     else:
         raise RuntimeError("Cannot initialize GPIO handle!")
 
@@ -43,11 +45,11 @@ def gpio_input_handle(open_gpio_handle: FtHandle) -> gpio.GpioHandle:
         ),
     )
 
-    if handle.tag == ResType.OK:
-        ft_common.set_suspend_out(handle.ok, False)
-        ft_common.set_wakeup_interrupt(handle.ok, False)
+    if isinstance(handle, Ok):
+        ft_common.set_suspend_out(handle.val, False)
+        ft_common.set_wakeup_interrupt(handle.val, False)
 
-        return handle.ok
+        return handle.val
     else:
         raise RuntimeError("Cannot initialize GPIO handle!")
 
@@ -63,9 +65,9 @@ def test_invalid_init():
         ),
     )
 
-    assert handle.tag == ResType.ERR
+    assert isinstance(handle, Err)
     # Why this status? Go ask FTDI i guess...
-    assert handle.err == Ft4222Status.DEVICE_NOT_SUPPORTED
+    assert handle.val == Ft4222Status.DEVICE_NOT_SUPPORTED
 
 
 def test_read_write(gpio_output_handle: gpio.GpioHandle):

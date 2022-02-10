@@ -1,11 +1,11 @@
-import pytest
 from typing import Final
 
-from tests.fixtures import open_serial_io_handle
+import pytest
+from koda import Ok
 
-from pyft4222.wrapper.i2c import master as i2c_master
 from pyft4222.wrapper.common import FtHandle
-from pyft4222 import ResType
+from pyft4222.wrapper.i2c import master as i2c_master
+from tests.fixtures import open_serial_io_handle
 
 _TEST_DEVICE_ADDR: Final[int] = 0x40
 
@@ -13,15 +13,15 @@ _TEST_DEVICE_ADDR: Final[int] = 0x40
 @pytest.fixture
 def i2c_master_handle(open_serial_io_handle: FtHandle) -> i2c_master.I2cMasterHandle:
     result = i2c_master.init(open_serial_io_handle, 3400)
-    if result.tag == ResType.OK:
-        return result.ok
+    if isinstance(result, Ok):
+        return result.val
     else:
         raise RuntimeError("Cannot initialize I2C Master handle!")
 
 
 def test_init(open_serial_io_handle: FtHandle):
     result = i2c_master.init(open_serial_io_handle, 3400)
-    assert result.tag == ResType.OK
+    assert isinstance(result, Ok)
 
 
 def test_read(i2c_master_handle: i2c_master.I2cMasterHandle):

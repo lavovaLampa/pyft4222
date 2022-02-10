@@ -1,13 +1,12 @@
-import pytest
 import itertools
-from typing import Tuple, Final
+from typing import Final, Tuple
 
-from tests.fixtures import open_serial_io_handle
+import pytest
+from koda import Ok
 
-from pyft4222.wrapper.common import uninitialize
+from pyft4222.wrapper.common import FtHandle, uninitialize
 from pyft4222.wrapper.spi import master as spi_ctrl
-from pyft4222.wrapper.common import FtHandle
-from pyft4222 import ResType
+from tests.fixtures import open_serial_io_handle
 
 _DEFAULT_CTRL_PARAMS: Final[
     Tuple[spi_ctrl.ClkDiv, spi_ctrl.ClkPolarity, spi_ctrl.ClkPhase, spi_ctrl.SsoMap]
@@ -26,8 +25,8 @@ def spi_ctrl_single_handle(
     result = spi_ctrl.init(
         open_serial_io_handle, spi_ctrl.IoMode.SINGLE, *_DEFAULT_CTRL_PARAMS
     )
-    if result.tag == ResType.OK:
-        return result.ok
+    if isinstance(result, Ok):
+        return result.val
     else:
         raise RuntimeError("Cannot initialize SPI controller handle!")
 
@@ -39,8 +38,8 @@ def spi_ctrl_dual_handle(
     result = spi_ctrl.init(
         open_serial_io_handle, spi_ctrl.IoMode.DUAL, *_DEFAULT_CTRL_PARAMS
     )
-    if result.tag == ResType.OK:
-        return result.ok
+    if isinstance(result, Ok):
+        return result.val
     else:
         raise RuntimeError("Cannot initialize SPI controller handle!")
 
@@ -52,8 +51,8 @@ def spi_ctrl_quad_handle(
     result = spi_ctrl.init(
         open_serial_io_handle, spi_ctrl.IoMode.QUAD, *_DEFAULT_CTRL_PARAMS
     )
-    if result.tag == ResType.OK:
-        return result.ok
+    if isinstance(result, Ok):
+        return result.val
     else:
         raise RuntimeError("Cannot initialize SPI controller handle!")
 
@@ -72,9 +71,9 @@ def test_init(open_serial_io_handle: FtHandle):
         if arg[4] != spi_ctrl.SsoMap.SS_0:
             continue
         result = spi_ctrl.init(open_serial_io_handle, *arg)
-        assert result.tag == ResType.OK
+        assert isinstance(result, Ok)
 
-        uninitialize(result.ok)
+        uninitialize(result.val)
 
 
 def test_set_cs(spi_ctrl_single_handle: spi_ctrl.SpiMasterSingleHandle):
@@ -107,4 +106,16 @@ def test_single_read_write(spi_ctrl_single_handle: spi_ctrl.SpiMasterSingleHandl
 
 
 def test_multi_read_write(spi_ctrl_quad_handle: spi_ctrl.SpiMasterMultiHandle):
-    pass
+    write_data = bytes([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
+    read_data = spi_ctrl.multi_read_write(spi_ctrl_quad_handle, None, 0, 0, 100)
+    assert len(read_data) == 100
+
+    read_data = spi_ctrl.multi_read_write(
+        spi_ctrl_quad_handle, write_data, 0, len(write_data), 100
+    )
+    assert len(read_data) == 100
+
+    read_data = spi_ctrl.multi_read_write(
+        spi_ctrl_quad_handle, write_data, len(write_data), 0, 0
+    )
+    assert len(read_data) == 0

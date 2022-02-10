@@ -13,20 +13,19 @@ Important:
 from enum import Enum, auto
 from typing import Literal, Union
 
-from pyft4222.handle import GenericHandle
-
-from pyft4222.wrapper import FtHandle, Ft4222Exception, Ft4222Status, ResType
-from pyft4222.wrapper import gpio
-from pyft4222.wrapper.spi import slave as spi_slave
-from pyft4222.wrapper.spi import master as spi_master
-from pyft4222.wrapper.i2c import slave as i2c_slave
-from pyft4222.wrapper.i2c import master as i2c_master
+from koda import Ok
 
 from pyft4222.gpio import Gpio
-from pyft4222.spi.master import SpiMasterMulti, SpiMasterSingle
-from pyft4222.spi.slave import SpiSlaveProto, SpiSlaveRaw
+from pyft4222.handle import GenericHandle
 from pyft4222.i2c.master import I2CMaster
 from pyft4222.i2c.slave import I2CSlave
+from pyft4222.spi.master import SpiMasterMulti, SpiMasterSingle
+from pyft4222.spi.slave import SpiSlaveProto, SpiSlaveRaw
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle, gpio
+from pyft4222.wrapper.i2c import master as i2c_master
+from pyft4222.wrapper.i2c import slave as i2c_slave
+from pyft4222.wrapper.spi import master as spi_master
+from pyft4222.wrapper.spi import slave as spi_slave
 
 
 class InterfaceType(Enum):
@@ -59,7 +58,7 @@ class InterfaceType(Enum):
     """Only SPI Master is supported"""
 
 
-class ProtocolStream(GenericHandle[FtHandle]):
+class ProtocolStream(GenericHandle[FtHandle, "ProtocolStream"]):
     """A class representing an open FT4222 stream in "Data Stream" mode.
 
     Attributes:
@@ -113,11 +112,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiMasterSingle(result.ok, self.__class__)
+                return SpiMasterSingle(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -151,11 +150,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiMasterMulti(result.ok, self.__class__)
+                return SpiMasterMulti(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -189,11 +188,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiMasterMulti(result.ok, self.__class__)
+                return SpiMasterMulti(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -211,11 +210,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
                 self._handle,
                 spi_slave.IoProtocol.NO_PROTOCOL,
             )
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiSlaveRaw(result.ok, self.__class__)
+                return SpiSlaveRaw(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -241,11 +240,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = spi_slave.init_ex(self._handle, proto_type)
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiSlaveProto(result.ok, self.__class__)
+                return SpiSlaveProto(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -263,11 +262,11 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = i2c_master.init(self._handle, kbps)
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return I2CMaster(result.ok, self.__class__)
+                return I2CMaster(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -282,16 +281,16 @@ class ProtocolStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = i2c_slave.init(self._handle)
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return I2CSlave(result.ok, self.__class__)
+                return I2CSlave(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
 
-class GpioStream(GenericHandle[FtHandle]):
+class GpioStream(GenericHandle[FtHandle, "GpioStream"]):
     """A class representing an open FT4222 stream in "GPIO" mode.
 
     Attributes:
@@ -323,16 +322,16 @@ class GpioStream(GenericHandle[FtHandle]):
         """
         if self._handle is not None:
             result = gpio.init(self._handle, dirs)
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return Gpio(result.ok, self.__class__)
+                return Gpio(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
 
-class SpiStream(GenericHandle[FtHandle]):
+class SpiStream(GenericHandle[FtHandle, "SpiStream"]):
     """A class representing an open FT4222 stream in "SPI Master" mode.
 
     Attributes:
@@ -387,11 +386,11 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiMasterSingle(result.ok, self.__class__)
+                return SpiMasterSingle(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -425,11 +424,11 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiMasterMulti(result.ok, self.__class__)
+                return SpiMasterMulti(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)
 
@@ -463,10 +462,10 @@ class SpiStream(GenericHandle[FtHandle]):
                 clk_phase,
                 sso_map,
             )
-            if result.tag == ResType.OK:
+            if isinstance(result, Ok):
                 self._handle = None
-                return SpiMasterMulti(result.ok, self.__class__)
+                return SpiMasterMulti(result.val, self)
             else:
-                raise Ft4222Exception(result.err)
+                raise Ft4222Exception(result.val)
         else:
             raise Ft4222Exception(Ft4222Status.INVALID_HANDLE)

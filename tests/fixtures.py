@@ -1,9 +1,11 @@
-from typing import Final, Mapping, Tuple
-import pytest
-
 from enum import Enum, auto
+from typing import Final, Generator, Mapping, Tuple
 
-from pyft4222.wrapper import FtHandle, ResType, ftd2xx as ftd
+import pytest
+from koda import Ok
+
+from pyft4222.wrapper import FtHandle
+from pyft4222.wrapper import ftd2xx as ftd
 
 FT4222_DEV_TYPES = {
     ftd.DeviceType.DEV_4222H_0,
@@ -62,35 +64,35 @@ def valid_dev_idx() -> int:
 
 
 @pytest.fixture
-def open_handle(valid_dev_idx: int) -> FtHandle:
+def open_handle(valid_dev_idx: int) -> Generator[FtHandle, None, None]:
     result = ftd.open_by_idx(valid_dev_idx)
-    if result.tag == ResType.OK:
-        yield result.ok
+    if isinstance(result, Ok):
+        yield result.val
 
-        ftd.close_handle(result.ok)
+        ftd.close_handle(result.val)
     else:
         raise RuntimeError("Cannot obtain an FT4222 device handle!")
 
 
 @pytest.fixture
-def open_gpio_handle() -> FtHandle:
+def open_gpio_handle() -> Generator[FtHandle, None, None]:
     device = _find_suitable_device(InterfaceType.GPIO)
     result = ftd.open_by_idx(device[0])
-    if result.tag == ResType.OK:
-        yield result.ok
+    if isinstance(result, Ok):
+        yield result.val
 
-        ftd.close_handle(result.ok)
+        ftd.close_handle(result.val)
     else:
         raise RuntimeError("Cannot obtain a valid GPIO handle!")
 
 
 @pytest.fixture
-def open_serial_io_handle() -> FtHandle:
+def open_serial_io_handle() -> Generator[FtHandle, None, None]:
     device = _find_suitable_device(InterfaceType.SERIAL_IO)
     result = ftd.open_by_idx(device[0])
-    if result.tag == ResType.OK:
-        yield result.ok
+    if isinstance(result, Ok):
+        yield result.val
 
-        ftd.close_handle(result.ok)
+        ftd.close_handle(result.val)
     else:
         raise RuntimeError("Cannot obtain a valid GPIO handle!")

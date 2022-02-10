@@ -1,12 +1,12 @@
-from ctypes import POINTER, byref, c_char_p
-from ctypes import c_void_p, c_uint, c_uint16, c_uint8
-
+from ctypes import POINTER, byref, c_char_p, c_uint, c_uint8, c_uint16, c_void_p
 from enum import IntEnum, IntFlag, auto
 from typing import Literal, NewType, Union, overload
 
-from . import ClkPhase, ClkPolarity
-from .. import FtHandle, Result, Ok, Err, Ft4222Exception, Ft4222Status
+from koda import Err, Ok, Result
+
+from .. import Ft4222Exception, Ft4222Status, FtHandle
 from ..dll_loader import ftlib
+from . import ClkPhase, ClkPolarity
 
 SpiSlaveRawHandle = NewType("SpiSlaveRawHandle", FtHandle)
 SpiSlaveProtoHandle = NewType("SpiSlaveProtoHandle", FtHandle)

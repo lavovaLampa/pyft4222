@@ -1,9 +1,7 @@
-from typing import Generic, List, Type, TypeVar
+from typing import Generic, List
 
-from pyft4222.handle import GenericHandle
-from pyft4222.wrapper import FtHandle
+from pyft4222.handle import GenericProtocolHandle, StreamHandleType
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, GpioTrigger
-from pyft4222.wrapper.common import uninitialize
 from pyft4222.wrapper.gpio import (
     GpioHandle,
     PortId,
@@ -15,23 +13,21 @@ from pyft4222.wrapper.gpio import (
     write,
 )
 
-T = TypeVar("T", bound=GenericHandle[FtHandle])
 
-
-class Gpio(Generic[T], GenericHandle[GpioHandle]):
+class Gpio(
+    Generic[StreamHandleType],
+    GenericProtocolHandle[GpioHandle, "Gpio", StreamHandleType],
+):
     """A class encapsulating GPIO functions."""
 
-    _mode_handle: Type[T]
-
-    def __init__(self, ft_handle: GpioHandle, mode_handle: Type[T]):
+    def __init__(self, ft_handle: GpioHandle, stream_handle: StreamHandleType):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
             ft_handle:      FT4222 handle initialized in any SPI Master mode
-            mode_class:     Calling class type. Used in 'uninitialize()' method.
+            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle)
-        self._mode_handle = mode_handle
+        super().__init__(ft_handle, stream_handle)
 
     def read(self, port_id: PortId) -> bool:
         """Read state of the given GPIO port.
@@ -143,36 +139,4 @@ class Gpio(Generic[T], GenericHandle[GpioHandle]):
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
-            )
-
-    def close(self) -> None:
-        """Uninitialize and close the owned handle.
-
-        Note:
-            A new handle must be opened and initialized
-            after calling this method.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-        """
-        self.uninitialize().close()
-
-    def uninitialize(self) -> T:
-        """Uninitialize the owned handle from GPIO mode.
-
-        The handle can be initialized into any other supported mode.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-
-        Returns:
-            T:                  A class encapsulating the opened stream type
-        """
-        if self._handle is not None:
-            handle = self._handle
-            self._handle = None
-            return self._mode_handle(uninitialize(handle))
-        else:
-            raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized already!"
             )

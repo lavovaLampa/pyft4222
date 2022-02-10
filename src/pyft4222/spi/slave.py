@@ -1,13 +1,17 @@
 from abc import ABC
 from ctypes import c_void_p
 from enum import Enum, auto
-from typing import Generic, Literal, Type, TypeVar, Union
+from typing import Any, Generic, Literal, TypeVar, Union
 
-from pyft4222.handle import GenericHandle
-from pyft4222.wrapper import FtHandle
+from pyft4222.handle import GenericProtocolHandle, StreamHandleType
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status
-from pyft4222.wrapper.common import uninitialize
 from pyft4222.wrapper.spi import ClkPhase, ClkPolarity, DriveStrength
+from pyft4222.wrapper.spi.common import (
+    TransactionIdx,
+    reset,
+    reset_transaction,
+    set_driving_strength,
+)
 from pyft4222.wrapper.spi.slave import (
     EventType,
     SpiSlaveHandle,
@@ -18,16 +22,9 @@ from pyft4222.wrapper.spi.slave import (
     set_mode,
     write,
 )
-from pyft4222.wrapper.spi.common import (
-    TransactionIdx,
-    reset,
-    reset_transaction,
-    set_driving_strength,
-)
 
-
-T = TypeVar("T", bound=GenericHandle[FtHandle])
-U = TypeVar("U", bound=SpiSlaveHandle)
+SpiSlaveHandleType = TypeVar("SpiSlaveHandleType", bound=SpiSlaveHandle)
+SpiSlaveType = TypeVar("SpiSlaveType", "SpiSlaveRaw[Any]", "SpiSlaveProto[Any]")
 
 
 class SpiModeTag(Enum):
@@ -35,20 +32,21 @@ class SpiModeTag(Enum):
     PROTO = auto()
 
 
-class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
+class SpiSlaveCommon(
+    Generic[SpiSlaveHandleType, SpiSlaveType, StreamHandleType],
+    GenericProtocolHandle[SpiSlaveHandleType, SpiSlaveType, StreamHandleType],
+    ABC,
+):
     """A class encapsulating functions common to all SPI Slave modes."""
 
-    _mode_class: Type[T]
-
-    def __init__(self, ft_handle: U, mode_class: Type[T]):
+    def __init__(self, ft_handle: SpiSlaveHandleType, stream_handle: StreamHandleType):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
             ft_handle:      FT4222 handle initialized in any SPI Slave mode
-            mode_class:     Calling class type. Used in 'uninitialize()' method.
+            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle)
-        self._mode_class = mode_class
+        super().__init__(ft_handle, stream_handle)
 
     # FIXME: De-duplicate with SPI Master
     def reset_bus(self) -> None:
@@ -193,41 +191,11 @@ class SpiSlaveCommon(Generic[T, U], GenericHandle[U], ABC):
                 Ft4222Status.DEVICE_NOT_OPENED, "SPI Slave has been uninitialized!"
             )
 
-    def close(self) -> None:
-        """Uninitialize and close the owned handle.
 
-        Note:
-            A new handle must be opened and initialized
-            after calling this method.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-        """
-        self.uninitialize().close()
-
-    def uninitialize(self) -> T:
-        """Uninitialize the owned handle from SPI Slave mode.
-
-        The handle can be initialized into any other supported mode.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-
-        Returns:
-            T:                  A class encapsulating the opened stream type
-        """
-        if self._handle is not None:
-            handle = self._handle
-            self._handle = None
-            return self._mode_class(uninitialize(handle))
-        else:
-            raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED,
-                "SPI Slave has been uninitialized already!",
-            )
-
-
-class SpiSlaveProto(Generic[T], SpiSlaveCommon[T, SpiSlaveProtoHandle]):
+class SpiSlaveProto(
+    Generic[StreamHandleType],
+    SpiSlaveCommon[SpiSlaveProtoHandle, "SpiSlaveProto", StreamHandleType],
+):
     """A class encapsulating the SPI Slave protocol mode.
 
     Attributes:
@@ -236,23 +204,29 @@ class SpiSlaveProto(Generic[T], SpiSlaveCommon[T, SpiSlaveProtoHandle]):
 
     tag: Literal[SpiModeTag.PROTO]
 
-    def __init__(self, ft_handle: SpiSlaveProtoHandle, mode_class: Type[T]):
+    def __init__(self, ft_handle: SpiSlaveProtoHandle, stream_handle: StreamHandleType):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
             ft_handle:  FT4222 handle initialized in protocol SPI Slave mode
-            mode_class: Calling class type. Used in 'uninitialize()' method.
+            mode_handle:    Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle, mode_class)
+        super().__init__(ft_handle, stream_handle)
         self.tag = SpiModeTag.PROTO
 
     # FIXME: Proper typing
     def set_event_notification(self, mask: EventType, param: c_void_p) -> None:
+        raise NotImplementedError(
+            "Unfortunately this function is yet to be implemented!"
+        )
         """TODO: Implement and document"""
         pass
 
 
-class SpiSlaveRaw(Generic[T], SpiSlaveCommon[T, SpiSlaveRawHandle]):
+class SpiSlaveRaw(
+    Generic[StreamHandleType],
+    SpiSlaveCommon[SpiSlaveRawHandle, "SpiSlaveRaw", StreamHandleType],
+):
     """A class encapsulating the SPI Slave in raw mode.
 
     Attributes:
@@ -261,15 +235,15 @@ class SpiSlaveRaw(Generic[T], SpiSlaveCommon[T, SpiSlaveRawHandle]):
 
     tag: Literal[SpiModeTag.RAW]
 
-    def __init__(self, ft_handle: SpiSlaveRawHandle, mode_class: Type[T]):
+    def __init__(self, ft_handle: SpiSlaveRawHandle, stream_handle: StreamHandleType):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
-            ft_handle:  FT4222 handle initialized in raw SPI Slave mode
-            mode_class: Calling class type. Used in 'uninitialize()' method.
+            ft_handle:      FT4222 handle initialized in raw SPI Slave mode
+            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle, mode_class)
+        super().__init__(ft_handle, stream_handle)
         self.tag = SpiModeTag.RAW
 
 
-SpiSlave = Union[SpiSlaveProto[T], SpiSlaveRaw[T]]
+SpiSlave = Union[SpiSlaveProto[StreamHandleType], SpiSlaveRaw[StreamHandleType]]

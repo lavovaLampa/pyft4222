@@ -1,40 +1,11 @@
-from enum import Enum, IntEnum, IntFlag, auto
-from typing import Final, Generic, Literal, NewType, Optional, TypeVar, Union
-from ctypes import c_void_p
-
 import platform
+from ctypes import c_void_p
+from enum import IntEnum, IntFlag, auto
+from typing import Final, NewType, Optional
 
 OS_TYPE: Final = platform.system()
 
 FtHandle = NewType("FtHandle", c_void_p)
-
-
-class ResType(Enum):
-    OK = auto()
-    ERR = auto()
-
-
-T = TypeVar("T")
-E = TypeVar("E")
-
-
-class Ok(Generic[T]):
-    tag: Literal[ResType.OK] = ResType.OK
-    ok: T
-
-    def __init__(self, result: T):
-        self.ok = result
-
-
-class Err(Generic[E]):
-    tag: Literal[ResType.ERR] = ResType.ERR
-    err: E
-
-    def __init__(self, err: E):
-        self.err = err
-
-
-Result = Union[Ok[T], Err[E]]
 
 
 class FtStatus(IntEnum):

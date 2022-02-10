@@ -1,24 +1,18 @@
 from abc import ABC
-from typing import Generic, Optional, TypeVar
+from contextlib import AbstractContextManager
+from types import TracebackType
+from typing import Any, Generic, Optional, Type, TypeVar
 
 from pyft4222.wrapper import (
     OS_TYPE,
-    FtHandle,
     Ft4222Exception,
     Ft4222Status,
+    FtHandle,
     GpioTrigger,
-)
-from pyft4222.wrapper.ftd2xx import (
-    DriverVersion,
-    BufferType,
-    ShortDeviceInfo,
-    close_handle,
-    get_device_info,
-    purge_buffers,
-    reset_device,
 )
 from pyft4222.wrapper.common import (
     ClockRate,
+    InitializedHandle,
     SwChipVersion,
     chip_reset,
     get_clock,
@@ -27,26 +21,50 @@ from pyft4222.wrapper.common import (
     set_interrupt_trigger,
     set_suspend_out,
     set_wakeup_interrupt,
+    uninitialize,
+)
+from pyft4222.wrapper.ftd2xx import (
+    BufferType,
+    DriverVersion,
+    ShortDeviceInfo,
+    close_handle,
+    get_device_info,
+    purge_buffers,
+    reset_device,
 )
 
 if OS_TYPE == "Windows":
     from pyft4222.wrapper.ftd2xx import get_driver_version
 
-T = TypeVar("T", bound=FtHandle)
+HandleType = TypeVar("HandleType", bound=FtHandle)
+ContextType = TypeVar("ContextType")
 
 
-class GenericHandle(Generic[T], ABC):
+class GenericHandle(
+    Generic[HandleType, ContextType], AbstractContextManager[ContextType], ABC
+):
     """An abstract class encapsulating common FT4222 functions."""
 
-    _handle: Optional[T]
+    _handle: Optional[HandleType]
 
-    def __init__(self, ft_handle: T):
+    def __init__(self, ft_handle: HandleType):
         """Initialize GenericHandle with given FtHandle.
 
         Args:
             ft_handle:      Handle to an opened FT4222 device
         """
         self._handle = ft_handle
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> bool:
+        if self._handle is not None:
+            self.close()
+
+        return False
 
     def close(self) -> None:
         """Close the current FT4222 handle.
@@ -55,15 +73,11 @@ class GenericHandle(Generic[T], ABC):
             A FT4222 stream must be opened again after calling this method.
 
         Raises:
-            Ft4222Exception:    In case of unexpected error
+            FtException:    In case of unexpected error
         """
         if self._handle is not None:
             close_handle(self._handle)
             self._handle = None
-        else:
-            raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED, "This handle is already closed!"
-            )
 
     def set_clock(self, clk_rate: ClockRate) -> None:
         """Set the FT4222 system clock frequency.
@@ -273,4 +287,69 @@ class GenericHandle(Generic[T], ABC):
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
+            )
+
+
+InitializedHandleType = TypeVar("InitializedHandleType", bound=InitializedHandle)
+StreamHandleType = TypeVar("StreamHandleType", bound=GenericHandle[FtHandle, Any])
+
+
+class GenericProtocolHandle(
+    Generic[InitializedHandleType, ContextType, StreamHandleType],
+    GenericHandle[InitializedHandleType, ContextType],
+    ABC,
+):
+    _stream_handle: StreamHandleType
+    """Reference to the used stream handle"""
+
+    def __init__(
+        self, ft_handle: InitializedHandleType, stream_handle: StreamHandleType
+    ):
+        super().__init__(ft_handle)
+        self._stream_handle = stream_handle
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> bool:
+        if self._handle is not None:
+            self.uninitialize()
+
+        return False
+
+    def close(self) -> None:
+        """Un-initialize and close the owned handle.
+
+        Note:
+            A new handle must be opened and initialized
+            after calling this method.
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+        """
+        self.uninitialize().close()
+
+    def uninitialize(self) -> StreamHandleType:
+        """Un-initialize the owned handle from the current stream mode.
+
+        The handle can be initialized into any other supported mode.
+
+        Raises:
+            Ft4222Exception:    In case of unexpected error
+
+        Returns:
+            C:                  A class encapsulating the opened stream type
+
+        """
+        if self._handle is not None:
+            new_handle = uninitialize(self._handle)
+            self._stream_handle._handle = new_handle
+            self._handle = None
+            return self._stream_handle
+        else:
+            raise Ft4222Exception(
+                Ft4222Status.DEVICE_NOT_OPENED,
+                "Handle is already uninitialized or invalid!",
             )

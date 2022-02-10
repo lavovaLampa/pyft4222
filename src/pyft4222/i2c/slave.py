@@ -1,9 +1,7 @@
-from typing import Generic, Type, TypeVar
+from typing import Generic
 
-from pyft4222.handle import GenericHandle
-from pyft4222.wrapper import FtHandle
+from pyft4222.handle import GenericProtocolHandle, StreamHandleType
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status
-from pyft4222.wrapper.common import uninitialize
 from pyft4222.wrapper.i2c.slave import (
     I2cSlaveHandle,
     get_address,
@@ -17,23 +15,20 @@ from pyft4222.wrapper.i2c.slave import (
 )
 
 
-T = TypeVar("T", bound=GenericHandle[FtHandle])
-
-
-class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
+class I2CSlave(
+    Generic[StreamHandleType],
+    GenericProtocolHandle[I2cSlaveHandle, "I2CSlave", StreamHandleType],
+):
     """A class encapsulating I2C Slave functions."""
 
-    _mode_class: Type[T]
-
-    def __init__(self, ft_handle: I2cSlaveHandle, mode_class: Type[T]):
+    def __init__(self, ft_handle: I2cSlaveHandle, stream_handle: StreamHandleType):
         """Initialize the class with given FT4222 handle and a mode class type.
 
         Args:
             ft_handle:      FT4222 handle initialized in I2C Master mode
-            mode_class:     Calling class type. Used in 'uninitialize()' method.
+            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
         """
-        super().__init__(ft_handle)
-        self._mode_class = mode_class
+        super().__init__(ft_handle, stream_handle)
 
     def get_address(self) -> int:
         """Get the address of I2C Slave device.
@@ -187,38 +182,6 @@ class I2CSlave(Generic[T], GenericHandle[I2cSlaveHandle]):
         """
         if self._handle is not None:
             reset(self._handle)
-        else:
-            raise Ft4222Exception(
-                Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"
-            )
-
-    def close(self) -> None:
-        """Uninitialize and close the owned handle.
-
-        Note:
-            A new handle must be opened and initialized
-            after calling this method.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-        """
-        self.uninitialize().close()
-
-    def uninitialize(self) -> T:
-        """Uninitialize the owned handle from I2C Slave mode.
-
-        The handle can be initialized into any other supported mode.
-
-        Raises:
-            Ft4222Exception:    In case of unexpected error
-
-        Returns:
-            T:                  A class encapsulating the opened stream type
-        """
-        if self._handle is not None:
-            handle = self._handle
-            self._handle = None
-            return self._mode_class(uninitialize(handle))
         else:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Slave has been uninitialized!"

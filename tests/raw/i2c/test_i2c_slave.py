@@ -1,12 +1,11 @@
-import pytest
 from typing import Final
 
-from tests.fixtures import open_serial_io_handle
+import pytest
+from koda import Ok
 
-from pyft4222.wrapper.i2c import slave as i2c_slave
 from pyft4222.wrapper.common import FtHandle
-from pyft4222 import ResType
-
+from pyft4222.wrapper.i2c import slave as i2c_slave
+from tests.fixtures import open_serial_io_handle
 
 _PERIPHERAL_ADDR: Final[int] = 0x10
 
@@ -14,15 +13,15 @@ _PERIPHERAL_ADDR: Final[int] = 0x10
 @pytest.fixture
 def i2c_perif_handle(open_serial_io_handle: FtHandle) -> i2c_slave.I2cSlaveHandle:
     result = i2c_slave.init(open_serial_io_handle)
-    if result.tag == ResType.OK:
-        return result.ok
+    if isinstance(result, Ok):
+        return result.val
     else:
         raise RuntimeError("Cannot initialize I2C Peripheral handle!")
 
 
 def test_init(open_serial_io_handle: FtHandle):
     result = i2c_slave.init(open_serial_io_handle)
-    assert result.tag == ResType.OK
+    assert isinstance(result, Ok)
 
 
 def test_reset(i2c_perif_handle: i2c_slave.I2cSlaveHandle):
