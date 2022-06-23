@@ -13,7 +13,7 @@ from pyft4222.wrapper import ftd2xx as ftd
 from pyft4222.wrapper import gpio as wgpio
 from pyft4222.wrapper.common import uninitialize
 
-VERSION: Final = "0.1.0"
+VERSION: Final = "0.1.1"
 
 _DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
     wgpio.Direction.INPUT,
