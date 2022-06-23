@@ -1,7 +1,6 @@
 from abc import ABC
-from contextlib import AbstractContextManager
 from types import TracebackType
-from typing import Any, Generic, Optional, Type, TypeVar
+from typing import Any, ContextManager, Generic, Optional, Type, TypeVar
 
 from pyft4222.wrapper import (
     OS_TYPE,
@@ -40,9 +39,7 @@ HandleType = TypeVar("HandleType", bound=FtHandle)
 ContextType = TypeVar("ContextType")
 
 
-class GenericHandle(
-    Generic[HandleType, ContextType], AbstractContextManager[ContextType], ABC
-):
+class GenericHandle(Generic[HandleType, ContextType], ContextManager[ContextType], ABC):
     """An abstract class encapsulating common FT4222 functions."""
 
     _handle: Optional[HandleType]
