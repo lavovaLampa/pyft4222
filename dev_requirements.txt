@@ -1,0 +1,6 @@
+black
+pylint
+pytest
+bump2version
+
+koda >= 0.10.2

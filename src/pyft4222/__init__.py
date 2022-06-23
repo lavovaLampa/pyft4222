@@ -13,6 +13,8 @@ from pyft4222.wrapper import ftd2xx as ftd
 from pyft4222.wrapper import gpio as wgpio
 from pyft4222.wrapper.common import uninitialize
 
+VERSION: Final = "0.1.0"
+
 _DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
     wgpio.Direction.INPUT,
     wgpio.Direction.INPUT,
@@ -99,7 +101,7 @@ def _validate_dev_idx(dev_idx: int) -> bool:
     Returns:
         bool:       Is given device index valid?
     """
-    return 0 <= dev_idx < (2 ** 31)
+    return 0 <= dev_idx < (2**31)
 
 
 def get_device_info_list() -> List[ftd.DeviceInfo]:
