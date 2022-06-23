@@ -2,5 +2,7 @@ black
 pylint
 pytest
 bump2version
+twine
+build
 
 koda >= 0.10.2
