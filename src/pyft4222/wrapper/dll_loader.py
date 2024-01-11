@@ -24,7 +24,8 @@ _DLL_IMPORT_MAP: Final[Mapping[Tuple[str, str], Tuple[str, str]]] = {
     ("Linux", "x86_64"): (_COMMON_DLL_PREFIX + "linux.amd64", "libft4222.so"),
     ("Linux", "aarch64"): (_COMMON_DLL_PREFIX + "linux.aarch64", "libft4222.so"),
     # macOs
-    # TODO: Implement!
+    ('Darwin', 'x86_64'): (_COMMON_DLL_PREFIX + "osx.amd64", "libft4222.dylib"),
+    ('Darwin', 'arm64'): (_COMMON_DLL_PREFIX + "osx.arm64", "libft4222.dylib"),
 }
 
 _dll_path = _DLL_IMPORT_MAP.get((OS_TYPE, platform.machine()))
