@@ -9,9 +9,7 @@ description = "A python wrapper for libft4222 library"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
-authors = [
-    { name = "Martin Cizmar", email = "betacheer@gmail.com" },
-]
+authors = [{ name = "Martin Cizmar", email = "lavovalampa@protonmail.com" }]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -25,9 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = [
-    "typing_extensions",
-]
+dependencies = ["typing_extensions"]
 
 [tool.hatch.version]
 path = "src/pyft4222/__about__.py"
@@ -37,11 +33,7 @@ Homepage = "https://github.com/lavovaLampa/pyft4222"
 Issues = "https://github.com/lavovaLampa/pyft4222/issues"
 
 [tool.hatch.build.targets.wheel]
-artifacts = [
-    "*.so",
-    ".dll",
-    "*.dylib"
-]
+artifacts = ["*.so", ".dll", "*.dylib"]
 
 [tool.pytest.init_options]
 minversion = "6.0"
