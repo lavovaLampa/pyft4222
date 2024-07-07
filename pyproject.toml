@@ -1,11 +1,49 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyft4222"
+dynamic = ["version"]
+description = "A python wrapper for libft4222 library"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Martin Cizmar", email = "betacheer@gmail.com" },
 ]
-build-backend = "setuptools.build_meta"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "typing_extensions",
+]
+
+[tool.hatch.version]
+path = "src/pyft4222/__about__.py"
+
+[project.urls]
+Homepage = "https://github.com/lavovaLampa/pyft4222"
+Issues = "https://github.com/lavovaLampa/pyft4222/issues"
+
+[tool.hatch.build.targets.wheel]
+artifacts = [
+    "*.so",
+    ".dll",
+    "*.dylib"
+]
 
 [tool.pytest.init_options]
 minversion = "6.0"
 testpaths = "tests"
-addopts = "--import-mode=importlib"
+# addopts = "--import-mode=importlib"
