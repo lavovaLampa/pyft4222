@@ -1,5 +1,6 @@
-from koda import Err, Ok
 import pyft4222 as ft
+from pyft4222.gpio import Gpio
+from pyft4222.result import Err, Ok
 from pyft4222.stream import InterfaceType
 from pyft4222.wrapper.gpio import Direction, PortId
 
@@ -21,7 +22,7 @@ match result:
                 # The handle is automatically uninitialized at the end of the scope
                 with handle.init_gpio(
                     (
-                        Direction.OUTPUT,
+                        Direction.INPUT,
                         Direction.INPUT,
                         Direction.OUTPUT,
                         Direction.OUTPUT,

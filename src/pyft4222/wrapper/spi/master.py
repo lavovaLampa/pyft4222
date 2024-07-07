@@ -12,7 +12,7 @@ from ctypes import (
 from enum import IntEnum, IntFlag, auto
 from typing import Literal, NewType, Optional, Union, overload
 
-from koda import Err, Ok, Result
+from pyft4222.result import Err, Ok, Result
 
 from .. import Ft4222Exception, Ft4222Status, FtHandle
 from ..dll_loader import ftlib

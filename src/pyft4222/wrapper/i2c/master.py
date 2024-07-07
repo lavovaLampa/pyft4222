@@ -2,7 +2,7 @@ from ctypes import POINTER, byref, c_char_p, c_uint8, c_uint16, c_uint32, c_void
 from enum import IntFlag
 from typing import NewType
 
-from koda import Err, Ok, Result
+from pyft4222.result import Err, Ok, Result
 
 from .. import Ft4222Exception, Ft4222Status, FtHandle
 from ..dll_loader import ftlib

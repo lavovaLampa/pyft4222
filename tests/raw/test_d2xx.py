@@ -1,7 +1,6 @@
-from koda import Ok
-
 import pyft4222.wrapper.ftd2xx as ftd
 from pyft4222.wrapper import FtHandle
+from pyft4222.result import Ok
 
 from ..fixtures import *
 
@@ -14,8 +13,8 @@ def test_list_devices() -> None:
 class TestOpenFunctions:
     def test_device_info_detail(self, valid_dev: ftd.DeviceInfo):
         dev_info = ftd.get_device_info_detail(valid_dev.idx)
-        assert dev_info is not None
-        assert dev_info.dev_type in FT4222_DEV_TYPES
+        assert isinstance(dev_info, Ok)
+        assert dev_info.val.dev_type in FT4222_DEV_TYPES
 
     def test_open_by_idx(self, valid_dev_idx: int):
         handle = ftd.open_by_idx(valid_dev_idx)

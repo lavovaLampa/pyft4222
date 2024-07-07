@@ -2,8 +2,8 @@ from enum import Enum, auto
 from typing import Final, Generator, Mapping, Tuple
 
 import pytest
-from koda import Ok
 
+from pyft4222.result import Ok
 from pyft4222.wrapper import FtHandle
 from pyft4222.wrapper import ftd2xx as ftd
 

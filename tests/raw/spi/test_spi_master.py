@@ -2,8 +2,8 @@ import itertools
 from typing import Final, Tuple
 
 import pytest
-from koda import Ok
 
+from pyft4222.result import Ok
 from pyft4222.wrapper.common import FtHandle, uninitialize
 from pyft4222.wrapper.spi import master as spi_ctrl
 from tests.fixtures import open_serial_io_handle

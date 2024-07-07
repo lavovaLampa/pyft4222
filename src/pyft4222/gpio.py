@@ -1,5 +1,3 @@
-from typing import Generic, List
-
 from pyft4222.handle import GenericProtocolHandle, StreamHandleType
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, GpioTrigger
 from pyft4222.wrapper.gpio import (
@@ -14,20 +12,8 @@ from pyft4222.wrapper.gpio import (
 )
 
 
-class Gpio(
-    Generic[StreamHandleType],
-    GenericProtocolHandle[GpioHandle, "Gpio", StreamHandleType],
-):
+class Gpio(GenericProtocolHandle[GpioHandle, StreamHandleType]):
     """A class encapsulating GPIO functions."""
-
-    def __init__(self, ft_handle: GpioHandle, stream_handle: StreamHandleType):
-        """Initialize the class with given FT4222 handle and a mode class type.
-
-        Args:
-            ft_handle:      FT4222 handle initialized in any SPI Master mode
-            stream_handle:  Calling stream mode handle. Used in 'uninitialize()' method.
-        """
-        super().__init__(ft_handle, stream_handle)
 
     def read(self, port_id: PortId) -> bool:
         """Read state of the given GPIO port.
@@ -41,12 +27,12 @@ class Gpio(
         Returns:
             bool:               Port state (True -> '1', False -> '0')
         """
-        if self._handle is not None:
-            return read(self._handle, port_id)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
+
+        return read(self._handle, port_id)
 
     def write(self, port_id: PortId, state: bool) -> None:
         """Set state of the given GPIO port.
@@ -58,12 +44,12 @@ class Gpio(
         Raises:
             Ft4222Exception:    In case of unexpected error
         """
-        if self._handle is not None:
-            write(self._handle, port_id, state)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
+
+        write(self._handle, port_id, state)
 
     def set_input_trigger(self, port_id: PortId, triggers: GpioTrigger) -> None:
         """Set software trigger conditions for the selected GPIO port.
@@ -75,12 +61,12 @@ class Gpio(
         Raises:
             Ft4222Exception:    In case of unexpected error
         """
-        if self._handle is not None:
-            set_input_trigger(self._handle, port_id, triggers)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
+
+        set_input_trigger(self._handle, port_id, triggers)
 
     def get_queued_trigger_event_count(self, port_id: PortId) -> int:
         """Get the size of trigger event queue.
@@ -94,16 +80,16 @@ class Gpio(
         Returns:
             int:                Number of pending events in the event queue
         """
-        if self._handle is not None:
-            return get_trigger_status(self._handle, port_id)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
 
+        return get_trigger_status(self._handle, port_id)
+
     def read_trigger_queue(
         self, port_id: PortId, event_read_count: int
-    ) -> List[GpioTrigger]:
+    ) -> list[GpioTrigger]:
         """Read events from the trigger event queue.
 
         Args:
@@ -114,14 +100,14 @@ class Gpio(
             Ft4222Exception:    In case of unexpected error
 
         Returns:
-            List[GpioTrigger]:  List of trigger events
+            list[GpioTrigger]:  List of trigger events
         """
-        if self._handle is not None:
-            return read_trigger_queue(self._handle, port_id, event_read_count)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
+
+        return read_trigger_queue(self._handle, port_id, event_read_count)
 
     def set_waveform_mode(self, enable: bool) -> None:
         """Enable or disable the waveform mode.
@@ -134,9 +120,9 @@ class Gpio(
         Raises:
             Ft4222Exception:    In case of unexpected error
         """
-        if self._handle is not None:
-            set_waveform_mode(self._handle, enable)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "GPIO has been uninitialized!"
             )
+
+        set_waveform_mode(self._handle, enable)
