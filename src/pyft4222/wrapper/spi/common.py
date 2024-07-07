@@ -1,12 +1,11 @@
+from ctypes import c_uint, c_uint8, c_void_p
 from typing import Final, Literal, Set, Union
-from ctypes import c_void_p, c_uint8, c_uint
 
-from .slave import SpiSlaveHandle
-from .master import SpiMasterHandle
-
-from . import DriveStrength
-from ..dll_loader import ftlib
 from .. import Ft4222Exception, Ft4222Status
+from ..dll_loader import ftlib
+from . import DriveStrength
+from .master import SpiMasterHandle
+from .slave import SpiSlaveHandle
 
 SpiHandle = Union[SpiMasterHandle, SpiSlaveHandle]
 

@@ -44,19 +44,20 @@ class SpiMasterCommon(SpiCommon[SpiMasterHandleType, StreamHandleType], ABC):
     @overload
     def set_io_mode(
         self, io_mode: Literal[IoMode.SINGLE]
-    ) -> "SpiMasterSingle[StreamHandleType]": ...
+    ) -> "SpiMasterSingle[StreamHandleType]":
+        ...
 
     @overload
     def set_io_mode(
         self, io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
-    ) -> "SpiMasterMulti[StreamHandleType]": ...
+    ) -> "SpiMasterMulti[StreamHandleType]":
+        ...
 
     @overload
     def set_io_mode(
         self, io_mode: IoMode
-    ) -> Union[
-        "SpiMasterSingle[StreamHandleType]", "SpiMasterMulti[StreamHandleType]"
-    ]: ...
+    ) -> Union["SpiMasterSingle[StreamHandleType]", "SpiMasterMulti[StreamHandleType]"]:
+        ...
 
     def set_io_mode(
         self, io_mode: IoMode

@@ -208,7 +208,7 @@ def read_trigger_queue(
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return list(map(GpioTrigger, event_buffer[: events_read.value])) # type: ignore
+    return list(map(GpioTrigger, event_buffer[: events_read.value]))  # type: ignore
 
 
 def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:

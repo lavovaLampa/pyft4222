@@ -1,6 +1,7 @@
 from abc import ABC
 from types import TracebackType
 from typing import Generic, Optional, Type, TypeVar
+
 from typing_extensions import Self
 
 from pyft4222.result import Ok
@@ -215,11 +216,9 @@ class GenericHandle(Generic[HandleType], ABC):
                 Ft4222Status.DEVICE_NOT_OPENED, "This handle is closed!"
             )
 
-        result = get_device_info(self._handle)
-        if isinstance(result, Ok):
-            return result.val
-        else:
-            raise Ft4222Exception(Ft4222Status.OTHER_ERROR, f"{result.err}")
+        return get_device_info(self._handle).unwrap(
+            lambda err: Ft4222Exception(Ft4222Status.OTHER_ERROR, f"{err}")
+        )
 
     if OS_TYPE == "Windows":
 

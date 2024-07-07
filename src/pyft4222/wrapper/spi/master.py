@@ -280,7 +280,7 @@ def single_read(
         bytes:              Read data (length can be lower than requested)
     """
     assert (
-        0 < read_byte_count < (2 ** 16)
+        0 < read_byte_count < (2**16)
     ), "Number of bytes to read must be positive and less than 2^16"
 
     buffer = (c_uint8 * read_byte_count)()
@@ -313,7 +313,7 @@ def single_write(
         int:                Number of transmitted bytes
     """
     assert (
-        0 < len(write_data) < (2 ** 16)
+        0 < len(write_data) < (2**16)
     ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
@@ -348,7 +348,7 @@ def single_read_write(
         bytes:              Received data
     """
     assert (
-        0 < len(write_data) < (2 ** 16)
+        0 < len(write_data) < (2**16)
     ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
@@ -397,13 +397,13 @@ def multi_read_write(
         bytes:                      Read data (if any)
     """
     assert (
-        0 <= single_write_byte_count < (2 ** 4)
+        0 <= single_write_byte_count < (2**4)
     ), "Number of single-write bytes must be non-negative and less than 16"
     assert (
-        0 <= multi_write_byte_count < (2 ** 16)
+        0 <= multi_write_byte_count < (2**16)
     ), "Number of multi-write bytes must be non-negative and less than 2^16 (65 536)"
     assert (
-        0 <= multi_read_byte_count < (2 ** 16)
+        0 <= multi_read_byte_count < (2**16)
     ), "Number of multi-read bytes must be non-negative and less than 2^16 (65 536)"
     assert (
         single_write_byte_count + multi_write_byte_count + multi_read_byte_count
@@ -414,7 +414,7 @@ def multi_read_write(
         ) == 0, "Number of bytes to write must be zero in case the write data are None"
     else:
         assert len(write_data) < (
-            2 ** 16
+            2**16
         ), "Data to be written must have size less than 2^16 bytes"
         assert (single_write_byte_count + multi_write_byte_count) <= len(
             write_data

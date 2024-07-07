@@ -11,7 +11,6 @@ from pyft4222.wrapper import ftd2xx as ftd
 from pyft4222.wrapper import gpio as wgpio
 from pyft4222.wrapper.common import uninitialize
 
-
 _DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
     wgpio.Direction.INPUT,
     wgpio.Direction.INPUT,
@@ -120,10 +119,10 @@ def get_device_info_detail(dev_idx: int) -> Result[ftd.DeviceInfo, FtStatus]:
         Result[DeviceInfo, FtError]:    Structure containing information
         about the device
     """
-    if _is_dev_idx_valid(dev_idx):
-        return ftd.get_device_info_detail(dev_idx)
-    else:
+    if not _is_dev_idx_valid(dev_idx):
         return Err(FtStatus.INVALID_ARGS)
+
+    return ftd.get_device_info_detail(dev_idx)
 
 
 def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtStatus]:
@@ -142,10 +141,10 @@ def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtStatus]:
         Ft4222Handle:   Handle encapsulating modes available in the
         current device configuration mode
     """
-    if _is_dev_idx_valid(dev_idx):
-        return ftd.open_by_idx(dev_idx).flat_map(_get_mode_handle)
-    else:
+    if not _is_dev_idx_valid(dev_idx):
         return Err(FtStatus.INVALID_ARGS)
+
+    return ftd.open_by_idx(dev_idx).flat_map(_get_mode_handle)
 
 
 def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtStatus]:
