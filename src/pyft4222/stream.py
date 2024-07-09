@@ -11,7 +11,7 @@ Important:
 """
 
 from enum import Enum, auto
-from typing import Literal
+from typing import ClassVar, Final, Literal
 
 from pyft4222.gpio import Gpio
 from pyft4222.handle import GenericHandle
@@ -58,6 +58,8 @@ class InterfaceType(Enum):
 
 class ProtocolStream(GenericHandle[FtHandle]):
     """A class representing an open FT4222 stream in "Data Stream" mode."""
+
+    tag: ClassVar[Literal[InterfaceType.DATA_STREAM]] = InterfaceType.DATA_STREAM
 
     def init_single_spi_master(
         self,
@@ -255,6 +257,8 @@ class ProtocolStream(GenericHandle[FtHandle]):
 class GpioStream(GenericHandle[FtHandle]):
     """A class representing an open FT4222 stream in "GPIO" mode."""
 
+    tag: ClassVar[Literal[InterfaceType.GPIO]] = InterfaceType.GPIO
+
     def init_gpio(self, dirs: gpio.DirTuple) -> Gpio["GpioStream"]:
         """Initialize GPIO.
 
@@ -278,6 +282,8 @@ class GpioStream(GenericHandle[FtHandle]):
 
 class SpiStream(GenericHandle[FtHandle]):
     """A class representing an open FT4222 stream in "SPI Master" mode."""
+
+    tag: ClassVar[Literal[InterfaceType.SPI_MASTER]] = InterfaceType.SPI_MASTER
 
     def init_single_spi_master(
         self,

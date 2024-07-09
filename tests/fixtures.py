@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from collections.abc import Generator, Mapping
 from enum import Enum, auto
 from typing import Final

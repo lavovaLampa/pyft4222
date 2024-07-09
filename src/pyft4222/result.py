@@ -34,6 +34,16 @@ class Err(Generic[T]):
         return self
 
     def unwrap(self, fun: Callable[[T], Exception] = ValueError) -> NoReturn:
+        """Try to unwrap and return contained value.
+
+        In case of error, raise given exception.
+
+        Args:
+            fun:    Function that will receive wrapped error and return an exception
+
+        Return:
+            Wrapped value (if any)
+        """
         raise fun(self.err)
 
     __rshift__ = flat_map
