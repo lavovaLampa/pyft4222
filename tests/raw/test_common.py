@@ -1,7 +1,6 @@
-from ..fixtures import *
-
 import pyft4222.wrapper.common as ft
 
+from ..fixtures import *
 
 # TESTS
 

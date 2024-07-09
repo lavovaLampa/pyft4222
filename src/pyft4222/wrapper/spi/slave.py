@@ -1,16 +1,17 @@
+from __future__ import annotations
+
 from ctypes import POINTER, byref, c_char_p, c_uint, c_uint8, c_uint16, c_void_p
 from enum import IntEnum, IntFlag, auto
-from typing import Literal, NewType, Union, overload
+from typing import Literal, NewType, TypeAlias, overload
 
 from pyft4222.result import Err, Ok, Result
-
-from .. import Ft4222Exception, Ft4222Status, FtHandle
-from ..dll_loader import ftlib
-from . import ClkPhase, ClkPolarity
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
+from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 
 SpiSlaveRawHandle = NewType("SpiSlaveRawHandle", FtHandle)
 SpiSlaveProtoHandle = NewType("SpiSlaveProtoHandle", FtHandle)
-SpiSlaveHandle = Union[SpiSlaveRawHandle, SpiSlaveProtoHandle]
+SpiSlaveHandle: TypeAlias = SpiSlaveRawHandle | SpiSlaveProtoHandle
 
 
 class IoProtocol(IntEnum):
@@ -65,10 +66,10 @@ def init(ft_handle: FtHandle) -> Result[SpiSlaveProtoHandle, Ft4222Status]:
     """
     result: Ft4222Status = _init(ft_handle)
 
-    if result == Ft4222Status.OK:
-        return Ok(SpiSlaveProtoHandle(ft_handle))
-    else:
+    if result != Ft4222Status.OK:
         return Err(result)
+
+    return Ok(SpiSlaveProtoHandle(ft_handle))
 
 
 @overload
@@ -88,17 +89,17 @@ def init_ex(
 @overload
 def init_ex(
     ft_handle: FtHandle, protocol: IoProtocol
-) -> Union[
-    Result[SpiSlaveProtoHandle, Ft4222Status], Result[SpiSlaveRawHandle, Ft4222Status]
-]:
+) -> (
+    Result[SpiSlaveProtoHandle, Ft4222Status] | Result[SpiSlaveRawHandle, Ft4222Status]
+):
     ...
 
 
 def init_ex(
     ft_handle: FtHandle, protocol: IoProtocol
-) -> Union[
-    Result[SpiSlaveProtoHandle, Ft4222Status], Result[SpiSlaveRawHandle, Ft4222Status]
-]:
+) -> (
+    Result[SpiSlaveProtoHandle, Ft4222Status] | Result[SpiSlaveRawHandle, Ft4222Status]
+):
     """Initialize the FT4222H as an SPI slave.
 
     Similar to 'spi.slave.init()' function, but with parameters to define the transmission protocol.
@@ -112,13 +113,13 @@ def init_ex(
     """
     result: Ft4222Status = _init_ex(ft_handle, protocol)
 
-    if result == Ft4222Status.OK:
-        if protocol == IoProtocol.NO_PROTOCOL:
-            return Ok(SpiSlaveRawHandle(ft_handle))
-        else:
-            return Ok(SpiSlaveProtoHandle(ft_handle))
-    else:
+    if result != Ft4222Status.OK:
         return Err(result)
+
+    if protocol == IoProtocol.NO_PROTOCOL:
+        return Ok(SpiSlaveRawHandle(ft_handle))
+    else:
+        return Ok(SpiSlaveProtoHandle(ft_handle))
 
 
 def set_mode(

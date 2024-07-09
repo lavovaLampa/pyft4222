@@ -4,10 +4,9 @@ from functools import reduce
 
 import pytest
 
-from pyft4222.result import Err
-from pyft4222.wrapper import Ft4222Status, FtHandle, GpioTrigger
+from pyft4222.result import Err, Ok
+from pyft4222.wrapper import Ft4222Status, FtHandle, GpioTrigger, gpio
 from pyft4222.wrapper import common as ft_common
-from pyft4222.wrapper import gpio
 
 from ..fixtures import *
 

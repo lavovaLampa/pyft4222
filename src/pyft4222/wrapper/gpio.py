@@ -3,9 +3,8 @@ from enum import IntEnum, auto
 from typing import Final, NewType
 
 from pyft4222.result import Err, Ok, Result
-
-from . import Ft4222Exception, Ft4222Status, FtHandle, GpioTrigger
-from .dll_loader import ftlib
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle, GpioTrigger
+from pyft4222.wrapper.dll_loader import ftlib
 
 GpioHandle = NewType("GpioHandle", FtHandle)
 
@@ -77,10 +76,10 @@ def init(ft_handle: FtHandle, dirs: DirTuple) -> Result[GpioHandle, Ft4222Status
 
     result: Ft4222Status = _init(ft_handle, dir_array)
 
-    if result == Ft4222Status.OK:
-        return Ok(GpioHandle(ft_handle))
-    else:
+    if result != Ft4222Status.OK:
         return Err(result)
+
+    return Ok(GpioHandle(ft_handle))
 
 
 def read(ft_handle: GpioHandle, port_id: PortId) -> bool:

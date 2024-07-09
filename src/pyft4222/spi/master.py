@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC
-from typing import Generic, Literal, Optional, TypeVar, Union, overload
+from typing import Generic, Literal, TypeVar, overload
 
 from pyft4222.handle import StreamHandleType
 from pyft4222.spi.common import SpiCommon
@@ -44,24 +46,24 @@ class SpiMasterCommon(SpiCommon[SpiMasterHandleType, StreamHandleType], ABC):
     @overload
     def set_io_mode(
         self, io_mode: Literal[IoMode.SINGLE]
-    ) -> "SpiMasterSingle[StreamHandleType]":
+    ) -> SpiMasterSingle[StreamHandleType]:
         ...
 
     @overload
     def set_io_mode(
         self, io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
-    ) -> "SpiMasterMulti[StreamHandleType]":
+    ) -> SpiMasterMulti[StreamHandleType]:
         ...
 
     @overload
     def set_io_mode(
         self, io_mode: IoMode
-    ) -> Union["SpiMasterSingle[StreamHandleType]", "SpiMasterMulti[StreamHandleType]"]:
+    ) -> SpiMasterSingle[StreamHandleType] | SpiMasterMulti[StreamHandleType]:
         ...
 
     def set_io_mode(
         self, io_mode: IoMode
-    ) -> Union["SpiMasterSingle[StreamHandleType]", "SpiMasterMulti[StreamHandleType]"]:
+    ) -> SpiMasterSingle[StreamHandleType] | SpiMasterMulti[StreamHandleType]:
         """Set I/O mode of the SPI Master (i.e., single, dual, quad)
 
         Note:
@@ -118,7 +120,7 @@ class SpiMasterSingle(
                 Ft4222Status.DEVICE_NOT_OPENED, "SPI Master has been uninitialized!"
             )
 
-        result: bytes = bytes()
+        result: bytes = b""
 
         while read_byte_count > 0:
             read_len: int = min(read_byte_count, (2**16) - 1)
@@ -191,7 +193,7 @@ class SpiMasterSingle(
 
         write_len: int = len(write_data)
         offset: int = 0
-        result: bytes = bytes()
+        result: bytes = b""
 
         while write_len > 0:
             write_amount: int = min(write_len, (2**16) - 1)
@@ -214,8 +216,8 @@ class SpiMasterMulti(
 
     def multi_read_write(
         self,
-        single_write_data: Optional[bytes] = None,
-        multi_write_data: Optional[bytes] = None,
+        single_write_data: bytes | None = None,
+        multi_write_data: bytes | None = None,
         multi_read_byte_count: int = 0,
     ) -> bytes:
         """Write and read data from an SPI slave.
@@ -252,10 +254,10 @@ class SpiMasterMulti(
             bytes:              Read data
         """
         single_write_bytes: bytes = (
-            single_write_data if single_write_data is not None else bytes()
+            single_write_data if single_write_data is not None else b""
         )
         multi_write_bytes: bytes = (
-            multi_write_data if multi_write_data is not None else bytes()
+            multi_write_data if multi_write_data is not None else b""
         )
         write_data_cat: bytes = single_write_bytes + multi_write_bytes
 
@@ -286,4 +288,4 @@ class SpiMasterMulti(
         )
 
 
-SpiMaster = Union[SpiMasterSingle[StreamHandleType], SpiMasterMulti[StreamHandleType]]
+SpiMaster = SpiMasterSingle[StreamHandleType] | SpiMasterMulti[StreamHandleType]

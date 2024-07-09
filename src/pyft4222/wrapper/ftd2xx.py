@@ -14,9 +14,8 @@ from enum import IntEnum, IntFlag, auto
 from typing import Final, NamedTuple
 
 from pyft4222.result import Err, Ok, Result
-
-from . import OS_TYPE, FtException, FtHandle, FtStatus
-from .dll_loader import d2lib
+from pyft4222.wrapper import OS_TYPE, FtException, FtHandle, FtStatus
+from pyft4222.wrapper.dll_loader import d2lib
 
 # DLL function protoypes declaration
 
@@ -282,20 +281,20 @@ def get_device_info_detail(dev_idx: int) -> Result[DeviceInfo, FtStatus]:
         byref(handle),
     )
 
-    if result == FtStatus.OK:
-        return Ok(
-            DeviceInfo(
-                flags=DeviceFlags(flags.value),
-                dev_type=DeviceType(dev_type.value),
-                idx=idx.value,
-                loc_id=loc_id.value,
-                serial_number=serial_number.value.decode("utf-8"),
-                description=description.value.decode("utf-8"),
-                handle=FtHandle(handle),
-            )
-        )
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(
+        DeviceInfo(
+            flags=DeviceFlags(flags.value),
+            dev_type=DeviceType(dev_type.value),
+            idx=idx.value,
+            loc_id=loc_id.value,
+            serial_number=serial_number.value.decode("utf-8"),
+            description=description.value.decode("utf-8"),
+            handle=FtHandle(handle),
+        )
+    )
 
 
 def open_by_idx(dev_idx: int) -> Result[FtHandle, FtStatus]:
@@ -319,10 +318,10 @@ def open_by_idx(dev_idx: int) -> Result[FtHandle, FtStatus]:
     ft_handle = c_void_p()
     result: FtStatus = _open(dev_idx, byref(ft_handle))
 
-    if result == FtStatus.OK:
-        return Ok(FtHandle(ft_handle))
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(FtHandle(ft_handle))
 
 
 def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
@@ -343,10 +342,10 @@ def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
         serial_num.encode("utf-8"), _OpenExFlag.BY_SERIAL_NUMBER, byref(ft_handle)
     )
 
-    if result == FtStatus.OK:
-        return Ok(FtHandle(ft_handle))
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(FtHandle(ft_handle))
 
 
 def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
@@ -367,10 +366,10 @@ def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
         dev_description.encode("utf-8"), _OpenExFlag.BY_DESCRIPTION, byref(ft_handle)
     )
 
-    if result == FtStatus.OK:
-        return Ok(FtHandle(ft_handle))
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(FtHandle(ft_handle))
 
 
 # This function is not supported on Linux and Windows CE
@@ -398,10 +397,10 @@ if OS_TYPE != "Linux":
             location_id, _OpenExFlag.BY_LOCATION, byref(ft_handle)
         )
 
-        if result == FtStatus.OK:
-            return Ok(FtHandle(ft_handle))
-        else:
+        if result != FtStatus.OK:
             return Err(result)
+
+        return Ok(FtHandle(ft_handle))
 
 
 def close_handle(ft_handle: FtHandle) -> None:
@@ -445,17 +444,17 @@ def get_device_info(ft_handle: FtHandle) -> Result[ShortDeviceInfo, FtStatus]:
         ft_handle, byref(dev_type), byref(dev_id), serial_number, description, None
     )
 
-    if result == FtStatus.OK:
-        return Ok(
-            ShortDeviceInfo(
-                dev_type=DeviceType(dev_type.value),
-                dev_idx=dev_id.value,
-                serial_number=serial_number.value.decode("utf-8"),
-                description=description.value.decode("utf-8"),
-            )
-        )
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(
+        ShortDeviceInfo(
+            dev_type=DeviceType(dev_type.value),
+            dev_idx=dev_id.value,
+            serial_number=serial_number.value.decode("utf-8"),
+            description=description.value.decode("utf-8"),
+        )
+    )
 
 
 if OS_TYPE == "Windows":

@@ -11,7 +11,7 @@ Important:
 """
 
 from enum import Enum, auto
-from typing import Literal, Union
+from typing import Literal
 
 from pyft4222.gpio import Gpio
 from pyft4222.handle import GenericHandle
@@ -189,9 +189,8 @@ class ProtocolStream(GenericHandle[FtHandle]):
 
     def init_proto_spi_slave(
         self,
-        proto_type: Union[
-            Literal[spi_slave.IoProtocol.NO_ACK],
-            Literal[spi_slave.IoProtocol.WITH_PROTOCOL],
+        proto_type: Literal[
+            spi_slave.IoProtocol.NO_ACK, spi_slave.IoProtocol.WITH_PROTOCOL
         ],
     ) -> SpiSlaveProto["ProtocolStream"]:
         """Initialize SPI Slave in selected protocol mode.

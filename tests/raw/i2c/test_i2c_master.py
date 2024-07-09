@@ -5,7 +5,6 @@ import pytest
 from pyft4222.result import Ok
 from pyft4222.wrapper.common import FtHandle
 from pyft4222.wrapper.i2c import master as i2c_master
-from tests.fixtures import open_serial_io_handle
 
 _TEST_DEVICE_ADDR: Final[int] = 0x40
 

@@ -1,6 +1,6 @@
 import pyft4222.wrapper.ftd2xx as ftd
-from pyft4222.wrapper import FtHandle
 from pyft4222.result import Ok
+from pyft4222.wrapper import FtHandle
 
 from ..fixtures import *
 

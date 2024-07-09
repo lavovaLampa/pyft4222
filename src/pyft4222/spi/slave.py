@@ -114,7 +114,6 @@ class SpiSlaveProto(SpiSlaveCommon[SpiSlaveProtoHandle, StreamHandleType]):
             "Unfortunately this function is yet to be implemented!"
         )
         """TODO: Implement and document"""
-        pass
 
 
 class SpiSlaveRaw(SpiSlaveCommon[SpiSlaveRawHandle, StreamHandleType]):

@@ -3,9 +3,8 @@ from enum import IntFlag
 from typing import NewType
 
 from pyft4222.result import Err, Ok, Result
-
-from .. import Ft4222Exception, Ft4222Status, FtHandle
-from ..dll_loader import ftlib
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
+from pyft4222.wrapper.dll_loader import ftlib
 
 I2cMasterHandle = NewType("I2cMasterHandle", FtHandle)
 
@@ -108,10 +107,10 @@ def init(ft_handle: FtHandle, kbps: int) -> Result[I2cMasterHandle, Ft4222Status
 
     result: Ft4222Status = _init(ft_handle, kbps)
 
-    if result == Ft4222Status.OK:
-        return Ok(I2cMasterHandle(ft_handle))
-    else:
+    if result != Ft4222Status.OK:
         return Err(result)
+
+    return Ok(I2cMasterHandle(ft_handle))
 
 
 def read(ft_handle: I2cMasterHandle, dev_address: int, read_byte_count: int) -> bytes:

@@ -2,7 +2,9 @@
 
 """
 
-from typing import Callable, Final, Type, Union
+from __future__ import annotations
+
+from typing import Callable, Final, TypeAlias
 
 from pyft4222.result import Err, Ok, Result
 from pyft4222.stream import GpioStream, ProtocolStream, SpiStream
@@ -19,7 +21,7 @@ _DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
 )
 
 
-def _disambiguate_modes(handle: FtHandle) -> Union[GpioStream, SpiStream]:
+def _disambiguate_modes(handle: FtHandle) -> GpioStream | SpiStream:
     """Disambiguate between chip configuration mode 1 and 2.
 
     Args:
@@ -38,14 +40,14 @@ def _disambiguate_modes(handle: FtHandle) -> Union[GpioStream, SpiStream]:
         return SpiStream(handle)
 
 
-_Ft4222HandleType = Union[
-    Type[ProtocolStream],
-    Type[GpioStream],
-    Type[SpiStream],
-    Callable[[FtHandle], Union[GpioStream, SpiStream]],
-]
+_Ft4222HandleType: TypeAlias = (
+    type[ProtocolStream]
+    | type[GpioStream]
+    | type[SpiStream]
+    | Callable[[FtHandle], GpioStream | SpiStream]
+)
 
-Ft4222Handle = Union[ProtocolStream, GpioStream, SpiStream]
+Ft4222Handle: TypeAlias = ProtocolStream | GpioStream | SpiStream
 
 _MODE_MAP: Final[dict[tuple[str, ftd.DeviceType], _Ft4222HandleType]] = {
     # Mode 0
@@ -72,14 +74,12 @@ def _get_mode_handle(ft_handle: FtHandle) -> Result[Ft4222Handle, FtStatus]:
     """
     dev_details = ftd.get_device_info(ft_handle)
 
-    if isinstance(dev_details, Ok):
-        handle_type = _MODE_MAP.get(
-            (dev_details.val.description, dev_details.val.dev_type)
-        )
-        assert handle_type is not None
-        return Ok(handle_type(ft_handle))
-    else:
+    if isinstance(dev_details, Err):
         return dev_details
+
+    handle_type = _MODE_MAP.get((dev_details.val.description, dev_details.val.dev_type))
+    assert handle_type is not None
+    return Ok(handle_type(ft_handle))
 
 
 def _is_dev_idx_valid(dev_idx: int) -> bool:

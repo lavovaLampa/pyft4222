@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 from abc import ABC
-from types import TracebackType
-from typing import Generic, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from typing_extensions import Self
 
-from pyft4222.result import Ok
 from pyft4222.wrapper import (
     OS_TYPE,
     Ft4222Exception,
@@ -35,6 +35,9 @@ from pyft4222.wrapper.ftd2xx import (
     reset_device,
 )
 
+if TYPE_CHECKING:
+    from types import TracebackType
+
 if OS_TYPE == "Windows":
     from pyft4222.wrapper.ftd2xx import get_driver_version
 
@@ -45,7 +48,7 @@ ContextType = TypeVar("ContextType")
 class GenericHandle(Generic[HandleType], ABC):
     """An abstract class encapsulating common FT4222 functions."""
 
-    _handle: Optional[HandleType]
+    _handle: HandleType | None
 
     def __init__(self, ft_handle: HandleType):
         """Initialize GenericHandle with given FtHandle.
@@ -60,9 +63,9 @@ class GenericHandle(Generic[HandleType], ABC):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool:
         if self._handle is not None:
             self.close()
@@ -311,9 +314,9 @@ class GenericProtocolHandle(
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool:
         if self._handle is not None:
             self.uninitialize()
