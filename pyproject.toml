@@ -38,4 +38,6 @@ artifacts = ["*.so", ".dll", "*.dylib"]
 [tool.pytest.init_options]
 minversion = "6.0"
 testpaths = "tests"
-# addopts = "--import-mode=importlib"
+
+[tool.isort]
+profile = "black"
