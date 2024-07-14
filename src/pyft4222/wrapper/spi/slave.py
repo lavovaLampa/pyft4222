@@ -75,15 +75,13 @@ def init(ft_handle: FtHandle) -> Result[SpiSlaveProtoHandle, Ft4222Status]:
 @overload
 def init_ex(
     ft_handle: FtHandle, protocol: Literal[IoProtocol.NO_PROTOCOL]
-) -> Result[SpiSlaveRawHandle, Ft4222Status]:
-    ...
+) -> Result[SpiSlaveRawHandle, Ft4222Status]: ...
 
 
 @overload
 def init_ex(
     ft_handle: FtHandle, protocol: Literal[IoProtocol.WITH_PROTOCOL, IoProtocol.NO_ACK]
-) -> Result[SpiSlaveProtoHandle, Ft4222Status]:
-    ...
+) -> Result[SpiSlaveProtoHandle, Ft4222Status]: ...
 
 
 @overload
@@ -91,8 +89,7 @@ def init_ex(
     ft_handle: FtHandle, protocol: IoProtocol
 ) -> (
     Result[SpiSlaveProtoHandle, Ft4222Status] | Result[SpiSlaveRawHandle, Ft4222Status]
-):
-    ...
+): ...
 
 
 def init_ex(

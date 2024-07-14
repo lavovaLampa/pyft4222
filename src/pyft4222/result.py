@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, NoReturn, Self, TypeAlias, TypeVar, Union
+from typing import Any, Callable, Generic, NoReturn, Self, TypeAlias, TypeVar
 
 E = TypeVar("E")
 R = TypeVar("R")
@@ -11,10 +13,10 @@ U = TypeVar("U")
 class Ok(Generic[T]):
     val: T
 
-    def map(self, fun: Callable[[T], R]) -> "Ok[R]":
+    def map(self, fun: Callable[[T], R]) -> Ok[R]:
         return Ok(fun(self.val))
 
-    def flat_map(self, fun: Callable[[T], "Result[U, R]"]) -> "Result[U, R]":
+    def flat_map(self, fun: Callable[[T], Result[U, R]]) -> Result[U, R]:
         return fun(self.val)
 
     def unwrap(self, fun: Callable[[U], Exception] = ValueError) -> T:
@@ -49,4 +51,4 @@ class Err(Generic[T]):
     __rshift__ = flat_map
 
 
-Result: TypeAlias = Union[Ok[R], Err[E]]
+Result: TypeAlias = Ok[R] | Err[E]

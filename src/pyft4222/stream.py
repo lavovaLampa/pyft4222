@@ -11,7 +11,7 @@ Important:
 """
 
 from enum import Enum, auto
-from typing import ClassVar, Final, Literal
+from typing import ClassVar, Literal
 
 from pyft4222.gpio import Gpio
 from pyft4222.handle import GenericHandle

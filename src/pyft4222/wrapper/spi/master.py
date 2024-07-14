@@ -128,8 +128,7 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap,
-) -> Result[SpiMasterSingleHandle, Ft4222Status]:
-    ...
+) -> Result[SpiMasterSingleHandle, Ft4222Status]: ...
 
 
 @overload
@@ -140,8 +139,7 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap,
-) -> Result[SpiMasterMultiHandle, Ft4222Status]:
-    ...
+) -> Result[SpiMasterMultiHandle, Ft4222Status]: ...
 
 
 @overload
@@ -155,8 +153,7 @@ def init(
 ) -> (
     Result[SpiMasterSingleHandle, Ft4222Status]
     | Result[SpiMasterMultiHandle, Ft4222Status]
-):
-    ...
+): ...
 
 
 def init(
@@ -219,20 +216,17 @@ def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None
 @overload
 def set_lines(
     ft_handle: SpiMasterHandle, io_mode: Literal[IoMode.SINGLE]
-) -> SpiMasterSingleHandle:
-    ...
+) -> SpiMasterSingleHandle: ...
 
 
 @overload
 def set_lines(
     ft_handle: SpiMasterHandle, io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
-) -> SpiMasterMultiHandle:
-    ...
+) -> SpiMasterMultiHandle: ...
 
 
 @overload
-def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
-    ...
+def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle: ...
 
 
 def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
