@@ -6,6 +6,8 @@ from pyft4222.result import Ok
 from pyft4222.wrapper.common import FtHandle
 from pyft4222.wrapper.i2c import slave as i2c_slave
 
+from ...fixtures import *
+
 _PERIPHERAL_ADDR: Final[int] = 0x10
 
 

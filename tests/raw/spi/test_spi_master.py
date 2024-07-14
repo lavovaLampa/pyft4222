@@ -7,6 +7,8 @@ from pyft4222.result import Ok
 from pyft4222.wrapper.common import FtHandle, uninitialize
 from pyft4222.wrapper.spi import master as spi_ctrl
 
+from ...fixtures import *
+
 _DEFAULT_CTRL_PARAMS: Final[
     Tuple[spi_ctrl.ClkDiv, spi_ctrl.ClkPolarity, spi_ctrl.ClkPhase, spi_ctrl.SsoMap]
 ] = (

@@ -7,6 +7,8 @@ from pyft4222.result import Ok
 from pyft4222.wrapper.common import FtHandle, uninitialize
 from pyft4222.wrapper.spi import slave as spi_periph
 
+from ...fixtures import *
+
 
 @pytest.fixture
 def spi_periph_raw_handle(
