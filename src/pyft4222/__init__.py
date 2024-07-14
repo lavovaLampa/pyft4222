@@ -2,18 +2,16 @@
 
 """
 
-from enum import Enum, auto
-from typing import Callable, Dict, Final, List, Tuple, Type, Union
+from __future__ import annotations
 
-from koda import Err, Ok, Result
+from typing import Callable, Final, TypeAlias
 
+from pyft4222.result import Err, Ok, Result
 from pyft4222.stream import GpioStream, ProtocolStream, SpiStream
-from pyft4222.wrapper import OS_TYPE, FtHandle
+from pyft4222.wrapper import OS_TYPE, FtHandle, FtStatus
 from pyft4222.wrapper import ftd2xx as ftd
 from pyft4222.wrapper import gpio as wgpio
 from pyft4222.wrapper.common import uninitialize
-
-VERSION: Final = "0.2.0"
 
 _DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
     wgpio.Direction.INPUT,
@@ -23,7 +21,7 @@ _DEFAULT_GPIO_DIRS: Final[wgpio.DirTuple] = (
 )
 
 
-def _disambiguate_modes(handle: FtHandle) -> Union[GpioStream, SpiStream]:
+def _disambiguate_modes(handle: FtHandle) -> GpioStream | SpiStream:
     """Disambiguate between chip configuration mode 1 and 2.
 
     Args:
@@ -42,16 +40,16 @@ def _disambiguate_modes(handle: FtHandle) -> Union[GpioStream, SpiStream]:
         return SpiStream(handle)
 
 
-_Ft4222HandleType = Union[
-    Type[ProtocolStream],
-    Type[GpioStream],
-    Type[SpiStream],
-    Callable[[FtHandle], Union[GpioStream, SpiStream]],
-]
+_Ft4222HandleType: TypeAlias = (
+    type[ProtocolStream]
+    | type[GpioStream]
+    | type[SpiStream]
+    | Callable[[FtHandle], GpioStream | SpiStream]
+)
 
-Ft4222Handle = Union[ProtocolStream, GpioStream, SpiStream]
+Ft4222Handle: TypeAlias = ProtocolStream | GpioStream | SpiStream
 
-_MODE_MAP: Final[Dict[Tuple[str, ftd.DeviceType], _Ft4222HandleType]] = {
+_MODE_MAP: Final[dict[tuple[str, ftd.DeviceType], _Ft4222HandleType]] = {
     # Mode 0
     ("FT4222 A", ftd.DeviceType.DEV_4222H_0): ProtocolStream,
     ("FT4222 B", ftd.DeviceType.DEV_4222H_0): GpioStream,
@@ -65,14 +63,7 @@ _MODE_MAP: Final[Dict[Tuple[str, ftd.DeviceType], _Ft4222HandleType]] = {
 }
 
 
-class FtError(Enum):
-    INVALID_MODE = auto()
-    INVALID_IDX = auto()
-    INVALID_HANDLE = auto()
-    UNKNOWN_FAILURE = auto()
-
-
-def _get_mode_handle(ft_handle: FtHandle) -> Result[Ft4222Handle, FtError]:
+def _get_mode_handle(ft_handle: FtHandle) -> Result[Ft4222Handle, FtStatus]:
     """Resolve and instantiate a correct device configuration class.
 
     Args:
@@ -82,17 +73,16 @@ def _get_mode_handle(ft_handle: FtHandle) -> Result[Ft4222Handle, FtError]:
         Result[Ft4222Handle, FtError]:
     """
     dev_details = ftd.get_device_info(ft_handle)
-    if dev_details is not None:
-        handle_type = _MODE_MAP.get((dev_details.description, dev_details.dev_type))
-        if handle_type is not None:
-            return Ok(handle_type(ft_handle))
-        else:
-            return Err(FtError.INVALID_MODE)
-    else:
-        return Err(FtError.INVALID_HANDLE)
+
+    if isinstance(dev_details, Err):
+        return dev_details
+
+    handle_type = _MODE_MAP.get((dev_details.val.description, dev_details.val.dev_type))
+    assert handle_type is not None
+    return Ok(handle_type(ft_handle))
 
 
-def _validate_dev_idx(dev_idx: int) -> bool:
+def _is_dev_idx_valid(dev_idx: int) -> bool:
     """Validate given D2XX device index.
 
     Args:
@@ -104,19 +94,19 @@ def _validate_dev_idx(dev_idx: int) -> bool:
     return 0 <= dev_idx < (2**31)
 
 
-def get_device_info_list() -> List[ftd.DeviceInfo]:
+def get_device_info_list() -> list[ftd.DeviceInfo]:
     """Get list containing information about available (connected) D2XX devices.
 
     Raises:
         FtException:        In case of unexpected error
 
     Returns:
-        List[DeviceInfo]:   List containing details about connected D2XX devices
+        list[DeviceInfo]:   List containing details about connected D2XX devices
     """
     return ftd.get_device_info_list()
 
 
-def get_device_info_detail(dev_idx: int) -> Result[ftd.DeviceInfo, FtError]:
+def get_device_info_detail(dev_idx: int) -> Result[ftd.DeviceInfo, FtStatus]:
     """Get information about device at the given index (if any).
 
     Args:
@@ -129,15 +119,13 @@ def get_device_info_detail(dev_idx: int) -> Result[ftd.DeviceInfo, FtError]:
         Result[DeviceInfo, FtError]:    Structure containing information
         about the device
     """
-    if _validate_dev_idx(dev_idx):
-        result = ftd.get_device_info_detail(dev_idx)
-        if result is not None:
-            return Ok(result)
+    if not _is_dev_idx_valid(dev_idx):
+        return Err(FtStatus.INVALID_ARGS)
 
-    return Err(FtError.INVALID_IDX)
+    return ftd.get_device_info_detail(dev_idx)
 
 
-def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtError]:
+def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtStatus]:
     """Open FT4222 device stream using 'device index'.
 
     The device index is 0-based and can be found by calling
@@ -153,17 +141,13 @@ def open_by_idx(dev_idx: int) -> Result[Ft4222Handle, FtError]:
         Ft4222Handle:   Handle encapsulating modes available in the
         current device configuration mode
     """
-    if _validate_dev_idx(dev_idx):
-        ft_handle = ftd.open_by_idx(dev_idx)
-        if isinstance(ft_handle, Ok):
-            return _get_mode_handle(ft_handle.val)
-        else:
-            return Err(FtError.INVALID_HANDLE)
-    else:
-        return Err(FtError.INVALID_IDX)
+    if not _is_dev_idx_valid(dev_idx):
+        return Err(FtStatus.INVALID_ARGS)
+
+    return ftd.open_by_idx(dev_idx).flat_map(_get_mode_handle)
 
 
-def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
+def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtStatus]:
     """Open FT4222 device stream using 'device serial number'.
 
     Args:
@@ -172,14 +156,10 @@ def open_by_serial(serial_num: str) -> Result[Ft4222Handle, FtError]:
     Returns:
         Result[Ft4222Handle, FtError]:
     """
-    ft_handle = ftd.open_by_serial(serial_num)
-    if isinstance(ft_handle, Ok):
-        return _get_mode_handle(ft_handle.val)
-    else:
-        return Err(FtError.INVALID_HANDLE)
+    return ftd.open_by_serial(serial_num).flat_map(_get_mode_handle)
 
 
-def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtError]:
+def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtStatus]:
     """Open FT4222 device stream using 'device description'.
 
     Args:
@@ -188,16 +168,12 @@ def open_by_description(dev_description: str) -> Result[Ft4222Handle, FtError]:
     Returns:
         Result[Ft4222Handle, FtError]:
     """
-    ft_handle = ftd.open_by_description(dev_description)
-    if isinstance(ft_handle, Ok):
-        return _get_mode_handle(ft_handle.val)
-    else:
-        return Err(FtError.INVALID_HANDLE)
+    return ftd.open_by_description(dev_description).flat_map(_get_mode_handle)
 
 
 if OS_TYPE != "Linux":
 
-    def open_by_location(location_id: int) -> Result[Ft4222Handle, FtError]:
+    def open_by_location(location_id: int) -> Result[Ft4222Handle, FtStatus]:
         """Open FT4222 device stream using 'device USB location ID'.
 
         Args:
@@ -206,8 +182,4 @@ if OS_TYPE != "Linux":
         Returns:
             Result[Ft4222Handle, FtError]:
         """
-        ft_handle = ftd.open_by_location(location_id)
-        if isinstance(ft_handle, Ok):
-            return _get_mode_handle(ft_handle.val)
-        else:
-            return Err(FtError.INVALID_HANDLE)
+        return ftd.open_by_location(location_id).flat_map(_get_mode_handle)

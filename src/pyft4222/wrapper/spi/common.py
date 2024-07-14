@@ -1,19 +1,19 @@
-from typing import Final, Literal, Set, Union
-from ctypes import c_void_p, c_uint8, c_uint
+from __future__ import annotations
 
-from .slave import SpiSlaveHandle
-from .master import SpiMasterHandle
+from ctypes import c_uint, c_uint8, c_void_p
+from typing import Final, Literal, TypeAlias
 
-from . import DriveStrength
-from ..dll_loader import ftlib
-from .. import Ft4222Exception, Ft4222Status
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status
+from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.spi import DriveStrength
+from pyft4222.wrapper.spi.master import SpiMasterHandle
+from pyft4222.wrapper.spi.slave import SpiSlaveHandle
 
-SpiHandle = Union[SpiMasterHandle, SpiSlaveHandle]
+SpiHandle: TypeAlias = SpiMasterHandle | SpiSlaveHandle
+TransactionIdx: TypeAlias = Literal[0, 1, 2, 3]
 
-TransactionIdx = Literal[0, 1, 2, 3]
 
-
-_SOFT_ERROR_SET: Final[Set[Ft4222Status]] = {
+_SOFT_ERROR_SET: Final[set[Ft4222Status]] = {
     Ft4222Status.OK,
     Ft4222Status.INVALID_HANDLE,
     Ft4222Status.DEVICE_NOT_FOUND,

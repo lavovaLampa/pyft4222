@@ -11,12 +11,11 @@ from ctypes import (
     create_string_buffer,
 )
 from enum import IntEnum, IntFlag, auto
-from typing import Final, List, NamedTuple, Optional
+from typing import Final, NamedTuple
 
-from koda import Err, Ok, Result
-
-from . import OS_TYPE, FtException, FtHandle, FtStatus
-from .dll_loader import d2lib
+from pyft4222.result import Err, Ok, Result
+from pyft4222.wrapper import OS_TYPE, FtException, FtHandle, FtStatus
+from pyft4222.wrapper.dll_loader import d2lib
 
 # DLL function protoypes declaration
 
@@ -220,7 +219,7 @@ def create_device_info_list() -> int:
     return dev_count.value
 
 
-def get_device_info_list() -> List[DeviceInfo]:
+def get_device_info_list() -> list[DeviceInfo]:
     """Return list containing details about connected D2XX devices.
 
     This function returns a device information list containing information
@@ -233,7 +232,7 @@ def get_device_info_list() -> List[DeviceInfo]:
         FtException:        In case of unexpected error
 
     Returns:
-        List[DeviceInfo]:   List containing details about connected D2XX devices
+        list[DeviceInfo]:   List containing details about connected D2XX devices
     """
     dev_count = create_device_info_list()
 
@@ -248,7 +247,7 @@ def get_device_info_list() -> List[DeviceInfo]:
     return list(map(DeviceInfo.from_raw, raw_list))[: array_elem_count.value]
 
 
-def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
+def get_device_info_detail(dev_idx: int) -> Result[DeviceInfo, FtStatus]:
     """This function returns an entry from the device information list.
 
     Args:
@@ -260,7 +259,7 @@ def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
     Returns:
         device details (if id exists)
     """
-    assert 0 <= dev_idx <= (2 ** 31) - 1, "Device ID must be a non-negative integer"
+    assert 0 <= dev_idx <= (2**31) - 1, "Device ID must be a non-negative integer"
 
     idx = c_uint(dev_idx)
     flags = c_uint()
@@ -282,8 +281,11 @@ def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
         byref(handle),
     )
 
-    if result == FtStatus.OK:
-        return DeviceInfo(
+    if result != FtStatus.OK:
+        return Err(result)
+
+    return Ok(
+        DeviceInfo(
             flags=DeviceFlags(flags.value),
             dev_type=DeviceType(dev_type.value),
             idx=idx.value,
@@ -292,10 +294,7 @@ def get_device_info_detail(dev_idx: int) -> Optional[DeviceInfo]:
             description=description.value.decode("utf-8"),
             handle=FtHandle(handle),
         )
-    elif result in {FtStatus.DEVICE_NOT_FOUND, FtStatus.INVALID_HANDLE}:
-        return None
-    else:
-        raise FtException(result)
+    )
 
 
 def open_by_idx(dev_idx: int) -> Result[FtHandle, FtStatus]:
@@ -314,15 +313,15 @@ def open_by_idx(dev_idx: int) -> Result[FtHandle, FtStatus]:
     Returns:
         D2XX device handle (optional)
     """
-    assert 0 <= dev_idx <= (2 ** 31) - 1, "Device ID must be a non-negative integer"
+    assert 0 <= dev_idx <= (2**31) - 1, "Device ID must be a non-negative integer"
 
     ft_handle = c_void_p()
     result: FtStatus = _open(dev_idx, byref(ft_handle))
 
-    if result == FtStatus.OK:
-        return Ok(FtHandle(ft_handle))
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(FtHandle(ft_handle))
 
 
 def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
@@ -343,10 +342,10 @@ def open_by_serial(serial_num: str) -> Result[FtHandle, FtStatus]:
         serial_num.encode("utf-8"), _OpenExFlag.BY_SERIAL_NUMBER, byref(ft_handle)
     )
 
-    if result == FtStatus.OK:
-        return Ok(FtHandle(ft_handle))
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(FtHandle(ft_handle))
 
 
 def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
@@ -367,10 +366,10 @@ def open_by_description(dev_description: str) -> Result[FtHandle, FtStatus]:
         dev_description.encode("utf-8"), _OpenExFlag.BY_DESCRIPTION, byref(ft_handle)
     )
 
-    if result == FtStatus.OK:
-        return Ok(FtHandle(ft_handle))
-    else:
+    if result != FtStatus.OK:
         return Err(result)
+
+    return Ok(FtHandle(ft_handle))
 
 
 # This function is not supported on Linux and Windows CE
@@ -398,10 +397,10 @@ if OS_TYPE != "Linux":
             location_id, _OpenExFlag.BY_LOCATION, byref(ft_handle)
         )
 
-        if result == FtStatus.OK:
-            return Ok(FtHandle(ft_handle))
-        else:
+        if result != FtStatus.OK:
             return Err(result)
+
+        return Ok(FtHandle(ft_handle))
 
 
 def close_handle(ft_handle: FtHandle) -> None:
@@ -424,7 +423,7 @@ def close_handle(ft_handle: FtHandle) -> None:
         raise FtException(result)
 
 
-def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
+def get_device_info(ft_handle: FtHandle) -> Result[ShortDeviceInfo, FtStatus]:
     """Get device information for an opened device.
 
     Args:
@@ -445,21 +444,17 @@ def get_device_info(ft_handle: FtHandle) -> Optional[ShortDeviceInfo]:
         ft_handle, byref(dev_type), byref(dev_id), serial_number, description, None
     )
 
-    if result == FtStatus.OK:
-        return ShortDeviceInfo(
+    if result != FtStatus.OK:
+        return Err(result)
+
+    return Ok(
+        ShortDeviceInfo(
             dev_type=DeviceType(dev_type.value),
             dev_idx=dev_id.value,
             serial_number=serial_number.value.decode("utf-8"),
             description=description.value.decode("utf-8"),
         )
-    elif result in {
-        FtStatus.DEVICE_NOT_FOUND,
-        FtStatus.DEVICE_NOT_OPENED,
-        FtStatus.INVALID_HANDLE,
-    }:
-        return None
-    else:
-        raise FtException(result)
+    )
 
 
 if OS_TYPE == "Windows":

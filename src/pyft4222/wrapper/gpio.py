@@ -1,11 +1,10 @@
 from ctypes import POINTER, byref, c_bool, c_uint, c_uint16, c_void_p
 from enum import IntEnum, auto
-from typing import Final, List, NewType, Tuple
+from typing import Final, NewType
 
-from koda import Err, Ok, Result
-
-from . import Ft4222Exception, Ft4222Status, FtHandle, GpioTrigger
-from .dll_loader import ftlib
+from pyft4222.result import Err, Ok, Result
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle, GpioTrigger
+from pyft4222.wrapper.dll_loader import ftlib
 
 GpioHandle = NewType("GpioHandle", FtHandle)
 
@@ -24,7 +23,7 @@ class PortId(IntEnum):
     PORT_3 = auto()
 
 
-DirTuple = Tuple[Direction, Direction, Direction, Direction]
+DirTuple = tuple[Direction, Direction, Direction, Direction]
 
 _init = ftlib.FT4222_GPIO_Init
 _init.argtypes = [c_void_p, c_uint * 4]
@@ -77,10 +76,10 @@ def init(ft_handle: FtHandle, dirs: DirTuple) -> Result[GpioHandle, Ft4222Status
 
     result: Ft4222Status = _init(ft_handle, dir_array)
 
-    if result == Ft4222Status.OK:
-        return Ok(GpioHandle(ft_handle))
-    else:
+    if result != Ft4222Status.OK:
         return Err(result)
+
+    return Ok(GpioHandle(ft_handle))
 
 
 def read(ft_handle: GpioHandle, port_id: PortId) -> bool:
@@ -177,8 +176,8 @@ def get_trigger_status(ft_handle: GpioHandle, port_id: PortId) -> int:
 
 
 def read_trigger_queue(
-    ft_handle: GpioHandle, port_id: PortId, max_read_size: int = (2 ** 16) - 1
-) -> List[GpioTrigger]:
+    ft_handle: GpioHandle, port_id: PortId, max_read_size: int = (2**16) - 1
+) -> list[GpioTrigger]:
     """Get events recorded in the trigger event queue.
 
     After calling this function, all events will be removed from the event queue.
@@ -192,10 +191,10 @@ def read_trigger_queue(
         Ft4222Exception:            In case of unexpected device error
 
     Returns:
-        List[FT4222.GpioTrigger]:   List of trigger events (if any)
+        list[FT4222.GpioTrigger]:   List of trigger events (if any)
     """
     assert (
-        0 <= max_read_size < (2 ** 16)
+        0 <= max_read_size < (2**16)
     ), "Max. read size must be a non-negative number smaller than 2^16."
 
     event_buffer = (c_uint * max_read_size)()
@@ -208,7 +207,7 @@ def read_trigger_queue(
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return list(map(GpioTrigger, event_buffer[: events_read.value]))
+    return list(map(GpioTrigger, event_buffer[: events_read.value]))  # type: ignore
 
 
 def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:

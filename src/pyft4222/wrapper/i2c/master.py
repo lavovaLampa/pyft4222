@@ -2,10 +2,9 @@ from ctypes import POINTER, byref, c_char_p, c_uint8, c_uint16, c_uint32, c_void
 from enum import IntFlag
 from typing import NewType
 
-from koda import Err, Ok, Result
-
-from .. import Ft4222Exception, Ft4222Status, FtHandle
-from ..dll_loader import ftlib
+from pyft4222.result import Err, Ok, Result
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
+from pyft4222.wrapper.dll_loader import ftlib
 
 I2cMasterHandle = NewType("I2cMasterHandle", FtHandle)
 
@@ -108,10 +107,10 @@ def init(ft_handle: FtHandle, kbps: int) -> Result[I2cMasterHandle, Ft4222Status
 
     result: Ft4222Status = _init(ft_handle, kbps)
 
-    if result == Ft4222Status.OK:
-        return Ok(I2cMasterHandle(ft_handle))
-    else:
+    if result != Ft4222Status.OK:
         return Err(result)
+
+    return Ok(I2cMasterHandle(ft_handle))
 
 
 def read(ft_handle: I2cMasterHandle, dev_address: int, read_byte_count: int) -> bytes:
@@ -129,10 +128,10 @@ def read(ft_handle: I2cMasterHandle, dev_address: int, read_byte_count: int) -> 
         bytes:              Read data
     """
     assert (
-        0 <= dev_address < (2 ** 16)
+        0 <= dev_address < (2**16)
     ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
     assert (
-        0 < read_byte_count < (2 ** 16)
+        0 < read_byte_count < (2**16)
     ), "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
@@ -163,10 +162,10 @@ def write(ft_handle: I2cMasterHandle, dev_address: int, write_data: bytes) -> in
         int:            Number of bytes written
     """
     assert (
-        0 <= dev_address < (2 ** 16)
+        0 <= dev_address < (2**16)
     ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
     assert (
-        0 < len(write_data) < (2 ** 16)
+        0 < len(write_data) < (2**16)
     ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
@@ -204,10 +203,10 @@ def read_ex(
         bytes:              Read data
     """
     assert (
-        0 <= dev_address < (2 ** 16)
+        0 <= dev_address < (2**16)
     ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
     assert (
-        0 < read_byte_count < (2 ** 16)
+        0 < read_byte_count < (2**16)
     ), "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
@@ -246,10 +245,10 @@ def write_ex(
         int:            Number of bytes written
     """
     assert (
-        0 <= dev_address < (2 ** 16)
+        0 <= dev_address < (2**16)
     ), "Device address must be an 16b unsigned integer (range 0 - 65 535)"
     assert (
-        0 < len(write_data) < (2 ** 16)
+        0 < len(write_data) < (2**16)
     ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()

@@ -3,11 +3,10 @@ from ctypes import c_void_p
 from functools import reduce
 
 import pytest
-from koda import Err, Ok
 
-from pyft4222.wrapper import Ft4222Status, FtHandle, GpioTrigger
+from pyft4222.result import Err, Ok
+from pyft4222.wrapper import Ft4222Status, FtHandle, GpioTrigger, gpio
 from pyft4222.wrapper import common as ft_common
-from pyft4222.wrapper import gpio
 
 from ..fixtures import *
 
@@ -67,7 +66,7 @@ def test_invalid_init():
 
     assert isinstance(handle, Err)
     # Why this status? Go ask FTDI i guess...
-    assert handle.val == Ft4222Status.DEVICE_NOT_SUPPORTED
+    assert handle.err == Ft4222Status.DEVICE_NOT_SUPPORTED
 
 
 def test_read_write(gpio_output_handle: gpio.GpioHandle):

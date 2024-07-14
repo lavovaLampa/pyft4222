@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import platform
 from ctypes import c_void_p
 from enum import IntEnum, IntFlag, auto
-from typing import Final, NewType, Optional
+from typing import Final, NewType
 
 OS_TYPE: Final = platform.system()
 
@@ -42,9 +44,9 @@ class FtException(Exception):
     """
 
     status: FtStatus
-    msg: Optional[str]
+    msg: str | None
 
-    def __init__(self, status: FtStatus, msg: Optional[str] = None):
+    def __init__(self, status: FtStatus, msg: str | None = None):
         super().__init__()
         self.status = status
         self.msg = msg
@@ -110,7 +112,7 @@ class Ft4222Status(IntEnum):
     FUN_NOT_SUPPORT = auto()
 
     @classmethod
-    def from_ft_status(cls, ft_status: FtStatus) -> "Ft4222Status":
+    def from_ft_status(cls, ft_status: FtStatus) -> Ft4222Status:
         return Ft4222Status(int(ft_status))
 
 
@@ -123,9 +125,9 @@ class Ft4222Exception(Exception):
     """
 
     status: Ft4222Status
-    msg: Optional[str]
+    msg: str | None
 
-    def __init__(self, status: Ft4222Status, msg: Optional[str] = None):
+    def __init__(self, status: Ft4222Status, msg: str | None = None):
         super().__init__()
         self.status = status
         self.msg = msg

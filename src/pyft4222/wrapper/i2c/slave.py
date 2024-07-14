@@ -1,10 +1,9 @@
 from ctypes import POINTER, byref, c_bool, c_char_p, c_uint8, c_uint16, c_void_p
 from typing import NewType
 
-from koda import Err, Ok, Result
-
-from .. import Ft4222Exception, Ft4222Status, FtHandle
-from ..dll_loader import ftlib
+from pyft4222.result import Err, Ok, Result
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
+from pyft4222.wrapper.dll_loader import ftlib
 
 I2cSlaveHandle = NewType("I2cSlaveHandle", FtHandle)
 
@@ -61,10 +60,10 @@ def init(ft_handle: FtHandle) -> Result[I2cSlaveHandle, Ft4222Status]:
     """
     result: Ft4222Status = _init(ft_handle)
 
-    if result == Ft4222Status.OK:
-        return Ok(I2cSlaveHandle(ft_handle))
-    else:
+    if result != Ft4222Status.OK:
         return Err(result)
+
+    return Ok(I2cSlaveHandle(ft_handle))
 
 
 def reset(ft_handle: I2cSlaveHandle) -> None:
@@ -120,7 +119,7 @@ def set_address(ft_handle: I2cSlaveHandle, addr: int) -> None:
         Ft4222Exception:    In case of unexpected error
     """
     assert (
-        0 <= addr < (2 ** 7)
+        0 <= addr < (2**7)
     ), "Device address must be an unsigned 16b integer (range 0 - 65 535)"
 
     result: Ft4222Status = _set_address(ft_handle, addr)
@@ -165,7 +164,7 @@ def read(ft_handle: I2cSlaveHandle, read_byte_count: int) -> bytes:
         bytes:              Read data
     """
     assert (
-        0 < read_byte_count < (2 ** 16)
+        0 < read_byte_count < (2**16)
     ), "Number of bytes to read must be positive and less than 2^16"
 
     read_buffer = (c_uint8 * read_byte_count)()
@@ -195,7 +194,7 @@ def write(ft_handle: I2cSlaveHandle, write_data: bytes) -> int:
         int:            Number of bytes written
     """
     assert (
-        0 < len(write_data) < (2 ** 16)
+        0 < len(write_data) < (2**16)
     ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_written = c_uint16()
@@ -251,7 +250,7 @@ def set_resp_word(ft_handle: I2cSlaveHandle, response_word: int) -> None:
         Ft4222Exception:    In case of unexpected error
     """
     assert (
-        0 <= response_word < (2 ** 8)
+        0 <= response_word < (2**8)
     ), "The response word must be an 8b unsigned integer (range 0 - 255)"
 
     result: Ft4222Status = _set_resp_word(ft_handle, response_word)

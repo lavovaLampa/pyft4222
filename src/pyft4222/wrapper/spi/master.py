@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ctypes import (
     POINTER,
     byref,
@@ -10,17 +12,16 @@ from ctypes import (
     c_void_p,
 )
 from enum import IntEnum, IntFlag, auto
-from typing import Literal, NewType, Optional, Union, overload
+from typing import Literal, NewType, TypeAlias, overload
 
-from koda import Err, Ok, Result
-
-from .. import Ft4222Exception, Ft4222Status, FtHandle
-from ..dll_loader import ftlib
-from . import ClkPhase, ClkPolarity
+from pyft4222.result import Err, Ok, Result
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
+from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 
 SpiMasterSingleHandle = NewType("SpiMasterSingleHandle", FtHandle)
 SpiMasterMultiHandle = NewType("SpiMasterMultiHandle", FtHandle)
-SpiMasterHandle = Union[SpiMasterSingleHandle, SpiMasterMultiHandle]
+SpiMasterHandle: TypeAlias = SpiMasterSingleHandle | SpiMasterMultiHandle
 
 
 class IoMode(IntEnum):
@@ -127,20 +128,18 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap,
-) -> Result[SpiMasterSingleHandle, Ft4222Status]:
-    ...
+) -> Result[SpiMasterSingleHandle, Ft4222Status]: ...
 
 
 @overload
 def init(
     ft_handle: FtHandle,
-    io_mode: Union[Literal[IoMode.DUAL], Literal[IoMode.QUAD]],
+    io_mode: Literal[IoMode.DUAL, IoMode.QUAD],
     clock_div: ClkDiv,
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap,
-) -> Result[SpiMasterMultiHandle, Ft4222Status]:
-    ...
+) -> Result[SpiMasterMultiHandle, Ft4222Status]: ...
 
 
 @overload
@@ -151,11 +150,10 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap,
-) -> Union[
-    Result[SpiMasterSingleHandle, Ft4222Status],
-    Result[SpiMasterMultiHandle, Ft4222Status],
-]:
-    ...
+) -> (
+    Result[SpiMasterSingleHandle, Ft4222Status]
+    | Result[SpiMasterMultiHandle, Ft4222Status]
+): ...
 
 
 def init(
@@ -165,10 +163,10 @@ def init(
     clk_polarity: ClkPolarity,
     clk_phase: ClkPhase,
     sso_map: SsoMap,
-) -> Union[
-    Result[SpiMasterSingleHandle, Ft4222Status],
-    Result[SpiMasterMultiHandle, Ft4222Status],
-]:
+) -> (
+    Result[SpiMasterSingleHandle, Ft4222Status]
+    | Result[SpiMasterMultiHandle, Ft4222Status]
+):
     """Initialize the FT4222H as an SPI master.
 
     Args:
@@ -186,13 +184,13 @@ def init(
         ft_handle, io_mode, clock_div, clk_polarity, clk_phase, sso_map
     )
 
-    if result == Ft4222Status.OK:
-        if io_mode == IoMode.SINGLE:
-            return Ok(SpiMasterSingleHandle(ft_handle))
-        elif io_mode in {IoMode.DUAL, IoMode.QUAD}:
-            return Ok(SpiMasterMultiHandle(ft_handle))
-        else:
-            return Err(result)
+    if result != Ft4222Status.OK:
+        return Err(result)
+
+    if io_mode == IoMode.SINGLE:
+        return Ok(SpiMasterSingleHandle(ft_handle))
+    elif io_mode in {IoMode.DUAL, IoMode.QUAD}:
+        return Ok(SpiMasterMultiHandle(ft_handle))
     else:
         return Err(result)
 
@@ -218,20 +216,17 @@ def set_cs_polarity(ft_handle: SpiMasterHandle, cs_polarity: CsPolarity) -> None
 @overload
 def set_lines(
     ft_handle: SpiMasterHandle, io_mode: Literal[IoMode.SINGLE]
-) -> SpiMasterSingleHandle:
-    ...
+) -> SpiMasterSingleHandle: ...
 
 
 @overload
 def set_lines(
     ft_handle: SpiMasterHandle, io_mode: Literal[IoMode.DUAL, IoMode.QUAD]
-) -> SpiMasterMultiHandle:
-    ...
+) -> SpiMasterMultiHandle: ...
 
 
 @overload
-def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
-    ...
+def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle: ...
 
 
 def set_lines(ft_handle: SpiMasterHandle, io_mode: IoMode) -> SpiMasterHandle:
@@ -280,7 +275,7 @@ def single_read(
         bytes:              Read data (length can be lower than requested)
     """
     assert (
-        0 < read_byte_count < (2 ** 16)
+        0 < read_byte_count < (2**16)
     ), "Number of bytes to read must be positive and less than 2^16"
 
     buffer = (c_uint8 * read_byte_count)()
@@ -313,7 +308,7 @@ def single_write(
         int:                Number of transmitted bytes
     """
     assert (
-        0 < len(write_data) < (2 ** 16)
+        0 < len(write_data) < (2**16)
     ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
@@ -348,7 +343,7 @@ def single_read_write(
         bytes:              Received data
     """
     assert (
-        0 < len(write_data) < (2 ** 16)
+        0 < len(write_data) < (2**16)
     ), "Data to be written must be non-empty and contain less than 2^16 bytes"
 
     bytes_transferred = c_uint16()
@@ -371,7 +366,7 @@ def single_read_write(
 
 def multi_read_write(
     ft_handle: SpiMasterMultiHandle,
-    write_data: Optional[bytes],
+    write_data: bytes | None,
     single_write_byte_count: int,
     multi_write_byte_count: int,
     multi_read_byte_count: int,
@@ -397,13 +392,13 @@ def multi_read_write(
         bytes:                      Read data (if any)
     """
     assert (
-        0 <= single_write_byte_count < (2 ** 4)
+        0 <= single_write_byte_count < (2**4)
     ), "Number of single-write bytes must be non-negative and less than 16"
     assert (
-        0 <= multi_write_byte_count < (2 ** 16)
+        0 <= multi_write_byte_count < (2**16)
     ), "Number of multi-write bytes must be non-negative and less than 2^16 (65 536)"
     assert (
-        0 <= multi_read_byte_count < (2 ** 16)
+        0 <= multi_read_byte_count < (2**16)
     ), "Number of multi-read bytes must be non-negative and less than 2^16 (65 536)"
     assert (
         single_write_byte_count + multi_write_byte_count + multi_read_byte_count
@@ -414,7 +409,7 @@ def multi_read_write(
         ) == 0, "Number of bytes to write must be zero in case the write data are None"
     else:
         assert len(write_data) < (
-            2 ** 16
+            2**16
         ), "Data to be written must have size less than 2^16 bytes"
         assert (single_write_byte_count + multi_write_byte_count) <= len(
             write_data

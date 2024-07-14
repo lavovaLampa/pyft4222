@@ -1,14 +1,12 @@
-from ctypes import Structure, POINTER, byref
-from ctypes import c_uint, c_void_p, c_bool, c_uint16
-from typing import NamedTuple, Union
+from ctypes import POINTER, Structure, byref, c_bool, c_uint, c_uint16, c_void_p
 from enum import IntEnum, auto
+from typing import NamedTuple, Union
 
-from . import Ft4222Status, Ft4222Exception, GpioTrigger, FtHandle
-from .dll_loader import ftlib
-from .i2c import I2cHandle
-from .spi.common import SpiHandle
-from .gpio import GpioHandle
-
+from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle, GpioTrigger
+from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.gpio import GpioHandle
+from pyft4222.wrapper.i2c import I2cHandle
+from pyft4222.wrapper.spi.common import SpiHandle
 
 # Internal data types
 

@@ -1,9 +1,12 @@
+from __future__ import annotations
+
+from collections.abc import Generator, Mapping
 from enum import Enum, auto
-from typing import Final, Generator, Mapping, Tuple
+from typing import Final
 
 import pytest
-from koda import Ok
 
+from pyft4222.result import Ok
 from pyft4222.wrapper import FtHandle
 from pyft4222.wrapper import ftd2xx as ftd
 
@@ -21,7 +24,7 @@ class InterfaceType(Enum):
     ANY = auto()
 
 
-DEV_INTERFACE_MAP: Final[Mapping[Tuple[InterfaceType, ftd.DeviceType], str]] = {
+DEV_INTERFACE_MAP: Final[Mapping[tuple[InterfaceType, ftd.DeviceType], str]] = {
     # GPIO interface
     (InterfaceType.GPIO, ftd.DeviceType.DEV_4222H_0): "FT4222 B",
     # Serial I/O interface
@@ -38,7 +41,7 @@ DEV_INTERFACE_MAP: Final[Mapping[Tuple[InterfaceType, ftd.DeviceType], str]] = {
 }
 
 
-def _find_suitable_device(intf_type: InterfaceType) -> Tuple[int, ftd.DeviceInfo]:
+def _find_suitable_device(intf_type: InterfaceType) -> tuple[int, ftd.DeviceInfo]:
     devices = ftd.get_device_info_list()
     devices = enumerate(devices)
     devices = filter(

@@ -1,5 +1,3 @@
-from typing import Generic
-
 from pyft4222.handle import GenericProtocolHandle, StreamHandleType
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status
 from pyft4222.wrapper.i2c.master import (
@@ -16,20 +14,8 @@ from pyft4222.wrapper.i2c.master import (
 )
 
 
-class I2CMaster(
-    Generic[StreamHandleType],
-    GenericProtocolHandle[I2cMasterHandle, "I2CMaster", StreamHandleType],
-):
+class I2CMaster(GenericProtocolHandle[I2cMasterHandle, StreamHandleType]):
     """A class encapsulating I2C Master functions."""
-
-    def __init__(self, ft_handle: I2cMasterHandle, mode_handle: StreamHandleType):
-        """Initialize the class with given FT4222 handle and a mode class type.
-
-        Args:
-            ft_handle:      FT4222 handle initialized in I2C Master mode
-            mode_handle:    Calling stream mode handle. Used in 'uninitialize()' method.
-        """
-        super().__init__(ft_handle, mode_handle)
 
     def read(self, dev_address: int, read_byte_count: int) -> bytes:
         """Read data from specified I2C slave with START and STOP conditions.
@@ -44,17 +30,17 @@ class I2CMaster(
         Returns:
             bytes:              Read data
         """
-        if self._handle is not None:
-            if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError("dev_address must be in range <0, 65_535>.")
-            if not (0 < read_byte_count < (2 ** 16)):
-                raise ValueError("read_byte_count must be in range <1, 65_535>.")
-
-            return read(self._handle, dev_address, read_byte_count)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
+
+        if not (0 <= dev_address < (2**16)):
+            raise ValueError("dev_address must be in range <0, 65_535>.")
+        if not (0 < read_byte_count < (2**16)):
+            raise ValueError("read_byte_count must be in range <1, 65_535>.")
+
+        return read(self._handle, dev_address, read_byte_count)
 
     def write(self, dev_address: int, write_data: bytes) -> int:
         """Write data to the specified I2C slave with START and STOP conditions.
@@ -69,17 +55,17 @@ class I2CMaster(
         Returns:
             int:            Number of bytes written
         """
-        if self._handle is not None:
-            if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError("dev_address must be in range <0, 65_535>.")
-            if not (0 < len(write_data) < (2 ** 16)):
-                raise ValueError("write_data length must be in range <1, 65_535>.")
-
-            return write(self._handle, dev_address, write_data)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
+
+        if not (0 <= dev_address < (2**16)):
+            raise ValueError("dev_address must be in range <0, 65_535>.")
+        if not (0 < len(write_data) < (2**16)):
+            raise ValueError("write_data length must be in range <1, 65_535>.")
+
+        return write(self._handle, dev_address, write_data)
 
     def read_ex(
         self, dev_address: int, flags: TransactionFlag, read_byte_count: int
@@ -97,17 +83,17 @@ class I2CMaster(
         Returns:
             bytes:              Read data
         """
-        if self._handle is not None:
-            if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError("dev_address must be in range <0, 65_535>.")
-            if not (0 < read_byte_count < (2 ** 16)):
-                raise ValueError("read_byte_count must be in range <1, 65_535>.")
-
-            return read_ex(self._handle, dev_address, flags, read_byte_count)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
+
+        if not (0 <= dev_address < (2**16)):
+            raise ValueError("dev_address must be in range <0, 65_535>.")
+        if not (0 < read_byte_count < (2**16)):
+            raise ValueError("read_byte_count must be in range <1, 65_535>.")
+
+        return read_ex(self._handle, dev_address, flags, read_byte_count)
 
     def write_ex(
         self, dev_address: int, flags: TransactionFlag, write_data: bytes
@@ -125,17 +111,17 @@ class I2CMaster(
         Returns:
             int:            Number of bytes written
         """
-        if self._handle is not None:
-            if not (0 <= dev_address < (2 ** 16)):
-                raise ValueError("dev_address must be in range <0, 65_535>.")
-            if not (0 < len(write_data) < (2 ** 16)):
-                raise ValueError("write_data length must be in range <1, 65_535>.")
-
-            return write_ex(self._handle, dev_address, flags, write_data)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
+
+        if not (0 <= dev_address < (2**16)):
+            raise ValueError("dev_address must be in range <0, 65_535>.")
+        if not (0 < len(write_data) < (2**16)):
+            raise ValueError("write_data length must be in range <1, 65_535>.")
+
+        return write_ex(self._handle, dev_address, flags, write_data)
 
     def get_status(self) -> CtrlStatus:
         """Get I2C Master controller status.
@@ -146,12 +132,12 @@ class I2CMaster(
         Returns:
             CtrlStatus:         IntFlag encoding controller status
         """
-        if self._handle is not None:
-            return get_status(self._handle)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
+
+        return get_status(self._handle)
 
     def reset(self) -> None:
         """Reset the I2C Master.
@@ -163,12 +149,11 @@ class I2CMaster(
         Raises:
             Ft4222Exception:    In case of unexpected error
         """
-        if self._handle is not None:
-            reset(self._handle)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
+        reset(self._handle)
 
     def reset_bus(self) -> None:
         """Reset the I2C bus.
@@ -183,9 +168,9 @@ class I2CMaster(
         Raises:
             Ft4222Exception:    In case of unexpected error
         """
-        if self._handle is not None:
-            reset_bus(self._handle)
-        else:
+        if self._handle is None:
             raise Ft4222Exception(
                 Ft4222Status.DEVICE_NOT_OPENED, "I2C Master has been uninitialized!"
             )
+
+        reset_bus(self._handle)
