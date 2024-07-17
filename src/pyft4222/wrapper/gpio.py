@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ctypes import POINTER, byref, c_bool, c_uint, c_uint16, c_void_p
 from enum import IntEnum, auto
 from typing import Final, NewType

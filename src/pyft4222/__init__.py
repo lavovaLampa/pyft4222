@@ -4,7 +4,9 @@
 
 from __future__ import annotations
 
-from typing import Callable, Final, TypeAlias
+from typing import Callable, Final, Union
+
+from typing_extensions import TypeAlias
 
 from pyft4222.result import Err, Ok, Result
 from pyft4222.stream import GpioStream, ProtocolStream, SpiStream
@@ -40,14 +42,14 @@ def _disambiguate_modes(handle: FtHandle) -> GpioStream | SpiStream:
         return SpiStream(handle)
 
 
-_Ft4222HandleType: TypeAlias = (
-    type[ProtocolStream]
-    | type[GpioStream]
-    | type[SpiStream]
-    | Callable[[FtHandle], GpioStream | SpiStream]
-)
+_Ft4222HandleType: TypeAlias = Union[
+    type[ProtocolStream],
+    type[GpioStream],
+    type[SpiStream],
+    Callable[[FtHandle], Union[GpioStream, SpiStream]],
+]
 
-Ft4222Handle: TypeAlias = ProtocolStream | GpioStream | SpiStream
+Ft4222Handle: TypeAlias = Union[ProtocolStream, GpioStream, SpiStream]
 
 _MODE_MAP: Final[dict[tuple[str, ftd.DeviceType], _Ft4222HandleType]] = {
     # Mode 0

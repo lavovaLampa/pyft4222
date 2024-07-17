@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, NoReturn, Self, TypeAlias, TypeVar
+from typing import Any, Callable, Generic, NoReturn, TypeVar, Union
+
+from typing_extensions import Self, TypeAlias
 
 E = TypeVar("E")
 R = TypeVar("R")
@@ -51,4 +53,4 @@ class Err(Generic[T]):
     __rshift__ = flat_map
 
 
-Result: TypeAlias = Ok[R] | Err[E]
+Result = Union["Ok[R]", "Err[E]"]

@@ -12,7 +12,9 @@ from ctypes import (
     c_void_p,
 )
 from enum import IntEnum, IntFlag, auto
-from typing import Literal, NewType, TypeAlias, overload
+from typing import Literal, NewType, Union, overload
+
+from typing_extensions import TypeAlias
 
 from pyft4222.result import Err, Ok, Result
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
@@ -21,7 +23,7 @@ from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 
 SpiMasterSingleHandle = NewType("SpiMasterSingleHandle", FtHandle)
 SpiMasterMultiHandle = NewType("SpiMasterMultiHandle", FtHandle)
-SpiMasterHandle: TypeAlias = SpiMasterSingleHandle | SpiMasterMultiHandle
+SpiMasterHandle: TypeAlias = Union[SpiMasterSingleHandle, SpiMasterMultiHandle]
 
 
 class IoMode(IntEnum):

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from ctypes import POINTER, byref, c_char_p, c_uint, c_uint8, c_uint16, c_void_p
 from enum import IntEnum, IntFlag, auto
-from typing import Literal, NewType, TypeAlias, overload
+from typing import Literal, NewType, Union, overload
+
+from typing_extensions import TypeAlias
 
 from pyft4222.result import Err, Ok, Result
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
@@ -11,7 +13,7 @@ from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 
 SpiSlaveRawHandle = NewType("SpiSlaveRawHandle", FtHandle)
 SpiSlaveProtoHandle = NewType("SpiSlaveProtoHandle", FtHandle)
-SpiSlaveHandle: TypeAlias = SpiSlaveRawHandle | SpiSlaveProtoHandle
+SpiSlaveHandle: TypeAlias = Union[SpiSlaveRawHandle, SpiSlaveProtoHandle]
 
 
 class IoProtocol(IntEnum):

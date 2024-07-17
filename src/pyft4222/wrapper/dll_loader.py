@@ -5,7 +5,7 @@ import importlib.resources as res
 import platform
 import sys
 from ctypes import CDLL, cdll
-from importlib.resources.abc import Traversable
+from importlib.abc import Traversable
 from typing import Final
 
 from pyft4222.wrapper import OS_TYPE
@@ -22,6 +22,8 @@ class DllMeta:
     hash: str  # sha256
 
     def __init__(self, path: str, name: str, version: str, hash: str):
+        self.path = res.files(_COMMON_DLL_PREFIX + path)
+        self.path = self.path.joinpath(name)
         self.path = res.files(_COMMON_DLL_PREFIX + path).joinpath(name)
         self.hash = hash
         self.version = version

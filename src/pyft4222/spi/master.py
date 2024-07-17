@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Generic, Literal, TypeVar, overload
+from typing import Generic, Literal, TypeVar, Union, overload
 
 from pyft4222.handle import StreamHandleType
 from pyft4222.spi.common import SpiCommon
@@ -285,4 +285,4 @@ class SpiMasterMulti(
         )
 
 
-SpiMaster = SpiMasterSingle[StreamHandleType] | SpiMasterMulti[StreamHandleType]
+SpiMaster = Union[SpiMasterSingle[StreamHandleType], SpiMasterMulti[StreamHandleType]]

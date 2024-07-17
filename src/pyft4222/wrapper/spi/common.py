@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from ctypes import c_uint, c_uint8, c_void_p
-from typing import Final, Literal, TypeAlias
+from typing import Final, Literal, Union
+
+from typing_extensions import TypeAlias
 
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status
 from pyft4222.wrapper.dll_loader import ftlib
@@ -9,7 +11,7 @@ from pyft4222.wrapper.spi import DriveStrength
 from pyft4222.wrapper.spi.master import SpiMasterHandle
 from pyft4222.wrapper.spi.slave import SpiSlaveHandle
 
-SpiHandle: TypeAlias = SpiMasterHandle | SpiSlaveHandle
+SpiHandle: TypeAlias = Union[SpiMasterHandle, SpiSlaveHandle]
 TransactionIdx: TypeAlias = Literal[0, 1, 2, 3]
 
 

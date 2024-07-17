@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ctypes import POINTER, byref, c_char_p, c_uint8, c_uint16, c_uint32, c_void_p
 from enum import IntFlag
 from typing import NewType
