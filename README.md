@@ -6,11 +6,7 @@ A libft4222 library python wrapper.
 
 ## Building
 
-Run the `create_dev_env.sh` command to create a virtual environment suitable for development:
-
-```sh
-./create_dev_env.sh
-```
+Run `uv build`.
 
 ## Installation
 

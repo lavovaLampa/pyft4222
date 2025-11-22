@@ -35,9 +35,24 @@ Issues = "https://github.com/lavovaLampa/pyft4222/issues"
 [tool.hatch.build.targets.wheel]
 artifacts = ["*.so", ".dll", "*.dylib"]
 
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "strict"
+
+reportPropertyTypeMismatch = "error"
+reportUninitializedInstanceVariable = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportUnreachable = "warning"
+reportUnusedCallResult = "warning"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "SIM", "RET", "I"]
+ignore = ["E501"]
+
 [tool.pytest.init_options]
 minversion = "6.0"
 testpaths = "tests"
 
-[tool.isort]
-profile = "black"
+[dependency-groups]
+dev = ["pytest", "bump2version"]

@@ -1,6 +1,0 @@
-black
-pylint
-pytest
-bump2version
-twine
-build
