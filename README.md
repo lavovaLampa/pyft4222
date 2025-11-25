@@ -2,11 +2,23 @@
 
 A libft4222 library python wrapper.
 
-## Description
-
 ## Building
 
 Run `uv build`.
+
+## Development
+
+### Type-checking
+
+Run `uv tool run pyright`. Check `pyproject.toml` for pyright configuration (basically strict + additional warnings).
+
+### Linting
+
+Run `ruff check`. Check `pyproject.toml` for enabled rules.
+
+### Formatting
+
+Run `ruff format`.
 
 ## Installation
 
