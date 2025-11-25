@@ -33,12 +33,12 @@ Use virtual environment preferably.
 ### udev rule
 
 The FT4222 device is not accessible by all users by default.
-You can create a rule in `/etc/udev/rules.d/99-ftdi.rules` to
+You can create a rule in `/etc/udev/rules.d/50-ftdi.rules` to
 make the device available to all users.
 
 ```conf
 # FTDI's ft4222 USB-I2C Adapter
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="601c", GROUP="plugdev", MODE="0666"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="601c", MODE="0660", TAG+="uaccess"
 ```
 
 ## Documentation
