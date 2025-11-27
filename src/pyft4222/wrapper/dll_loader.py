@@ -5,10 +5,16 @@ import importlib.resources as res
 import platform
 import sys
 from ctypes import CDLL, cdll
-from importlib.abc import Traversable
 from typing import Final
 
 from pyft4222.wrapper import OS_TYPE
+
+try:
+    # Python 3.11+
+    from importlib.resources.abc import Traversable
+except ImportError:
+    # Python 3.10 and lower
+    from importlib.abc import Traversable
 
 ftlib: CDLL
 d2lib: CDLL
@@ -57,34 +63,40 @@ _DLL_IMPORT_MAP: Final[dict[tuple[str, str], DllMeta]] = {
     ("Windows", "AMD64"): DllMeta(
         "win.amd64",
         "LibFT4222-64.dll",
-        "1.4.6.1",
-        "23dcb848297ec160d04bec1024f6d842b0fc6c75189a914ebe0df7b1c33e34d1",
+        "1.4.8",
+        "9b9e381e87b44084e03eb9d22d1c87a5f9edbaaeed897e749031506307c390b5",
+    ),
+    ("Windows", "ARM64"): DllMeta(
+        "win.arm64",
+        "LibFT4222-64.dll",
+        "1.4.8",
+        "2f00028118263e4cb4fa63ab0a4623e37533d639271780c11bcb2ebb74fcdeac"
     ),
     # Linux
     ("Linux", "x86_64"): DllMeta(
         "linux.amd64",
-        "libft4222.so.1.4.4.188",
-        "1.4.4.188",
-        "2a90bb6c880b119191582d21f3e527940c604cc0af6dbf117178f9689633405e",
+        "libft4222.so.1.4.4.232",
+        "1.4.4.232",
+        "2d4ea24277fe41013a185c46dafe70a4ddeb77853396ce93de43b4f73da67725",
     ),
     ("Linux", "aarch64"): DllMeta(
         "linux.aarch64",
-        "libft4222.so.1.4.4.188",
-        "1.4.4.188",
-        "1d1990880ab769ef5dba378e1887897576a6062b8c86e098681fe422a0bf5b4f",
+        "libft4222.so.1.4.4.232",
+        "1.4.4.232",
+        "85663df63f882b715971789bfee77450f182997bd59eab3af87f06c9b53c97d2",
     ),
     # macOs
     ("Darwin", "x86_64"): DllMeta(
         "osx.universal",
-        "libft4222.1.4.4.190.dylib",
-        "1.4.4.190",
-        "31d0310eda14f9006725104d3bf0733e07c7e33643bec38c2812160f6ba2da54",
+        "libft4222.1.4.4.221.dylib",
+        "1.4.4.221",
+        "11b8066dfc595d5a4e1fb9a63b2870484e49194f675562a343e377f1281f9b52",
     ),
     ("Darwin", "arm64"): DllMeta(
         "osx.universal",
-        "libft4222.1.4.4.190.dylib",
-        "1.4.4.190",
-        "31d0310eda14f9006725104d3bf0733e07c7e33643bec38c2812160f6ba2da54",
+        "libft4222.1.4.4.221.dylib",
+        "1.4.4.221",
+        "11b8066dfc595d5a4e1fb9a63b2870484e49194f675562a343e377f1281f9b52",
     ),
 }
 
@@ -109,6 +121,8 @@ def _get_d2xx_lib() -> CDLL | None:
             )
             print(e)
             sys.exit(1)
+
+    return None
 
 
 def init_libraries() -> None:
