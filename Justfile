@@ -31,7 +31,7 @@ format:
     ruff format
 
 type-check:
-    uv run pyright
+    uv run basedpyright
 
 build:
     uv build

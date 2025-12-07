@@ -1,6 +1,4 @@
-import itertools
 from ctypes import c_void_p
-from functools import reduce
 
 import pytest
 
@@ -23,13 +21,13 @@ def gpio_output_handle(open_gpio_handle: FtHandle) -> gpio.GpioHandle:
         ),
     )
 
-    if isinstance(handle, Ok):
-        ft_common.set_suspend_out(handle.val, False)
-        ft_common.set_wakeup_interrupt(handle.val, False)
-
-        return handle.val
-    else:
+    if not isinstance(handle, Ok):
         raise RuntimeError("Cannot initialize GPIO handle!")
+
+    ft_common.set_suspend_out(handle.val, False)
+    ft_common.set_wakeup_interrupt(handle.val, False)
+
+    return handle.val
 
 
 @pytest.fixture
@@ -44,13 +42,13 @@ def gpio_input_handle(open_gpio_handle: FtHandle) -> gpio.GpioHandle:
         ),
     )
 
-    if isinstance(handle, Ok):
-        ft_common.set_suspend_out(handle.val, False)
-        ft_common.set_wakeup_interrupt(handle.val, False)
-
-        return handle.val
-    else:
+    if not isinstance(handle, Ok):
         raise RuntimeError("Cannot initialize GPIO handle!")
+
+    ft_common.set_suspend_out(handle.val, False)
+    ft_common.set_wakeup_interrupt(handle.val, False)
+
+    return handle.val
 
 
 def test_invalid_init():
@@ -78,13 +76,8 @@ def test_read_write(gpio_output_handle: gpio.GpioHandle):
 
 def test_input_trigger(gpio_input_handle: gpio.GpioHandle):
     for port in gpio.PortId:
-        states = itertools.product(*[(None, x) for x in GpioTrigger])
-        for state in states:
-            if state == (None, None, None, None):
-                continue
-            state = filter(lambda x: x is not None, state)
-            trigger = reduce(lambda acc, x: acc | x, state)
-            gpio.set_input_trigger(gpio_input_handle, port, trigger)
+        for trigger in range(2**4):
+            gpio.set_input_trigger(gpio_input_handle, port, GpioTrigger(trigger))
 
 
 def test_get_trigger_status(gpio_input_handle: gpio.GpioHandle):

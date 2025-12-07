@@ -1,6 +1,4 @@
-"""TODO: Add module information
-
-"""
+"""TODO: Add module information"""
 
 from __future__ import annotations
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyft4222"
-dynamic = ["version"]
+version = "0.3.3"
 description = "A python wrapper for libft4222 library"
 readme = "README.md"
 license = "MIT"
@@ -24,9 +24,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = ["typing_extensions"]
-
-[tool.hatch.version]
-path = "src/pyft4222/__about__.py"
 
 [project.urls]
 Homepage = "https://github.com/lavovaLampa/pyft4222"
@@ -50,9 +47,11 @@ reportUnusedCallResult = "warning"
 select = ["E", "F", "B", "SIM", "RET", "I"]
 ignore = ["E501"]
 
-[tool.pytest.init_options]
-minversion = "6.0"
-testpaths = "tests"
+[tool.pytest]
+addopts = ["--import-mode=importlib"]
 
 [dependency-groups]
-dev = ["pytest", "bump2version"]
+dev = [
+    "basedpyright>=1.34.0",
+    "pytest>=8.4.2",
+]

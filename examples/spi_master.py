@@ -14,12 +14,15 @@ handle = ft.open_by_idx(0).unwrap()
 if handle.tag == InterfaceType.DATA_STREAM:
     # Initialize FT4222 in SPI master mode using a single-bit
     # full-duplex transfer
-    with handle, handle.init_single_spi_master(
-        ClkDiv.CLK_DIV_2,
-        ClkPolarity.CLK_IDLE_LOW,
-        ClkPhase.CLK_TRAILING,
-        SsoMap.SS_0,
-    ) as spi_master:
+    with (
+        handle,
+        handle.init_single_spi_master(
+            ClkDiv.CLK_DIV_2,
+            ClkPolarity.CLK_IDLE_LOW,
+            ClkPhase.CLK_TRAILING,
+            SsoMap.SS_0,
+        ) as spi_master,
+    ):
         # Write and read back data simultaneously
         read_data = spi_master.single_read_write(bytes([0x01, 0x02, 0x03, 0x04]))
 
