@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pyft4222.wrapper.common as ft
 
 from ..fixtures import *
@@ -26,5 +28,9 @@ def test_get_version(open_handle: FtHandle):
     assert result.chip_version == ft.ChipVersion.REV_D
 
 
+@pytest.mark.skipif(
+    Path("/run/.toolboxenv").exists(),
+    reason="Libft4222 library issue when running in a container.",
+)
 def test_chip_reset(open_handle: FtHandle):
     ft.chip_reset(open_handle)
