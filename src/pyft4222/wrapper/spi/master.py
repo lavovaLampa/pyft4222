@@ -276,9 +276,9 @@ def single_read(
     Returns:
         bytes:              Read data (length can be lower than requested)
     """
-    assert (
-        0 < read_byte_count < (2**16)
-    ), "Number of bytes to read must be positive and less than 2^16"
+    assert 0 < read_byte_count < (2**16), (
+        "Number of bytes to read must be positive and less than 2^16"
+    )
 
     buffer = (c_uint8 * read_byte_count)()
     bytes_transferred = c_uint16()
@@ -309,9 +309,9 @@ def single_write(
     Returns:
         int:                Number of transmitted bytes
     """
-    assert (
-        0 < len(write_data) < (2**16)
-    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert 0 < len(write_data) < (2**16), (
+        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    )
 
     bytes_transferred = c_uint16()
     result: Ft4222Status = _single_write(
@@ -344,9 +344,9 @@ def single_read_write(
     Returns:
         bytes:              Received data
     """
-    assert (
-        0 < len(write_data) < (2**16)
-    ), "Data to be written must be non-empty and contain less than 2^16 bytes"
+    assert 0 < len(write_data) < (2**16), (
+        "Data to be written must be non-empty and contain less than 2^16 bytes"
+    )
 
     bytes_transferred = c_uint16()
     read_buffer = (c_uint8 * len(write_data))()
@@ -393,29 +393,29 @@ def multi_read_write(
     Returns:
         bytes:                      Read data (if any)
     """
-    assert (
-        0 <= single_write_byte_count < (2**4)
-    ), "Number of single-write bytes must be non-negative and less than 16"
-    assert (
-        0 <= multi_write_byte_count < (2**16)
-    ), "Number of multi-write bytes must be non-negative and less than 2^16 (65 536)"
-    assert (
-        0 <= multi_read_byte_count < (2**16)
-    ), "Number of multi-read bytes must be non-negative and less than 2^16 (65 536)"
+    assert 0 <= single_write_byte_count < (2**4), (
+        "Number of single-write bytes must be non-negative and less than 16"
+    )
+    assert 0 <= multi_write_byte_count < (2**16), (
+        "Number of multi-write bytes must be non-negative and less than 2^16 (65 536)"
+    )
+    assert 0 <= multi_read_byte_count < (2**16), (
+        "Number of multi-read bytes must be non-negative and less than 2^16 (65 536)"
+    )
     assert (
         single_write_byte_count + multi_write_byte_count + multi_read_byte_count
     ) > 0, "Total number of bytes written/read must be non-zero"
     if write_data is None:
-        assert (
-            single_write_byte_count + multi_write_byte_count
-        ) == 0, "Number of bytes to write must be zero in case the write data are None"
+        assert (single_write_byte_count + multi_write_byte_count) == 0, (
+            "Number of bytes to write must be zero in case the write data are None"
+        )
     else:
-        assert len(write_data) < (
-            2**16
-        ), "Data to be written must have size less than 2^16 bytes"
-        assert (single_write_byte_count + multi_write_byte_count) <= len(
-            write_data
-        ), "Length of data to write is longer than given data"
+        assert len(write_data) < (2**16), (
+            "Data to be written must have size less than 2^16 bytes"
+        )
+        assert (single_write_byte_count + multi_write_byte_count) <= len(write_data), (
+            "Length of data to write is longer than given data"
+        )
 
     read_buffer = (c_uint8 * multi_read_byte_count)()
     bytes_read = c_uint32()

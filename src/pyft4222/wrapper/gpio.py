@@ -195,9 +195,9 @@ def read_trigger_queue(
     Returns:
         list[FT4222.GpioTrigger]:   List of trigger events (if any)
     """
-    assert (
-        0 <= max_read_size < (2**16)
-    ), "Max. read size must be a non-negative number smaller than 2^16."
+    assert 0 <= max_read_size < (2**16), (
+        "Max. read size must be a non-negative number smaller than 2^16."
+    )
 
     event_buffer = (c_uint * max_read_size)()
     events_read = c_uint16()
@@ -209,7 +209,7 @@ def read_trigger_queue(
     if result != Ft4222Status.OK:
         raise Ft4222Exception(result)
 
-    return list(map(GpioTrigger, event_buffer[: events_read.value]))  # type: ignore
+    return list(map(GpioTrigger, event_buffer[: events_read.value]))
 
 
 def set_waveform_mode(ft_handle: GpioHandle, enable: bool) -> None:

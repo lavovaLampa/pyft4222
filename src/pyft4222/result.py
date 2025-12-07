@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable, Generic, NoReturn, TypeVar, Union
 
-from typing_extensions import Self, TypeAlias
+from typing_extensions import Self
 
 E = TypeVar("E")
 R = TypeVar("R")

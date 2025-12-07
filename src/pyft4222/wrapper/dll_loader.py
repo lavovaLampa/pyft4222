@@ -9,11 +9,9 @@ from typing import Final
 
 from pyft4222.wrapper import OS_TYPE
 
-try:
-    # Python 3.11+
+if sys.version_info >= (3, 11):
     from importlib.resources.abc import Traversable
-except ImportError:
-    # Python 3.10 and lower
+else:
     from importlib.abc import Traversable
 
 ftlib: CDLL
@@ -70,7 +68,7 @@ _DLL_IMPORT_MAP: Final[dict[tuple[str, str], DllMeta]] = {
         "win.arm64",
         "LibFT4222-64.dll",
         "1.4.8",
-        "2f00028118263e4cb4fa63ab0a4623e37533d639271780c11bcb2ebb74fcdeac"
+        "2f00028118263e4cb4fa63ab0a4623e37533d639271780c11bcb2ebb74fcdeac",
     ),
     # Linux
     ("Linux", "x86_64"): DllMeta(
