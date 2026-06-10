@@ -6,7 +6,7 @@ from typing import Final, Literal, Union
 from typing_extensions import TypeAlias
 
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status
-from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.dll import ftlib
 from pyft4222.wrapper.spi import DriveStrength
 from pyft4222.wrapper.spi.master import SpiMasterHandle
 from pyft4222.wrapper.spi.slave import SpiSlaveHandle
