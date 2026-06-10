@@ -166,8 +166,9 @@ def init_libraries() -> None:
 
     if "d2lib" not in globals() or "ftlib" not in globals():
         if _dll_path.d2xx is not None:
-            ftlib = _dll_path.ft4222.load()
+            # Load D2XX first so that it's preloaded when libft4222 requires it on macOS
             d2lib = _dll_path.d2xx.load()
+            ftlib = _dll_path.ft4222.load()
         else:
             ftlib = _dll_path.ft4222.load()
             d2lib = ftlib
