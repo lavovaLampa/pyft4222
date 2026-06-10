@@ -46,13 +46,11 @@ class BundledDll:
         actual_hash = self._actual_hash()
 
         if actual_hash != self.hash:
-            print(
-                "Library hash is invalid!"
-                f"\n\tExpected: {self.hash}"
-                f"\n\tActual: {actual_hash}",
-                file=sys.stderr,
+            raise RuntimeError(
+                ("Library hash is invalid!\n\tExpected: {}\n\tActual: {}").format(
+                    self.hash, actual_hash
+                ),
             )
-            sys.exit(1)
 
         with res.as_file(self.path) as lib:
             return cdll.LoadLibrary(str(lib))
@@ -156,8 +154,8 @@ def init_libraries() -> None:
 
     if "d2lib" not in globals() or "ftlib" not in globals():
         if _dll_path.d2xx is not None:
-            ftlib = _dll_path.d2xx.load()
-            d2lib = _dll_path.ft4222.load()
+            ftlib = _dll_path.ft4222.load()
+            d2lib = _dll_path.d2xx.load()
         else:
             ftlib = _dll_path.ft4222.load()
             d2lib = ftlib
