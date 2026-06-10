@@ -41,15 +41,16 @@ class BundledDll:
         """Load a bundled shared library.
 
         Raises:
-            OSError - Issue loading library.
+            OSError -      Issue loading library.
+            RuntimeError - Library file hash mismatch.
         """
         actual_hash = self._actual_hash()
 
         if actual_hash != self.hash:
             raise RuntimeError(
-                ("Library hash is invalid!\n\tExpected: {}\n\tActual: {}").format(
-                    self.hash, actual_hash
-                ),
+                "Library hash is invalid!"
+                f"\n\tExpected: {self.hash}"
+                f"\n\tActual: {actual_hash}"
             )
 
         with res.as_file(self.path) as lib:
@@ -63,6 +64,11 @@ class SystemDll:
     name: str
 
     def load(self) -> CDLL:
+        """Load system shared library.
+
+        Raises:
+            OSError - Issue loading library.
+        """
         return cdll.LoadLibrary(self.name)
 
 
@@ -146,6 +152,12 @@ _dll_path = _DLL_IMPORT_MAP.get((OS_TYPE, platform.machine()))
 
 
 def init_libraries() -> None:
+    """Load dynamic libraries based on current OS and CPU architecture.
+
+    Raises:
+        OSError -      Issue loading library.
+        RuntimeError - Unsupported OS/CPU combination or bundled library hash mismatch.
+    """
     global ftlib
     global d2lib
 
