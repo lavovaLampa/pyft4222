@@ -65,18 +65,13 @@ class SystemDll:
     name: str
 
     def load(self) -> CDLL:
-        try:
-            return cdll.LoadLibrary(self.name)
-        except OSError as e:
-            print("Unable to load shared library!", file=sys.stderr)
-            print(e, file=sys.stderr)
-            sys.exit(1)
+        return cdll.LoadLibrary(self.name)
 
 
 @dataclass
 class DllDescription:
     ft4222: BundledDll
-    d2xx: BundledDll | SystemDll | None
+    d2xx: "BundledDll | SystemDll | None"
 
 
 _DLL_IMPORT_MAP: Final[dict[tuple[str, str], DllDescription]] = {
@@ -88,7 +83,7 @@ _DLL_IMPORT_MAP: Final[dict[tuple[str, str], DllDescription]] = {
             "1.4.8",
             "9b9e381e87b44084e03eb9d22d1c87a5f9edbaaeed897e749031506307c390b5",
         ),
-        SystemDll("d2xx.dll"),
+        SystemDll("ftd2xx.dll"),
     ),
     ("Windows", "ARM64"): DllDescription(
         BundledDll(
@@ -97,7 +92,7 @@ _DLL_IMPORT_MAP: Final[dict[tuple[str, str], DllDescription]] = {
             "1.4.8",
             "2f00028118263e4cb4fa63ab0a4623e37533d639271780c11bcb2ebb74fcdeac",
         ),
-        SystemDll("d2xx.dll"),
+        SystemDll("ftd2xx.dll"),
     ),
     # Linux
     ("Linux", "x86_64"): DllDescription(
@@ -152,32 +147,20 @@ _DLL_IMPORT_MAP: Final[dict[tuple[str, str], DllDescription]] = {
 _dll_path = _DLL_IMPORT_MAP.get((OS_TYPE, platform.machine()))
 
 
-def _get_ft4222_lib() -> CDLL:
-    if _dll_path is None:
-        raise RuntimeError("Unsupported OS/CPU combination!")
-
-    return _dll_path.ft4222.load()
-
-
-def _get_d2xx_lib() -> CDLL:
-    if _dll_path is None:
-        raise RuntimeError("Unsupported OS/CPU combination!")
-
-    if _dll_path.d2xx is None:
-        return _get_ft4222_lib()
-
-    return _dll_path.d2xx.load()
-
-
 def init_libraries() -> None:
     global ftlib
     global d2lib
 
-    if "d2lib" not in globals():
-        d2lib = _get_d2xx_lib()
+    if _dll_path is None:
+        raise RuntimeError("Unsupported OS/CPU combination!")
 
-    if "ftlib" not in globals():
-        ftlib = _get_ft4222_lib()
+    if "d2lib" not in globals() or "ftlib" not in globals():
+        if _dll_path.d2xx is not None:
+            ftlib = _dll_path.d2xx.load()
+            d2lib = _dll_path.ft4222.load()
+        else:
+            ftlib = _dll_path.ft4222.load()
+            d2lib = ftlib
 
 
 init_libraries()
