@@ -18,7 +18,7 @@ from typing_extensions import TypeAlias
 
 from pyft4222.result import Err, Ok, Result
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle
-from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.dll import ftlib
 from pyft4222.wrapper.spi import ClkPhase, ClkPolarity
 
 SpiMasterSingleHandle = NewType("SpiMasterSingleHandle", FtHandle)

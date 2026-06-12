@@ -6,7 +6,7 @@ from typing import Final, NewType
 
 from pyft4222.result import Err, Ok, Result
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle, GpioTrigger
-from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.dll import ftlib
 
 GpioHandle = NewType("GpioHandle", FtHandle)
 

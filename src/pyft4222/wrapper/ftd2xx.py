@@ -17,7 +17,7 @@ from typing import Final, NamedTuple
 
 from pyft4222.result import Err, Ok, Result
 from pyft4222.wrapper import OS_TYPE, FtException, FtHandle, FtStatus
-from pyft4222.wrapper.dll_loader import d2lib
+from pyft4222.wrapper.dll import d2lib
 
 # DLL function protoypes declaration
 

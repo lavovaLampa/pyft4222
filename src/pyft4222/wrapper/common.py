@@ -3,7 +3,7 @@ from enum import IntEnum, auto
 from typing import NamedTuple, Union
 
 from pyft4222.wrapper import Ft4222Exception, Ft4222Status, FtHandle, GpioTrigger
-from pyft4222.wrapper.dll_loader import ftlib
+from pyft4222.wrapper.dll import ftlib
 from pyft4222.wrapper.gpio import GpioHandle
 from pyft4222.wrapper.i2c import I2cHandle
 from pyft4222.wrapper.spi.common import SpiHandle
