@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyft4222"
-version = "0.3.3"
+version = "0.3.4"
 description = "A python wrapper for libft4222 library"
 readme = "README.md"
 license = "MIT"
